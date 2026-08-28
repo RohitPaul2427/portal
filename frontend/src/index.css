@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Public+Sans:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  :root {
+    /* LEAMSS Brand Colors */
+    --leamss-orange: #f7620b;
+    --leamss-teal: #2a777a;
+    --leamss-red: #d81f26;
+    
+    /* HSL values for Shadcn components */
+    --background: 210 20% 97%;
+    --foreground: 215 25% 17%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 17%;
+    --primary: 178 49% 32%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 22 93% 51%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 22 93% 51%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 357 77% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 178 49% 32%;
+    --radius: 0.75rem;
+    --success: 142 71% 45%;
+    --warning: 22 93% 51%;
+    --info: 178 49% 32%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 178 49% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 22 93% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 22 93% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 63% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 178 49% 42%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  .dark body, body.dark-mode {
+    @apply bg-[#0f172a];
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* LEAMSS Brand Color Utilities */
+  .bg-leamss-orange {
+    background-color: #f7620b;
+  }
+  
+  .bg-leamss-teal {
+    background-color: #2a777a;
+  }
+  
+  .bg-leamss-red {
+    background-color: #d81f26;
+  }
+  
+  .text-leamss-orange {
+    color: #f7620b;
+  }
+  
+  .text-leamss-teal {
+    color: #2a777a;
+  }
+  
+  .text-leamss-red {
+    color: #d81f26;
+  }
+  
+  .border-leamss-orange {
+    border-color: #f7620b;
+  }
+  
+  .border-leamss-teal {
+    border-color: #2a777a;
+  }
+  
+  .border-leamss-red {
+    border-color: #d81f26;
+  }
+  
+  .hover\:bg-leamss-orange:hover {
+    background-color: #e55a09;
+  }
+  
+  .hover\:bg-leamss-teal:hover {
+    background-color: #236466;
+  }
+  
+  /* Modern Sidebar styling */
+  .sidebar-modern {
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+  }
+  
+  .sidebar-dark {
+    background-color: #1e293b;
+  }
+  
+  /* Modern Card styling */
+  .card-modern {
+    @apply bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  /* Modern Table styling */
+  .table-modern {
+    @apply rounded-lg border border-slate-200 bg-white overflow-hidden;
+  }
+  
+  .table-modern thead {
+    @apply bg-slate-50/80;
+  }
+  
+  .table-modern tbody tr {
+    @apply hover:bg-slate-50/50 transition-colors border-b border-slate-100;
+  }
+  
+  .table-modern tbody tr:last-child {
+    @apply border-0;
+  }
+}

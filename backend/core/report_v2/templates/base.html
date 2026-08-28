@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LEAMSS Assessment Report — {{ snap.snapshot_id }}</title>
+  <style>{{ css|safe }}</style>
+</head>
+<body>
+
+{# ──────────────────────────────────────────────────────────────────────── #}
+{# COVER PAGE — always shown for every tier                                #}
+{# ──────────────────────────────────────────────────────────────────────── #}
+{% include "_cover.html" %}
+
+{# ──────────────────────────────────────────────────────────────────────── #}
+{# EXECUTIVE SUMMARY DASHBOARD                                             #}
+{# ──────────────────────────────────────────────────────────────────────── #}
+{% include "_executive.html" %}
+
+{# ──────────────────────────────────────────────────────────────────────── #}
+{# ELIGIBILITY VERDICT — eligible / not-eligible-yet / age-blocked          #}
+{# ──────────────────────────────────────────────────────────────────────── #}
+{% if snap.eligibility_verdict %}
+  {% include "_eligibility_verdict.html" %}
+{% endif %}
+
+{# ──────────────────────────────────────────────────────────────────────── #}
+{# CLIENT PROFILE                                                          #}
+{# ──────────────────────────────────────────────────────────────────────── #}
+{% include "_client_profile.html" %}
+
+{% if snap.render_tier in ['full', 'proposal'] or not snap.render_tier %}
+
+  {# ─── ANZSCO Occupation Deep-Dive ────────────────────────────────── #}
+  {% if snap.anzsco_profile %}
+    {% include "_anzsco.html" %}
+  {% endif %}
+
+  {# ─── Points across all AU subclasses (189/190/491) ──────────────── #}
+  {% if snap.au_subclass_points and snap.au_subclass_points.rows %}
+    {% include "_subclass_points.html" %}
+  {% endif %}
+
+  {# ─── Occupation Pathways Comparison (primary + alternatives) ─────── #}
+  {% if snap.occupation_comparison and snap.occupation_comparison.occupations and snap.occupation_comparison.occupations|length >= 2 %}
+    {% include "_occupations_compare.html" %}
+  {% endif %}
+
+  {# ─── EOI Backlog (SkillSelect pool competition) — primary + alternates ── #}
+  {% if snap.eoi_backlog and snap.eoi_backlog.unified and snap.eoi_backlog.unified.rows %}
+    {% include "_eoi_backlog.html" %}
+  {% endif %}
+  {% for alt_eoi in (snap.eoi_backlog_alts or []) %}
+    {% if alt_eoi.unified and alt_eoi.unified.rows %}
+      {% set eoi_ctx = alt_eoi %}
+      {% set eoi_is_alt = true %}
+      {% include "_eoi_backlog.html" %}
+    {% endif %}
+  {% endfor %}
+
+  {# ─── Per-country sections ──────────────────────────────────────── #}
+  {% for country in snap.countries %}
+    {% set ctx_country = country %}
+    {% set ctx_index   = loop.index %}
+    {% include "_country.html" %}
+  {% endfor %}
+
+  {# ─── Process + Cost Breakdown ──────────────────────────────────── #}
+  {% include "_process.html" %}
+
+  {% if snap.cost_estimator and snap.cost_estimator.items %}
+    {% include "_cost.html" %}
+  {% endif %}
+
+  {% if snap.cost_estimator and (snap.cost_estimator.service_packages or snap.cost_estimator.packages) %}
+    {% include "_packages.html" %}
+  {% endif %}
+
+  {# ─── Country Guide ─────────────────────────────────────────────── #}
+  {% if snap.country_guides %}
+    {% include "_country_guide.html" %}
+  {% endif %}
+
+  {# ─── Document Checklist ───────────────────────────────────────── #}
+  {% include "_checklist.html" %}
+
+{% else %}
+
+  {# Teaser tier — keep things tight                                  #}
+  {% include "_process.html" %}
+
+{% endif %}
+
+{# ──────────────────────────────────────────────────────────────────────── #}
+{# PROTECTION POLICY — every tier (this is the USP, always visible)       #}
+{# ──────────────────────────────────────────────────────────────────────── #}
+{% if snap.protection_policy %}
+  {% include "_protection.html" %}
+{% endif %}
+
+{# ──────────────────────────────────────────────────────────────────────── #}
+{# DISCLAIMER + CONTACT                                                    #}
+{# ──────────────────────────────────────────────────────────────────────── #}
+{% include "_disclaimer.html" %}
+{% include "_contact.html" %}
+
+</body>
+</html>

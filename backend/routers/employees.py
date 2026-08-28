@@ -1,0 +1,885 @@
+"""Employees Router — Phase 2 Employee Portal
+
+Provides CRUD + role mgmt + org chart for internal employees.
+Permissions are gated via the RBAC Phase 1 catalog.
+"""
+import uuid
+import secrets
+import string
+from datetime import datetime, timezone
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, EmailStr, Field
+
+from core.database import db, users_col
+from core.auth import get_current_user, get_password_hash
+from core.rbac.dependencies import require_any_permission
+from core.rbac.permission_service import PermissionService
+
+router = APIRouter(prefix="/employees", tags=["Employees"])
+
+departments_col = db["departments"]
+roles_col = db["roles"]
+teams_col = db["teams"]
+user_role_history_col = db["user_role_history"]
+activity_log_col = db["activity_log"]
+notifications_col = db["notifications"]
+
+
+# ────────────────────────────────────────────────────────────
+# Helpers
+# ────────────────────────────────────────────────────────────
+async def _next_employee_id() -> str:
+    year = datetime.now(timezone.utc).year
+    prefix = f"LMS-{year}-"
+    nums = []
+    async for u in users_col.find({"employee_id": {"$regex": f"^{prefix}"}}, {"_id": 0, "employee_id": 1}):
+        try:
+            nums.append(int(u["employee_id"].split("-")[-1]))
+        except (ValueError, IndexError):
+            continue
+    return f"{prefix}{(max(nums) + 1 if nums else 1):04d}"
+
+
+def _gen_password(length: int = 12) -> str:
+    alphabet = string.ascii_letters + string.digits + "!@#$%&*"
+    return "".join(secrets.choice(alphabet) for _ in range(length))
+
+
+def _serialize_user(u: dict) -> dict:
+    """Strip password + serialize datetimes."""
+    out = {k: v for k, v in u.items() if k not in ("password", "_id")}
+    for f in ("created_at", "date_of_joining", "date_of_leaving", "last_password_change", "account_locked_until"):
+        if isinstance(out.get(f), datetime):
+            out[f] = out[f].isoformat()
+    return out
+
+
+async def _log_role_change(user_id: str, changed_from: Optional[str], changed_to: str, changed_by: str, reason: Optional[str] = None):
+    await user_role_history_col.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "changed_from": changed_from,
+        "changed_to": changed_to,
+        "changed_by": changed_by,
+        "reason": reason,
+        "effective_date": datetime.now(timezone.utc),
+        "created_at": datetime.now(timezone.utc),
+    })
+
+
+# ────────────────────────────────────────────────────────────
+# Models
+# ────────────────────────────────────────────────────────────
+class EmployeeCreate(BaseModel):
+    # Basic
+    name: str = Field(min_length=2)
+    email: EmailStr
+    mobile: Optional[str] = ""
+    date_of_birth: Optional[str] = None
+    # Employment
+    department: str
+    role: str  # rbac_role key
+    designation: Optional[str] = None
+    reports_to: Optional[str] = None
+    team_id: Optional[str] = None
+    date_of_joining: Optional[str] = None
+    employment_type: str = "full_time"
+    work_mode: str = "onsite"
+    work_location: Optional[str] = None
+    # Access
+    password: Optional[str] = None  # auto-gen if absent
+    send_welcome_email: bool = True
+    require_2fa: Optional[bool] = None
+
+
+class EmployeeUpdate(BaseModel):
+    name: Optional[str] = None
+    mobile: Optional[str] = None
+    designation: Optional[str] = None
+    reports_to: Optional[str] = None
+    team_id: Optional[str] = None
+    department: Optional[str] = None
+    work_location: Optional[str] = None
+    work_mode: Optional[str] = None
+    employment_type: Optional[str] = None
+    emergency_contact: Optional[dict] = None
+    avatar_url: Optional[str] = None
+
+
+# Phase 21.B — Self-service section update payload
+class SelfProfileSection(BaseModel):
+    # personal (subset)
+    mobile: Optional[str] = None
+    alt_contact: Optional[str] = None
+    address: Optional[dict] = None  # {line1, line2, city, state, pincode, country}
+    # bank (HR will verify)
+    bank_account: Optional[dict] = None  # {account_number, ifsc, bank_name, holder_name}
+    pan_number: Optional[str] = None
+    # emergency contact
+    emergency_contact: Optional[dict] = None  # {name, relation, mobile, alt_mobile}
+    # preferences
+    avatar_url: Optional[str] = None
+    work_location: Optional[str] = None
+
+
+class RoleChange(BaseModel):
+    new_role: str
+    new_department: Optional[str] = None
+    new_designation: Optional[str] = None
+    reason: Optional[str] = None
+    effective_date: Optional[str] = None  # ISO date string
+
+
+# ────────────────────────────────────────────────────────────
+# Endpoints
+# ────────────────────────────────────────────────────────────
+@router.get("")
+async def list_employees(
+    department: Optional[str] = None,
+    role: Optional[str] = None,
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: dict = Depends(require_any_permission("employee.view.all", "user.view.all")),
+):
+    """List internal employees with filters."""
+    query = {"user_type": "internal"}
+    if department:
+        query["department"] = department
+    if role:
+        query["rbac_role"] = role
+    if status:
+        query["status"] = status
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+            {"employee_id": {"$regex": search, "$options": "i"}},
+        ]
+    cursor = users_col.find(query, {"_id": 0, "password": 0}).skip(skip).limit(limit).sort("created_at", -1)
+    items = [_serialize_user(u) async for u in cursor]
+    total = await users_col.count_documents(query)
+    return {"items": items, "total": total, "skip": skip, "limit": limit}
+
+
+@router.get("/stats")
+async def employees_stats(current_user: dict = Depends(require_any_permission("employee.view.all", "user.view.all"))):
+    """Top-line employee stats for dashboard."""
+    base = {"user_type": "internal"}
+    total = await users_col.count_documents(base)
+    active = await users_col.count_documents({**base, "employment_status": "active"})
+    on_leave = await users_col.count_documents({**base, "employment_status": "on_leave"})
+    terminated = await users_col.count_documents({**base, "employment_status": {"$in": ["terminated", "resigned"]}})
+
+    # New this month
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_this_month = await users_col.count_documents({**base, "date_of_joining": {"$gte": month_start}})
+
+    # Department breakdown
+    pipeline = [
+        {"$match": base},
+        {"$group": {"_id": "$department", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+    ]
+    dept_breakdown = []
+    async for d in users_col.aggregate(pipeline):
+        dept_breakdown.append({"department": d["_id"], "count": d["count"]})
+
+    # Role breakdown
+    pipeline_role = [
+        {"$match": base},
+        {"$group": {"_id": "$rbac_role", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+    ]
+    role_breakdown = []
+    async for r in users_col.aggregate(pipeline_role):
+        role_breakdown.append({"role": r["_id"], "count": r["count"]})
+
+    return {
+        "total": total,
+        "active": active,
+        "on_leave": on_leave,
+        "terminated": terminated,
+        "new_this_month": new_this_month,
+        "department_breakdown": dept_breakdown,
+        "role_breakdown": role_breakdown,
+    }
+
+
+@router.get("/recent")
+async def recent_joiners(
+    limit: int = 5,
+    current_user: dict = Depends(require_any_permission("employee.view.all", "user.view.all")),
+):
+    cursor = users_col.find(
+        {"user_type": "internal", "employment_status": "active"},
+        {"_id": 0, "password": 0},
+    ).sort("date_of_joining", -1).limit(limit)
+    return [_serialize_user(u) async for u in cursor]
+
+
+@router.get("/org-chart")
+async def org_chart(
+    current_user: dict = Depends(require_any_permission("employee.view.all", "user.view.all", "team.view.all")),
+):
+    """Build hierarchical org chart from reports_to relationships."""
+    users = []
+    async for u in users_col.find({"user_type": "internal"}, {"_id": 0, "password": 0}):
+        users.append({
+            "id": u["id"],
+            "name": u.get("name"),
+            "email": u.get("email"),
+            "employee_id": u.get("employee_id"),
+            "designation": u.get("designation"),
+            "department": u.get("department"),
+            "rbac_role": u.get("rbac_role"),
+            "avatar_url": u.get("avatar_url"),
+            "reports_to": u.get("reports_to"),
+            "employment_status": u.get("employment_status"),
+            "children": [],
+        })
+
+    by_id = {u["id"]: u for u in users}
+    roots = []
+    for u in users:
+        parent_id = u.get("reports_to")
+        if parent_id and parent_id in by_id:
+            by_id[parent_id]["children"].append(u)
+        else:
+            roots.append(u)
+
+    return {"roots": roots, "total": len(users)}
+
+
+@router.get("/managers-for-role/{role_key}")
+async def managers_for_role(
+    role_key: str,
+    current_user: dict = Depends(require_any_permission("employee.view.all", "user.view.all")),
+):
+    """Return active users whose role can be reports_to for the given role.
+
+    Logic: Look up role.reports_to_roles array, find active users whose
+    rbac_role is in that list. Used in cascading Add Employee form.
+    """
+    role = await roles_col.find_one({"key": role_key}, {"_id": 0})
+    if not role:
+        raise HTTPException(status_code=404, detail=f"Role '{role_key}' not found")
+
+    parent_roles = role.get("reports_to_roles", [])
+    if not parent_roles:
+        # Top-level role — no manager needed
+        return []
+
+    items = []
+    async for u in users_col.find(
+        {
+            "rbac_role": {"$in": parent_roles},
+            "status": "active",
+            "user_type": "internal",
+        },
+        {"_id": 0, "id": 1, "name": 1, "designation": 1, "email": 1, "rbac_role": 1, "department": 1, "avatar_url": 1},
+    ).sort("name", 1):
+        items.append(u)
+    return items
+
+
+# ────────────────────────────────────────────────────────────
+# Phase 21.B — Employee Self-Service Endpoints (BEFORE /{employee_id} catch-all)
+# ────────────────────────────────────────────────────────────
+@router.get("/me/profile")
+async def get_my_profile(current_user: dict = Depends(get_current_user)):
+    """Return current employee's full profile (self-service view)."""
+    user = await users_col.find_one({"id": current_user["id"]}, {"_id": 0, "password": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Manager info
+    manager = None
+    if user.get("reports_to"):
+        m = await users_col.find_one(
+            {"id": user["reports_to"]},
+            {"_id": 0, "id": 1, "name": 1, "designation": 1, "email": 1, "avatar_url": 1},
+        )
+        if m:
+            manager = m
+
+    # Document count (Phase 21.C placeholder — collection may not exist yet)
+    try:
+        doc_count = await db["employee_documents"].count_documents(
+            {"user_id": current_user["id"], "deleted": {"$ne": True}}
+        )
+    except Exception:
+        doc_count = 0
+
+    return {
+        **_serialize_user(user),
+        "manager": manager,
+        "doc_count": doc_count,
+    }
+
+
+SECTION_FIELD_MAP = {
+    "personal": {"mobile", "alt_contact", "address"},
+    "bank": {"bank_account", "pan_number"},
+    "emergency": {"emergency_contact"},
+    "preferences": {"avatar_url", "work_location"},
+}
+
+
+@router.patch("/me/section/{section_name}")
+async def update_my_profile_section(
+    section_name: str,
+    payload: SelfProfileSection,
+    current_user: dict = Depends(get_current_user),
+):
+    """Auto-save a section of the user's profile. Debounced from frontend (1s)."""
+    if section_name not in SECTION_FIELD_MAP:
+        raise HTTPException(status_code=400, detail=f"Unknown section '{section_name}'")
+    allowed_fields = SECTION_FIELD_MAP[section_name]
+    updates_raw = payload.model_dump(exclude_unset=True)
+    updates = {k: v for k, v in updates_raw.items() if k in allowed_fields}
+    if not updates:
+        return {"message": "No changes", "section": section_name, "updated_fields": []}
+
+    # IFSC validation (lightweight)
+    if "bank_account" in updates and updates["bank_account"]:
+        ifsc = (updates["bank_account"] or {}).get("ifsc", "")
+        if ifsc and (len(ifsc) != 11 or not ifsc[:4].isalpha() or not ifsc[4] == "0"):
+            raise HTTPException(status_code=400, detail="Invalid IFSC code format (expected 11 chars, e.g. SBIN0001234)")
+
+    # PAN validation (lightweight)
+    if "pan_number" in updates and updates["pan_number"]:
+        pan = updates["pan_number"].strip().upper()
+        if len(pan) != 10 or not (pan[:5].isalpha() and pan[5:9].isdigit() and pan[9].isalpha()):
+            raise HTTPException(status_code=400, detail="Invalid PAN format (expected ABCDE1234F)")
+        updates["pan_number"] = pan
+
+    # Snapshot before for audit
+    before = await users_col.find_one(
+        {"id": current_user["id"]},
+        {"_id": 0, **{k: 1 for k in updates.keys()}},
+    )
+
+    updates["updated_at"] = datetime.now(timezone.utc)
+    await users_col.update_one({"id": current_user["id"]}, {"$set": updates})
+
+    # Audit log
+    await activity_log_col.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "entity_type": "employee_self_profile",
+        "entity_id": current_user["id"],
+        "action": f"section_updated:{section_name}",
+        "details": {
+            "section": section_name,
+            "before": {k: (before or {}).get(k) for k in updates if k != "updated_at"},
+            "after": {k: v for k, v in updates.items() if k != "updated_at"},
+        },
+        "created_at": datetime.now(timezone.utc),
+    })
+
+    return {
+        "message": "Section saved",
+        "section": section_name,
+        "updated_fields": [k for k in updates.keys() if k != "updated_at"],
+        "saved_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@router.get("/me/audit-history")
+async def my_profile_audit_history(
+    limit: int = 30,
+    current_user: dict = Depends(get_current_user),
+):
+    """Last N self-service profile section saves (for the drawer)."""
+    items = []
+    async for a in activity_log_col.find(
+        {"entity_type": "employee_self_profile", "user_id": current_user["id"]},
+        {"_id": 0},
+    ).sort("created_at", -1).limit(limit):
+        if isinstance(a.get("created_at"), datetime):
+            a["created_at"] = a["created_at"].isoformat()
+        items.append(a)
+    return items
+
+
+@router.get("/me/documents")
+async def list_my_documents(current_user: dict = Depends(get_current_user)):
+    """List employee's own uploaded personal documents."""
+    items = []
+    async for d in db["employee_documents"].find(
+        {"user_id": current_user["id"], "deleted": {"$ne": True}},
+        {"_id": 0},
+    ).sort("created_at", -1):
+        if isinstance(d.get("created_at"), datetime):
+            d["created_at"] = d["created_at"].isoformat()
+        items.append(d)
+    return items
+
+
+@router.post("/me/documents")
+async def upload_my_document(
+    payload: dict,
+    current_user: dict = Depends(get_current_user),
+):
+    """Register a personal document. Body: {doc_type, file_name, file_url, notes?}
+
+    File upload is expected to happen via a dedicated upload endpoint elsewhere
+    (Phase 21.C). This route just records the metadata.
+    """
+    doc_type = (payload.get("doc_type") or "").strip()
+    file_name = (payload.get("file_name") or "").strip()
+    file_url = (payload.get("file_url") or "").strip()
+    if not doc_type or not file_url:
+        raise HTTPException(status_code=400, detail="doc_type and file_url are required")
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "doc_type": doc_type,
+        "file_name": file_name or doc_type,
+        "file_url": file_url,
+        "notes": payload.get("notes", ""),
+        "uploaded_by": current_user["id"],
+        "uploaded_by_name": current_user.get("name"),
+        "status": "pending_verification",
+        "deleted": False,
+        "created_at": datetime.now(timezone.utc),
+    }
+    await db["employee_documents"].insert_one(doc)
+
+    await activity_log_col.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "entity_type": "employee_document",
+        "entity_id": doc["id"],
+        "action": "document_uploaded",
+        "details": {"doc_type": doc_type, "file_name": file_name},
+        "created_at": datetime.now(timezone.utc),
+    })
+
+    return {
+        "message": "Document recorded",
+        "id": doc["id"],
+        "status": doc["status"],
+    }
+
+
+
+
+@router.get("/{employee_id}")
+async def get_employee(
+    employee_id: str,
+    current_user: dict = Depends(require_any_permission("employee.view.all", "user.view.all", "employee.view.own")),
+):
+    # Guard: /me alias should be handled by /me endpoints above, not here
+    if employee_id == "me":
+        raise HTTPException(status_code=404, detail="Use /employees/me endpoints")
+    user = await users_col.find_one({"id": employee_id}, {"_id": 0, "password": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    # Manager + team info
+    manager = None
+    if user.get("reports_to"):
+        m = await users_col.find_one({"id": user["reports_to"]}, {"_id": 0, "id": 1, "name": 1, "designation": 1, "email": 1, "avatar_url": 1})
+        if m:
+            manager = m
+
+    # Direct reports
+    reports = []
+    async for r in users_col.find({"reports_to": employee_id}, {"_id": 0, "id": 1, "name": 1, "designation": 1, "rbac_role": 1, "avatar_url": 1, "employment_status": 1}):
+        reports.append(r)
+
+    return {
+        **_serialize_user(user),
+        "manager": manager,
+        "direct_reports": reports,
+    }
+
+
+@router.get("/{employee_id}/history")
+async def employee_role_history(
+    employee_id: str,
+    current_user: dict = Depends(require_any_permission("employee.view.all", "user.view.all")),
+):
+    items = []
+    async for h in user_role_history_col.find({"user_id": employee_id}, {"_id": 0}).sort("effective_date", -1).limit(50):
+        if isinstance(h.get("effective_date"), datetime):
+            h["effective_date"] = h["effective_date"].isoformat()
+        if isinstance(h.get("created_at"), datetime):
+            h["created_at"] = h["created_at"].isoformat()
+        items.append(h)
+    return items
+
+
+@router.get("/{employee_id}/activity")
+async def employee_activity(
+    employee_id: str,
+    limit: int = 50,
+    current_user: dict = Depends(require_any_permission("employee.view.all", "user.view.all", "activity_log.view.all")),
+):
+    items = []
+    async for a in activity_log_col.find({"user_id": employee_id}, {"_id": 0}).sort("created_at", -1).limit(limit):
+        if isinstance(a.get("created_at"), datetime):
+            a["created_at"] = a["created_at"].isoformat()
+        items.append(a)
+    return items
+
+
+@router.post("")
+async def create_employee(
+    payload: EmployeeCreate,
+    current_user: dict = Depends(require_any_permission("employee.create.any", "user.create.any")),
+):
+    # Validate department + role exist
+    dept = await departments_col.find_one({"key": payload.department}, {"_id": 0})
+    if not dept:
+        raise HTTPException(status_code=400, detail=f"Department '{payload.department}' not found")
+
+    role_doc = await roles_col.find_one({"key": payload.role}, {"_id": 0})
+    if not role_doc:
+        raise HTTPException(status_code=400, detail=f"Role '{payload.role}' not found")
+
+    if role_doc.get("user_type") not in ("internal", None):
+        raise HTTPException(status_code=400, detail=f"Role '{payload.role}' is not an internal employee role")
+
+    # Email uniqueness
+    if await users_col.find_one({"email": payload.email}, {"_id": 0, "id": 1}):
+        raise HTTPException(status_code=400, detail="Email already exists")
+
+    # Build legacy 'role' for backward compat
+    legacy_role_map = {
+        "admin_owner": "admin",
+        "case_manager": "case_manager",
+    }
+    legacy_role = legacy_role_map.get(payload.role, payload.role)
+
+    password = payload.password or _gen_password()
+    emp_id = await _next_employee_id()
+
+    # 2FA: auto-true if hierarchy_level >= 3 OR explicitly requested
+    auto_2fa = (role_doc.get("hierarchy_level", 0) >= 3)
+    require_2fa = payload.require_2fa if payload.require_2fa is not None else auto_2fa
+
+    now = datetime.now(timezone.utc)
+    doj = now
+    if payload.date_of_joining:
+        try:
+            doj = datetime.fromisoformat(payload.date_of_joining.replace("Z", "+00:00"))
+        except Exception:
+            pass
+
+    user = {
+        "id": str(uuid.uuid4()),
+        "email": payload.email,
+        "password": get_password_hash(password),
+        "name": payload.name,
+        "mobile": payload.mobile or "",
+        "role": legacy_role,                # legacy preserved
+        "rbac_role": payload.role,          # new RBAC key
+        "user_type": "internal",
+        "department": payload.department,
+        "designation": payload.designation,
+        "reports_to": payload.reports_to,
+        "team_id": payload.team_id,
+        "employee_id": emp_id,
+        "date_of_joining": doj,
+        "employment_status": "active",
+        "employment_type": payload.employment_type,
+        "work_mode": payload.work_mode,
+        "work_location": payload.work_location,
+        "status": "active",
+        "commission_rate": 0.0,
+        "permissions": role_doc.get("permissions", []),
+        "ui_modules": role_doc.get("ui_modules", []),
+        "custom_permissions_granted": [],
+        "custom_permissions_revoked": [],
+        "two_fa_enabled": False,
+        "two_fa_required": require_2fa,
+        "two_fa_secret": None,
+        "failed_login_count": 0,
+        "created_at": now,
+        "created_by": current_user["id"],
+    }
+    if payload.date_of_birth:
+        user["date_of_birth"] = payload.date_of_birth
+
+    await users_col.insert_one(user)
+    await _log_role_change(user["id"], None, payload.role, current_user["id"], "Initial role assignment")
+
+    # Phase 3A: Create leave balance docs for the new internal employee
+    try:
+        from core.database import leave_balances_col, leave_types_col
+        year = now.year
+        async for lt in leave_types_col.find(
+            {"is_active": True, "applicable_to": {"$in": ["all"]}}, {"_id": 0}
+        ):
+            opening = lt["annual_quota"] if lt["key"] not in ("lwp", "comp_off") else 0
+            await leave_balances_col.insert_one({
+                "id": str(uuid.uuid4()),
+                "user_id": user["id"],
+                "year": year,
+                "leave_type_key": lt["key"],
+                "opening_balance": opening,
+                "earned": 0,
+                "used": 0,
+                "carried_forward": 0,
+                "available": opening,
+                "monthly_used": {},
+                "created_at": now,
+                "updated_at": now,
+            })
+    except Exception as e:
+        print(f"[Employee Create] Leave balance seed failed: {e}")
+
+    # Activity log
+    await activity_log_col.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "entity_type": "employee",
+        "entity_id": user["id"],
+        "action": "employee_created",
+        "details": {"name": payload.name, "email": payload.email, "role": payload.role, "department": payload.department},
+        "created_at": now,
+    })
+
+    # MOCK welcome email (Resend integration pending)
+    welcome_email_sent = False
+    if payload.send_welcome_email:
+        welcome_email_sent = True  # mocked
+
+    return {
+        "id": user["id"],
+        "employee_id": emp_id,
+        "email": payload.email,
+        "temporary_password": password,  # show once for admin to share
+        "welcome_email_sent": welcome_email_sent,
+        "require_2fa": require_2fa,
+        "message": f"Employee {payload.name} created successfully",
+    }
+
+
+@router.patch("/{employee_id}")
+async def update_employee(
+    employee_id: str,
+    payload: EmployeeUpdate,
+    current_user: dict = Depends(require_any_permission("employee.update.all", "user.update.any")),
+):
+    user = await users_col.find_one({"id": employee_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    updates = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
+    if not updates:
+        return {"message": "No changes"}
+
+    # Validate department if being changed
+    if "department" in updates:
+        dept = await departments_col.find_one({"key": updates["department"]}, {"_id": 0})
+        if not dept:
+            raise HTTPException(status_code=400, detail=f"Department '{updates['department']}' not found")
+
+    updates["updated_at"] = datetime.now(timezone.utc)
+    await users_col.update_one({"id": employee_id}, {"$set": updates})
+
+    await activity_log_col.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "entity_type": "employee",
+        "entity_id": employee_id,
+        "action": "employee_updated",
+        "details": updates,
+        "created_at": datetime.now(timezone.utc),
+    })
+
+    return {"message": "Updated", "updated_fields": list(updates.keys())}
+
+
+@router.patch("/{employee_id}/role")
+async def change_role(
+    employee_id: str,
+    payload: RoleChange,
+    current_user: dict = Depends(require_any_permission("employee.update.all", "user.update.any")),
+):
+    user = await users_col.find_one({"id": employee_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Employee not found")
+
+    role_doc = await roles_col.find_one({"key": payload.new_role}, {"_id": 0})
+    if not role_doc:
+        raise HTTPException(status_code=400, detail=f"Role '{payload.new_role}' not found")
+
+    # Validate reason min 20 chars (sensitive action)
+    reason = (payload.reason or "").strip()
+    if len(reason) < 20:
+        raise HTTPException(status_code=400, detail="Reason is required (minimum 20 characters)")
+
+    old_role = user.get("rbac_role")
+    if old_role == payload.new_role:
+        return {"message": "No change — role is already set"}
+
+    # Parse effective_date if provided
+    effective_date = datetime.now(timezone.utc)
+    if payload.effective_date:
+        try:
+            effective_date = datetime.fromisoformat(payload.effective_date.replace("Z", "+00:00"))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid effective_date format (use ISO 8601)")
+
+    legacy_role_map = {"admin_owner": "admin", "case_manager": "case_manager"}
+    legacy_role = legacy_role_map.get(payload.new_role, payload.new_role)
+    new_department = payload.new_department or role_doc.get("department") or user.get("department")
+    new_designation = payload.new_designation or role_doc.get("name") or user.get("designation")
+
+    # Clear reports_to if old manager not valid for new role
+    parent_roles = role_doc.get("reports_to_roles", [])
+    new_reports_to = user.get("reports_to")
+    if new_reports_to and parent_roles:
+        manager = await users_col.find_one({"id": new_reports_to}, {"_id": 0, "rbac_role": 1})
+        if not manager or manager.get("rbac_role") not in parent_roles:
+            new_reports_to = None
+
+    await users_col.update_one(
+        {"id": employee_id},
+        {"$set": {
+            "rbac_role": payload.new_role,
+            "role": legacy_role,
+            "department": new_department,
+            "designation": new_designation,
+            "reports_to": new_reports_to,
+            "permissions": role_doc.get("permissions", []),
+            "ui_modules": role_doc.get("ui_modules", []),
+            "updated_at": datetime.now(timezone.utc),
+        }}
+    )
+
+    # Log to user_role_history with structured before/after
+    await user_role_history_col.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": employee_id,
+        "changed_from": old_role,
+        "changed_from_detail": {
+            "role": old_role,
+            "department": user.get("department"),
+            "designation": user.get("designation"),
+        },
+        "changed_to": payload.new_role,
+        "changed_to_detail": {
+            "role": payload.new_role,
+            "department": new_department,
+            "designation": new_designation,
+        },
+        "changed_by": current_user["id"],
+        "changed_by_name": current_user.get("name"),
+        "reason": reason,
+        "effective_date": effective_date,
+        "created_at": datetime.now(timezone.utc),
+    })
+
+    # Invalidate RBAC cache (user counts in /roles/{key} would be stale)
+    try:
+        from routers.rbac_admin import invalidate_cache
+        invalidate_cache()
+    except Exception:
+        pass
+
+    # Notify the employee
+    await notifications_col.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": employee_id,
+        "title": "Your role was updated",
+        "message": f"Your role has been changed to {role_doc.get('name')}. Reason: {reason}. Please log out and log in again to refresh your access.",
+        "type": "role_change",
+        "read": False,
+        "created_at": datetime.now(timezone.utc),
+    })
+
+    return {
+        "message": "Role changed",
+        "from": old_role,
+        "to": payload.new_role,
+        "new_department": new_department,
+        "new_designation": new_designation,
+        "effective_date": effective_date.isoformat(),
+    }
+
+
+@router.post("/{employee_id}/deactivate")
+async def deactivate_employee(
+    employee_id: str,
+    reason: str = Query(""),
+    current_user: dict = Depends(require_any_permission("employee.terminate.any", "employee.update.all", "user.delete.any")),
+):
+    user = await users_col.find_one({"id": employee_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    await users_col.update_one(
+        {"id": employee_id},
+        {"$set": {
+            "status": "inactive",
+            "employment_status": "terminated",
+            "date_of_leaving": datetime.now(timezone.utc),
+            "deactivation_reason": reason,
+        }}
+    )
+    await activity_log_col.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "entity_type": "employee",
+        "entity_id": employee_id,
+        "action": "employee_deactivated",
+        "details": {"reason": reason},
+        "created_at": datetime.now(timezone.utc),
+    })
+    return {"message": "Employee deactivated"}
+
+
+@router.post("/{employee_id}/reactivate")
+async def reactivate_employee(
+    employee_id: str,
+    current_user: dict = Depends(require_any_permission("employee.update.all", "user.update.any")),
+):
+    user = await users_col.find_one({"id": employee_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    await users_col.update_one(
+        {"id": employee_id},
+        {"$set": {
+            "status": "active",
+            "employment_status": "active",
+            "date_of_leaving": None,
+            "deactivation_reason": None,
+        }}
+    )
+    await activity_log_col.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "entity_type": "employee",
+        "entity_id": employee_id,
+        "action": "employee_reactivated",
+        "details": {},
+        "created_at": datetime.now(timezone.utc),
+    })
+    return {"message": "Employee reactivated"}
+
+
+@router.post("/{employee_id}/reset-password")
+async def reset_employee_password(
+    employee_id: str,
+    current_user: dict = Depends(require_any_permission("employee.update.all", "user.update.any")),
+):
+    user = await users_col.find_one({"id": employee_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    new_pwd = _gen_password()
+    await users_col.update_one(
+        {"id": employee_id},
+        {"$set": {
+            "password": get_password_hash(new_pwd),
+            "last_password_change": datetime.now(timezone.utc),
+        }}
+    )
+    return {"message": "Password reset", "temporary_password": new_pwd}
