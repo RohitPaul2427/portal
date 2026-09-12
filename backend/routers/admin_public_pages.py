@@ -46,9 +46,9 @@ def _is_admin(user: dict) -> bool:
 
 
 def _public_site_url() -> str:
-    base = (os.environ.get("PUBLIC_SITE_URL") or os.environ.get("FRONTEND_URL") or "https://leamss.com").rstrip("/")
+    base = (os.environ.get("PUBLIC_SITE_URL") or os.environ.get("FRONTEND_URL") or "http://localhost:3000").rstrip("/")
     if not base.startswith(("http://", "https://")):
-        base = "https://" + base
+        base = "http://" + base
     return base
 
 

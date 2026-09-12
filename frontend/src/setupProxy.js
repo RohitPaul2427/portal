@@ -63,25 +63,38 @@ module.exports = function setupProxy(app) {
     if (parts.some((p) => p.includes('..'))) return next();
     if (urlPath.match(/\.(js|css|map|png|jpg|jpeg|svg|webp|ico|woff2?|ttf)$/i)) return next();
 
+    const COUNTRY_MAP = {
+      'australia': 'au',
+      'canada': 'ca',
+      'new-zealand': 'nz',
+      'newzealand': 'nz',
+      'au': 'au',
+      'ca': 'ca',
+      'nz': 'nz',
+    };
+
     let target;
     if (parts.length === 1) {
       // /atlas
       target = path.join(ATLAS_DIR, 'index.html');
     } else if (parts.length === 2) {
       // /atlas/{country}
-      const country = parts[1].toLowerCase();
+      const rawCountry = parts[1].toLowerCase();
+      const country = COUNTRY_MAP[rawCountry] || rawCountry;
       if (!/^[a-z]{2}$/.test(country)) return next();
       target = path.join(ATLAS_DIR, country, 'index.html');
     } else if (parts.length === 3) {
       // /atlas/{country}/{code}
-      const country = parts[1].toLowerCase();
+      const rawCountry = parts[1].toLowerCase();
+      const country = COUNTRY_MAP[rawCountry] || rawCountry;
       const code = parts[2];
       if (!/^[a-z]{2}$/.test(country)) return next();
       if (!/^[a-zA-Z0-9_-]{1,20}$/.test(code)) return next();
       target = path.join(ATLAS_DIR, country, code, 'index.html');
     } else if (parts.length === 4 && parts[2] === 'industry') {
       // Phase 19.4c — /atlas/{country}/industry/{slug}
-      const country = parts[1].toLowerCase();
+      const rawCountry = parts[1].toLowerCase();
+      const country = COUNTRY_MAP[rawCountry] || rawCountry;
       const slug = parts[3];
       if (!/^[a-z]{2}$/.test(country)) return next();
       if (!/^[a-z0-9-]{1,80}$/.test(slug)) return next();

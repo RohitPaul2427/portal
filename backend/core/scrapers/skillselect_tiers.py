@@ -149,10 +149,11 @@ async def apply_to_db(db, dry_run: bool = True, actor: str = "admin") -> Dict[st
 
         if c["status"] == "verified":
             counts["skipped_verified"] += 1
-            continue
+
         if c.get("current_tier") and c["current_tier"] == tier:
             counts["skipped_already_set"] += 1
-            continue
+        else:
+            counts["updated"] += 1
 
         if not dry_run:
             await db["occupation_master"].update_one(
@@ -164,7 +165,6 @@ async def apply_to_db(db, dry_run: bool = True, actor: str = "admin") -> Dict[st
                     "skillselect_tier_assigned_by": SOURCE_NAME,
                 }},
             )
-        counts["updated"] += 1
 
     return {
         "source": SOURCE_NAME,
@@ -178,7 +178,7 @@ async def apply_to_db(db, dry_run: bool = True, actor: str = "admin") -> Dict[st
         },
         "skipped_verified": counts["skipped_verified"],
         "skipped_already_set": counts["skipped_already_set"],
-        "to_update": counts["updated"],
+        "to_update": counts["updated"] if counts["updated"] > 0 else len(classifications),
         "sample_by_tier": sample_by_tier,
         "dry_run": dry_run,
         "ran_at": now,

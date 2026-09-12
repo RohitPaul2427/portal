@@ -317,15 +317,23 @@ async def generate_pre_assessment(
         return Response(content=html, media_type="text/html",
                         headers={"X-Report-Ref": ref})
 
-    # Render PDF
+    # Render PDF — try Browser Engine first for pixel-perfect HTML/CSS rendering
+    pdf_bytes = None
     try:
-        from weasyprint import HTML
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=f"PDF engine unavailable: {e}") from e
-    buf = BytesIO()
-    HTML(string=html, base_url=str(tmpl_dir)).write_pdf(target=buf)
-    buf.seek(0)
-    pdf_bytes = buf.read()
+        from core.report_v2.renderer import _render_via_browser
+        pdf_bytes = _render_via_browser(html)
+    except Exception as browser_err:
+        logger.warning("Browser PDF export failed in pre-assessment report (%s), trying WeasyPrint", browser_err)
+
+    if not pdf_bytes:
+        try:
+            from weasyprint import HTML
+            buf = BytesIO()
+            HTML(string=html, base_url=str(tmpl_dir)).write_pdf(target=buf)
+            buf.seek(0)
+            pdf_bytes = buf.read()
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(status_code=500, detail=f"PDF engine unavailable: {e}") from e
 
     # Cache + log
     _CACHE[key] = (now_ts + _TTL, pdf_bytes, ref)

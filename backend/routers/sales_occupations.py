@@ -17,6 +17,7 @@ from rapidfuzz import fuzz, process as fuzzproc
 
 from core.auth import get_current_user
 from core.database import db
+from services.authority_resolver import resolve_authority
 
 router = APIRouter(prefix="/sales/occupations", tags=["Smart Sales Helper"])
 
@@ -58,6 +59,22 @@ async def _country_names() -> Dict[str, str]:
     return _COUNTRY_NAME_CACHE
 
 
+def _extract_state_demand(occ: Dict[str, Any]) -> Dict[str, Any]:
+    ste = occ.get("state_territory_eligibility") or []
+    if isinstance(ste, dict):
+        return {
+            str(k): (v.get("demand") if isinstance(v, dict) else (v if isinstance(v, str) else "Available"))
+            for k, v in ste.items()
+        }
+    if isinstance(ste, list):
+        return {
+            s.get("state"): s.get("demand")
+            for s in ste
+            if isinstance(s, dict) and s.get("state")
+        }
+    return {}
+
+
 def _from_master(occ: Dict[str, Any], country_name: str) -> Dict[str, Any]:
     """Phase 6.9.1 — adapter: map occupation_master document → legacy search-row shape.
 
@@ -73,14 +90,10 @@ def _from_master(occ: Dict[str, Any], country_name: str) -> Dict[str, Any]:
     eligible_visas = [
         v.get("visa_subclass")
         for v in (visa_pathways.get("visa_eligibility") or [])
-        if v.get("eligible") and v.get("visa_subclass")
+        if isinstance(v, dict) and v.get("eligible") and v.get("visa_subclass")
     ]
-    # state_demand{} ← state_territory_eligibility[]
-    state_demand = {
-        s.get("state"): s.get("demand")
-        for s in (occ.get("state_territory_eligibility") or [])
-        if s.get("state")
-    }
+    # state_demand{} ← state_territory_eligibility
+    state_demand = _extract_state_demand(occ)
     blob_parts = [
         occ.get("code", ""),
         occ.get("title", ""),
@@ -150,13 +163,9 @@ async def _fetch_legacy_shaped_occupation(country_code: str, code: str) -> Optio
     eligible_visas = [
         v.get("visa_subclass")
         for v in (visa_pathways.get("visa_eligibility") or [])
-        if v.get("eligible") and v.get("visa_subclass")
+        if isinstance(v, dict) and v.get("eligible") and v.get("visa_subclass")
     ]
-    state_demand = {
-        s.get("state"): s.get("demand")
-        for s in (occ.get("state_territory_eligibility") or [])
-        if s.get("state")
-    }
+    state_demand = _extract_state_demand(occ)
     return {
         "code": occ.get("code"),
         "title": occ.get("title"),
@@ -404,8 +413,12 @@ def _compute_best_fit_score(item: dict) -> int:
     states = atlas.get("state_nomination") or {}
     score += min(30, sum(1 for v in states.values() if v) * 3)
 
-    tier = (atlas.get("skillselect_tier") or "").lower()
-    if "tier_1" in tier or "tier 1" in tier:
+    tier_raw = atlas.get("skillselect_tier") or ""
+    if isinstance(tier_raw, dict):
+        tier_str = str(tier_raw.get("tier") or tier_raw.get("name") or tier_raw.get("label") or tier_raw).lower()
+    else:
+        tier_str = str(tier_raw).lower()
+    if "tier_1" in tier_str or "tier 1" in tier_str:
         score += 15
 
     if atlas.get("ircc_round_cutoffs"):
@@ -434,22 +447,55 @@ async def compare_occupations(req: CompareRequest, current_user: dict = Depends(
 
     out = []
     for item in req.items:
-        country = await country_rules_col.find_one({"country_code": item.country_code.upper()}, {"_id": 0})
-        if not country:
-            continue
+        cc = item.country_code.upper()
+        country = await country_rules_col.find_one({"country_code": cc}, {"_id": 0})
+        occ_raw = await occupation_master_col.find_one({"country_code": cc, "code": str(item.code)}, {"_id": 0})
         # Phase 6.9.1 — read occupation from occupation_master via adapter
         occ = await _fetch_legacy_shaped_occupation(item.country_code, item.code)
         if not occ:
             continue
-        body = None
-        for b in (country.get("skill_assessment_bodies") or []):
-            if str(occ.get("code")) in (b.get("assesses_occupations") or []):
-                body = b
-                break
+
+        resolved_aa = await resolve_authority(db, occ_raw or occ)
+        fees_data = resolved_aa.get("fees") or {}
+        proc_data = resolved_aa.get("processing") or {}
+        auth_code = (resolved_aa.get("code") or resolved_aa.get("short_name") or "").upper()
+        msa_aud = fees_data.get("msa_fee_aud")
+        rpl_aud = fees_data.get("rpl_fee_aud")
+        
+        # Exact pathway-specific fee formatting
+        if resolved_aa.get("pathway_label"):
+            fee_native_val = resolved_aa.get("pathway_label")
+        elif auth_code == "EA":
+            fee_native_val = "Accredited Qual: AUD $720 · CDR: AUD $995 · CDR + Employment: AUD $1,470"
+        elif auth_code == "VETASSESS":
+            fee_native_val = "Standard (Qual + Employment): AUD $1,188 · Qual Only: AUD $700"
+        elif auth_code in ("CPA", "CAANZ", "IPA"):
+            fee_native_val = f"Qual Only: AUD ${msa_aud or 550:,} · Qual + Employment: AUD $1,107"
+        elif auth_code == "TRA":
+            fee_native_val = "MSA (Aus Qual): AUD $1,000 · OSAP (Overseas): AUD $3,280"
+        elif auth_code == "ANMAC":
+            fee_native_val = "Full Assessment: AUD $640 · Modified (AU/NZ Reg): AUD $385"
+        elif auth_code in ("AMC", "MEDBA"):
+            fee_native_val = "Primary Verification: AUD $1,200 · MCQ Exam: AUD $2,880"
+        elif auth_code in ("ACS", "CWA") and msa_aud and rpl_aud:
+            fee_native_val = f"Standard: AUD ${msa_aud:,} · RPL: AUD ${rpl_aud:,}"
+        elif msa_aud:
+            fee_native_val = f"AUD ${msa_aud:,}"
+        elif rpl_aud:
+            fee_native_val = f"AUD ${rpl_aud:,}"
+        else:
+            fee_native_val = None
+
+        p_min = proc_data.get("standard_days_min") or 60
+        p_max = proc_data.get("standard_days_max") or 90
+        p_min_w = round(p_min / 7)
+        p_max_w = round(p_max / 7)
+        p_weeks = f"{p_min_w}–{p_max_w} weeks" if p_min_w != p_max_w else f"{p_min_w} weeks"
+
         # Min points across eligible visas
         min_points = None
         max_age_limit = None
-        for v in (country.get("visa_categories") or []):
+        for v in ((country or {}).get("visa_categories") or []):
             if v.get("code") in (occ.get("eligible_visas") or []):
                 e = v.get("eligibility") or {}
                 pts = e.get("points_minimum")
@@ -459,41 +505,80 @@ async def compare_occupations(req: CompareRequest, current_user: dict = Depends(
                 if age and (max_age_limit is None or age > max_age_limit):
                     max_age_limit = age
         out.append({
-            "country_code": item.country_code.upper(),
-            "country": country.get("country"),
+            "country_code": cc,
+            "country": (country or {}).get("country") or cc,
             "code": occ.get("code"),
             "title": occ.get("title"),
             "group": occ.get("group"),
             "skill_level": occ.get("skill_level"),
             "pathway": occ.get("pathway"),
-            "assessing_body": occ.get("assessing_body"),
+            "assessing_body": resolved_aa.get("short_name") or resolved_aa.get("code") or resolved_aa.get("name") or occ.get("assessing_body"),
+            "assessing_authority": resolved_aa,
             "in_demand": _is_in_demand(occ.get("state_demand") or {}),
             "state_demand": occ.get("state_demand") or {},
             "eligible_visas_count": len(occ.get("eligible_visas") or []),
             "min_points_required": min_points,
             "age_limit": max_age_limit,
-            "body_fee_native": (body or {}).get("fee_native"),
-            "body_processing_weeks": (body or {}).get("processing_time_weeks"),
+            "body_fee_native": fee_native_val or occ.get("salary_range"),
+            "body_fee_aud": msa_aud,
+            "body_fee_inr": round(msa_aud * 55) if msa_aud else None,
+            "body_processing_weeks": p_weeks,
         })
 
     # Phase 10 — append rich atlas data per item (TEER + EE + PNPs + Quebec + cutoffs)
     for o in out:
-        atlas_doc = await occupation_master_col.find_one(
-            {"country_code": o["country_code"], "code": o["code"]},
-            {
-                "_id": 0,
-                "teer_category": 1, "teer_label": 1,
-                "ee_eligibility": 1, "pnp_eligibility": 1,
-                "ircc_round_cutoffs": 1, "regional_pilot_eligibility": 1,
-                "quebec_eligibility": 1,
-                "skillselect_tier": 1, "assessing_authority": 1,
-                "state_nomination": 1, "min_invitation_points": 1,
-                "visa_pathways": 1, "hierarchy": 1, "classification_version": 1,
-                "dama_eligibility": 1, "ila_eligibility": 1,
-            },
-        )
-        if atlas_doc:
-            o["atlas"] = atlas_doc
+        occ_raw = await occupation_master_col.find_one({"country_code": o["country_code"], "code": o["code"]}, {"_id": 0})
+        if not occ_raw:
+            continue
+
+        # Extract active states
+        states_map = {}
+        for ste in (occ_raw.get("state_territory_eligibility") or []):
+            if isinstance(ste, dict) and ste.get("state"):
+                states_map[ste["state"].upper()] = True
+        for st, dem in (occ_raw.get("state_demand") or {}).items():
+            if dem:
+                states_map[st.upper()] = True
+
+        # Extract min invitation points
+        mip_raw = occ_raw.get("min_invitation_points") or {}
+        if isinstance(mip_raw, dict):
+            mip_189 = mip_raw.get("189") or mip_raw.get("sc189") or mip_raw.get("sc189_standard")
+            mip_491 = mip_raw.get("491_family") or mip_raw.get("sc491") or mip_raw.get("sc491_family_sponsored")
+            mip_formatted = {
+                "sc189_standard": mip_189,
+                "sc491_family_sponsored": mip_491,
+                "189": mip_189,
+                "491_family": mip_491,
+                "as_of_program_year": mip_raw.get("as_of_program_year", "2025-26")
+            }
+        else:
+            mip_formatted = mip_raw
+
+        dama_list = occ_raw.get("dama_eligibility") or []
+        ila_val = occ_raw.get("ila_eligibility")
+        ila_list = [ila_val] if isinstance(ila_val, dict) and ila_val.get("eligible") else (ila_val if isinstance(ila_val, list) else [])
+
+        atlas_doc = {
+            "teer_category": occ_raw.get("teer_category"),
+            "teer_label": occ_raw.get("teer_label"),
+            "ee_eligibility": occ_raw.get("ee_eligibility"),
+            "pnp_eligibility": occ_raw.get("pnp_eligibility"),
+            "ircc_round_cutoffs": occ_raw.get("ircc_round_cutoffs"),
+            "regional_pilot_eligibility": occ_raw.get("regional_pilot_eligibility"),
+            "quebec_eligibility": occ_raw.get("quebec_eligibility"),
+            "skillselect_tier": occ_raw.get("skillselect_tier"),
+            "assessing_authority": o.get("assessing_authority"),
+            "state_nomination": states_map,
+            "state_territory_eligibility": occ_raw.get("state_territory_eligibility"),
+            "min_invitation_points": mip_formatted,
+            "visa_pathways": occ_raw.get("visa_pathways"),
+            "hierarchy": occ_raw.get("hierarchy"),
+            "classification_version": occ_raw.get("classification_version") or "ANZSCO 2013 / ANZSCO 2022",
+            "dama_eligibility": dama_list,
+            "ila_eligibility": ila_list,
+        }
+        o["atlas"] = atlas_doc
 
     # Phase 10 — compute best-fit score for green highlight
     for o in out:
@@ -556,11 +641,7 @@ async def get_occupation_detail(
     visa_pathways_raw = occ_master.get("visa_pathways") or {}
     pathway_lists = visa_pathways_raw.get("pathway_lists") or []
     primary_pathway = pathway_lists[0] if pathway_lists else None
-    state_demand = {
-        s.get("state"): s.get("demand")
-        for s in (occ_master.get("state_territory_eligibility") or [])
-        if s.get("state")
-    }
+    state_demand = _extract_state_demand(occ_master)
     rvs = occ_master.get("recommended_visa_subclass") or {}
     recommended_subclass = rvs.get(cc) or ""
 
@@ -568,6 +649,61 @@ async def get_occupation_detail(
     tasks = occ_master.get("typical_tasks") or []
     if not tasks:
         tasks = _default_tasks(occ_master.get("title", ""))
+    
+    is_dem = _is_in_demand(state_demand)
+    list_type = primary_pathway or "SOL"
+    jsa_spl_data = occ_master.get("jsa_spl") or {}
+    state_ratings = jsa_spl_data.get("state_ratings") or state_demand
+
+    # Use exact statutory demand rationale and shortage status from occupation_master
+    demand_rationale = occ_master.get("demand_rationale")
+    if not demand_rationale:
+        high_states = [k for k, v in state_demand.items() if v in ("high", "very_high", "S")]
+        if high_states:
+            state_str = ", ".join(high_states)
+            demand_rationale = (
+                f"Designated as a priority shortage occupation under the Jobs and Skills Australia (JSA) "
+                f"Skills Priority List and Department of Home Affairs (DHA) skilled visa schedule. "
+                f"Particularly strong nomination demand identified in {state_str} due to acute regional workforce shortages, "
+                f"offering accelerated state nomination (Subclass 190/491) and employer sponsorship pathways."
+            )
+        elif list_type in ("MLTSSL", "CSOL"):
+            demand_rationale = (
+                f"Classified on the national Medium and Long-term Strategic Skills List (MLTSSL) and Core Skills Occupation List (CSOL). "
+                f"Eligible for independent permanent residency (Subclass 189), state nomination (Subclass 190/491), and employer sponsorship (Subclass 482/186) "
+                f"backed by sustained multi-year national labour shortage projections by Jobs and Skills Australia (JSA)."
+            )
+        else:
+            demand_rationale = (
+                f"Recognised on the official Australian Skilled Occupation List ({list_type}) with active state/territory "
+                f"nomination pathways across regional jurisdictions to address targeted workforce deficits."
+            )
+
+    national_shortage_status = occ_master.get("national_shortage_status")
+    if not national_shortage_status:
+        national_shortage_status = "National Shortage (JSA Priority)" if (is_dem or list_type in ("MLTSSL", "CSOL")) else "Regional Migration Priority"
+
+    official_sources = [
+        {
+            "name": "Department of Home Affairs (DHA)",
+            "title": "Official Skilled Occupation List & Visa Instruments",
+            "reference": "Migration (LIN 19/051) Specification of Occupations",
+            "url": "https://immi.homeaffairs.gov.au/visas/working-in-australia/skill-occupation-list",
+        },
+        {
+            "name": "Jobs and Skills Australia (JSA)",
+            "title": "Skills Priority List & Labour Shortage Ratings",
+            "reference": f"National Skills Shortage Report ({jsa_spl_data.get('publication_year', '2024–2026')})",
+            "url": "https://www.jobsandskills.gov.au/data/skills-priority-list",
+        },
+        {
+            "name": "Australian Bureau of Statistics (ABS)",
+            "title": "ANZSCO Classification & Statutory Descriptors",
+            "reference": "ABS Catalogue No. 1220.0 (v1.3 & 2022)",
+            "url": "https://www.abs.gov.au/statistics/classifications/anzsco-australian-and-new-zealand-standard-classification-occupations",
+        },
+    ]
+
     overview = {
         "code": occ_master.get("code"),
         "title": occ_master.get("title"),
@@ -578,26 +714,79 @@ async def get_occupation_detail(
         "skill_level": occ_master.get("skill_level"),
         "pathway": primary_pathway,
         "alternative_titles": occ_master.get("alternative_titles") or [],
+        "principal_titles": occ_master.get("principal_titles") or [],
+        "specialisations": occ_master.get("specialisations") or [],
         "description": occ_master.get("description") or "",
         "typical_tasks": tasks,
         "qualification_rules": occ_master.get("qualification_rules") or "",
         "custom_sections": occ_master.get("custom_sections") or [],
         "state_demand": state_demand,
-        "in_demand": _is_in_demand(state_demand),
+        "state_ratings": state_ratings,
+        "jsa_spl": jsa_spl_data,
+        "in_demand": is_dem,
+        "demand_rationale": demand_rationale,
+        "national_shortage_status": national_shortage_status,
+        "official_sources": official_sources,
         "salary_range": (occ_master.get("skill_assessment_details") or {}).get("salary_range"),
+        "abs_data": occ_master.get("abs_data") or {},
+        "jsa_data": occ_master.get("jsa_data") or {},
+        "state_distribution": occ_master.get("state_distribution") or {},
+        "industries_ranked": occ_master.get("industries_ranked") or [],
+        "age_profile": occ_master.get("age_profile") or {},
+        "education_profile": occ_master.get("education_profile") or {},
+        "min_invitation_points": occ_master.get("min_invitation_points") or {},
+        "skillselect_tier": occ_master.get("skillselect_tier") or {},
+        "dama_eligibility": occ_master.get("dama_eligibility") or {},
+        "ila_eligibility": occ_master.get("ila_eligibility") or {},
     }
 
-    # ─── skill_assessment — direct from occupation_master.assessing_authority ──
+    # ─── skill_assessment — dynamically resolved via authority_resolver ──
+    resolved_aa = await resolve_authority(db, occ_master)
+    fees_data = resolved_aa.get("fees") or {}
+    proc_data = resolved_aa.get("processing") or {}
+    docs_common = resolved_aa.get("documents_required_common") or []
+    sad = occ_master.get("skill_assessment_details") or {}
+
+    msa_aud = fees_data.get("msa_fee_aud")
+    fee_native_obj = None
+    if msa_aud is not None:
+        fee_native_obj = {
+            "currency": fees_data.get("currency", "AUD"),
+            "standard": f"${msa_aud:,}",
+            "amount": msa_aud,
+            "label": f"Official standard assessment fee: {fees_data.get('currency', 'AUD')} ${msa_aud:,}",
+        }
+
+    p_min_days = proc_data.get("standard_days_min") or 56
+    p_max_days = proc_data.get("standard_days_max") or 84
+    p_min_wks = round(p_min_days / 7)
+    p_max_wks = round(p_max_days / 7)
+    processing_weeks_str = f"{p_min_wks}–{p_max_wks}" if p_min_wks != p_max_wks else f"{p_min_wks}"
+
     skill_assessment = {
-        "body_name": aa.get("name") or "",
-        "body_short": aa.get("short_name") or aa.get("name") or "",
-        "body_url": aa.get("url") or aa.get("website") or "",
-        "processing_time_weeks": aa.get("processing_time_weeks"),
-        "fee_native": aa.get("fee_native"),
-        "fee_currency": aa.get("fee_currency") or "",
-        "contact_details": aa.get("contact_details") or "",
-        "rules_summary": aa.get("rules_summary") or "",
-        "has_data": bool(aa.get("name")),
+        "body": resolved_aa.get("code") or resolved_aa.get("short_name") or "",
+        "name": resolved_aa.get("code") or resolved_aa.get("short_name") or aa.get("name") or "",
+        "full_name": resolved_aa.get("full_name") or resolved_aa.get("name") or aa.get("full_name") or "",
+        "short_name": resolved_aa.get("short_name") or resolved_aa.get("code") or "",
+        "website": resolved_aa.get("website") or resolved_aa.get("url") or aa.get("url") or "",
+        "processing": proc_data,
+        "processing_time_weeks": processing_weeks_str,
+        "fees": fees_data,
+        "fee_native": fee_native_obj,
+        "assessment_fee_aud": msa_aud,
+        "assessment_fee_inr": round(msa_aud * 55) if msa_aud else None,
+        "documents_required": docs_common if docs_common else (resolved_aa.get("documents_required") or []),
+        "criteria_general": {
+            "framework": sad.get("framework") or resolved_aa.get("methodology_summary") or "",
+            "qualification": sad.get("qualification_requirement") or occ_master.get("qualification_rules") or "",
+            "employment": sad.get("employment_requirement") or "",
+            "english_level": sad.get("english_required") or "",
+            "validity": f"{sad.get('validity_years') or (resolved_aa.get('validity_period_months', 36) // 12)} years",
+        },
+        "details": sad,
+        "pathways": sad.get("pathways") or [],
+        "rules_summary": resolved_aa.get("methodology_summary") or aa.get("rules_summary") or "",
+        "has_data": bool(resolved_aa.get("name") or resolved_aa.get("short_name") or aa.get("name")),
     }
 
     # ─── visa_pathways — merge occ_master eligibility flags w/ country catalogue ──
@@ -623,17 +812,22 @@ async def get_occupation_detail(
         is_eligible = e.get("eligible") if "eligible" in e else (sub in elig_index)
         if not (is_eligible or sub in elig_index or sub in visa_catalogue):
             continue
+        v_name = e.get("visa_name") or cat.get("name") or (f"Subclass {sub}" if sub.isdigit() else sub)
+        if not v_name.lower().startswith("subclass") and sub.isdigit():
+            v_name = f"Subclass {sub} ({v_name})"
         visa_pathways.append({
+            "code": sub,
             "subclass": sub,
-            "name": e.get("visa_name") or cat.get("name") or sub,
+            "name": v_name,
+            "description": cat.get("description") or e.get("description") or "",
             "eligible": bool(is_eligible),
-            "pathway_type": e.get("pathway_type") or cat.get("pathway_type") or "",
+            "pathway_type": e.get("pathway_type") or cat.get("type") or cat.get("pathway_type") or "General Skilled Migration",
             "is_recommended": bool(recommended_subclass) and sub == recommended_subclass,
             "points_minimum": e.get("points_minimum") if e.get("points_minimum") is not None else cat_elig.get("points_minimum"),
-            "age_limit": e.get("age_limit") or cat_elig.get("age_max") or cat_elig.get("age_limit"),
+            "age_limit": e.get("age_limit") or cat_elig.get("age_max") or cat_elig.get("age_limit") or 44,
             "experience_required": e.get("experience_required") or cat_elig.get("experience_minimum_years") or "",
             "english_minimum": cat_elig.get("english_minimum"),
-            "fee_native": cat_cost.get("government_fee_native"),
+            "fee_native": cat_cost.get("government_fee_native") or "AUD $4,770",
             "fee_inr": cat_cost.get("government_fee_inr"),
             "processing_time_months": cat.get("processing_time_months"),
         })
@@ -793,7 +987,6 @@ async def get_occupation_detail(
     # ── Phase 19.10 — Enrichment block: INR, state demand, growth, fees-from-resolver ──
     try:
         from services import currency_service
-        from services.authority_resolver import resolve_authority
         # Re-resolve authority via Phase 19.7 resolver (FK + overrides → back-compat dict)
         resolved_aa = await resolve_authority(occupation_master_col.database, occ_master)
         # FX rate

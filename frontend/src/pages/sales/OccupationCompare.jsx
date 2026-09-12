@@ -27,8 +27,7 @@ import {
 } from 'lucide-react';
 
 import { formatApiError } from '@/lib/apiErrors';
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from './lib/constants';
 
 const COUNTRY_META = {
   AU: { flag: '🇦🇺', name: 'Australia', label: 'ANZSCO' },
@@ -272,32 +271,71 @@ export default function OccupationCompare() {
                     : <span style={{ color: C.muted }}>—</span>} />
                   <Row label="SkillSelect Tier" items={items} render={it => {
                     const tier = it.atlas?.skillselect_tier;
-                    return tier
-                      ? <Badge style={{ background: C.tealWash2, color: C.tealDeep, fontSize: 9 }}>
-                          {String(tier).replace('_', ' ').toUpperCase()}
-                        </Badge>
-                      : <span style={{ color: C.muted }}>—</span>;
+                    if (!tier) return <span style={{ color: C.muted }}>—</span>;
+                    let label = '';
+                    if (typeof tier === 'object' && tier !== null) {
+                      label = tier.tier_label || (tier.tier ? String(tier.tier).replace('_', ' ').toUpperCase() : '');
+                    } else {
+                      const tStr = String(tier).toLowerCase();
+                      if (tStr.includes('tier_1') || tStr.includes('tier 1')) label = 'Tier 1 — Priority Health & Education';
+                      else if (tStr.includes('tier_2') || tStr.includes('tier 2')) label = 'Tier 2 — Core Skills (CSOL)';
+                      else if (tStr.includes('tier_3') || tStr.includes('tier 3')) label = 'Tier 3 — MLTSSL Strategic Trades';
+                      else if (tStr.includes('tier_4') || tStr.includes('tier 4')) label = 'Tier 4 — Short-Term / Regional';
+                      else label = String(tier).replace('_', ' ').toUpperCase();
+                    }
+                    return (
+                      <Badge style={{ background: C.tealWash2, color: C.tealDeep, fontSize: 9 }} className="font-semibold px-1.5 py-0.5">
+                        {label}
+                      </Badge>
+                    );
                   }} />
                   <Row label="State Nominations" items={items} render={it => {
-                    const states = it.atlas?.state_nomination || {};
-                    const active = Object.keys(states).filter(k => states[k]);
+                    const states = it.atlas?.state_nomination || it.state_demand || {};
+                    let active = [];
+                    if (Array.isArray(states)) {
+                      active = states.map(s => typeof s === 'string' ? s : s?.state).filter(Boolean);
+                    } else if (typeof states === 'object' && states !== null) {
+                      active = Object.keys(states).filter(k => Boolean(states[k]));
+                    }
                     return active.length > 0
                       ? <div className="flex flex-wrap gap-0.5">{active.map(st =>
-                          <span key={st} className="text-[9px] font-mono font-bold px-1 py-0.5 rounded"
-                                style={{ background: C.tealWash, color: C.tealDeep }}>{st}</span>
+                          <span key={st} className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            {st}
+                          </span>
                         )}</div>
                       : <span style={{ color: C.muted }}>—</span>;
                   }} />
                   <Row label="Min Invitation Points" items={items} render={it => {
                     const mp = it.atlas?.min_invitation_points || {};
-                    if (!mp.sc189_standard && !mp.sc491_family_sponsored) return <span style={{ color: C.muted }}>—</span>;
-                    return <span className="text-[10px]">189: {mp.sc189_standard || '—'} / 491: {mp.sc491_family_sponsored || '—'}</span>;
+                    const p189 = mp.sc189_standard ?? mp['189'] ?? mp.sc189;
+                    const p491 = mp.sc491_family_sponsored ?? mp['491_family'] ?? mp['491'] ?? mp.sc491;
+                    if (p189 === undefined && p491 === undefined && typeof mp !== 'number') return <span style={{ color: C.muted }}>—</span>;
+                    if (typeof mp === 'number') return <span className="font-semibold text-teal-800">{mp} pts</span>;
+                    return (
+                      <div className="flex items-center gap-1.5 font-medium">
+                        {p189 !== undefined && (
+                          <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded border">
+                            <strong className="text-slate-600">189:</strong> {p189} pts
+                          </span>
+                        )}
+                        {p491 !== undefined && (
+                          <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded border">
+                            <strong className="text-slate-600">491:</strong> {p491} pts
+                          </span>
+                        )}
+                      </div>
+                    );
                   }} />
                   <Row label="DAMA + ILA" items={items} render={it => {
                     const d = (it.atlas?.dama_eligibility || []).length;
                     const i = (it.atlas?.ila_eligibility || []).length;
                     if (!d && !i) return <span style={{ color: C.muted }}>—</span>;
-                    return <span className="text-[10px]">DAMA: {d} · ILA: {i}</span>;
+                    return (
+                      <div className="flex items-center gap-1">
+                        {d > 0 && <span className="text-[10px] bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200 font-medium">DAMA ({d})</span>}
+                        {i > 0 && <span className="text-[10px] bg-purple-50 text-purple-800 px-1.5 py-0.5 rounded border border-purple-200 font-medium">ILA ({i})</span>}
+                      </div>
+                    );
                   }} />
                 </>
               )}
@@ -417,7 +455,18 @@ function CompareCard({ item }) {
             <span>Visas: <b>{item.eligible_visas_count}</b></span>
             <span>·</span>
             <span>States: <b>{Object.keys(a.state_nomination || {}).filter(k => (a.state_nomination || {})[k]).length}</b></span>
-            {a.skillselect_tier && <><span>·</span><span><b>{String(a.skillselect_tier).replace('_', ' ').toUpperCase()}</b></span></>}
+            {a.skillselect_tier && (
+              <>
+                <span>·</span>
+                <span>
+                  <b>
+                    {typeof a.skillselect_tier === 'object' && a.skillselect_tier !== null
+                      ? (a.skillselect_tier.tier ? String(a.skillselect_tier.tier).replace('_', ' ').toUpperCase() : 'TIER')
+                      : String(a.skillselect_tier).replace('_', ' ').toUpperCase()}
+                  </b>
+                </span>
+              </>
+            )}
           </>
         )}
       </div>

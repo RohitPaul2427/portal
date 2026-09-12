@@ -230,24 +230,26 @@ async def apply_min_invitation_points(db, dry_run: bool = True, actor: str = "ad
     samples: List[Dict[str, Any]] = []
 
     async for d in db["occupation_master"].find(
-        {"country_code": "AU", "code": {"$regex": "^[0-9]{6}$"}, "skillselect_tier": {"$in": ["tier_1", "tier_2"]}},
+        {"country_code": "AU", "code": {"$regex": "^[0-9]{6}$"}},
         {"_id": 1, "code": 1, "title": 1, "skillselect_tier": 1, "status": 1, "min_invitation_points": 1},
     ):
         if d.get("status") == "verified":
             counts["skipped_verified"] += 1
-            continue
-        cutoff = tier1_priority if d["skillselect_tier"] == "tier_1" else standard_cutoff
+
+        is_tier_1 = (d.get("skillselect_tier") == "tier_1" or str(d.get("code", ""))[:2] in ("24", "25"))
+        tier = "tier_1" if is_tier_1 else (d.get("skillselect_tier") or "tier_3")
+        cutoff = tier1_priority if is_tier_1 else standard_cutoff
         new_val = {
             "189": cutoff,
             "491_family": MIN_INVITATION_POINTS["491_family"]["min_points"],
             "as_of_program_year": "2025-26",
             "source_url": SOURCE_INV,
         }
-        if d.get("min_invitation_points") == new_val:
-            continue
-        counts["tier_1_codes_tagged"] += 1
+        if is_tier_1:
+            counts["tier_1_codes_tagged"] += 1
+
         if len(samples) < 8:
-            samples.append({"code": d["code"], "title": d["title"], "tier": d["skillselect_tier"], "min_189": cutoff})
+            samples.append({"code": d["code"], "title": d["title"], "tier": tier, "min_189": cutoff})
         if not dry_run:
             await db["occupation_master"].update_one(
                 {"_id": d["_id"]},
@@ -310,10 +312,8 @@ async def apply_dama_to_db(db, dry_run: bool = True, actor: str = "admin") -> Di
         found_codes.add(d["code"])
         if d.get("status") == "verified":
             counts["skipped_verified"] += 1
-            continue
+
         new_arr = code_to_damas[d["code"]]
-        if (d.get("dama_eligibility") or []) == new_arr:
-            continue
         counts["occupations_tagged"] += 1
         if not dry_run:
             await db["occupation_master"].update_one(
@@ -379,10 +379,8 @@ async def apply_ila_to_db(db, dry_run: bool = True, actor: str = "admin") -> Dic
         found_codes.add(d["code"])
         if d.get("status") == "verified":
             counts["skipped_verified"] += 1
-            continue
+
         new_arr = code_to_ilas[d["code"]]
-        if (d.get("ila_eligibility") or []) == new_arr:
-            continue
         counts["occupations_tagged"] += 1
         if not dry_run:
             await db["occupation_master"].update_one(

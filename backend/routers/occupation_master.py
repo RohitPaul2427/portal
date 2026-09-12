@@ -185,9 +185,19 @@ class OccupationUpdate(BaseModel):
     typical_tasks: Optional[List[str]] = None
     skill_level: Optional[int] = None
     assessing_authority: Optional[AssessingAuthority] = None
+    assessing_authority_id: Optional[str] = None
+    skillselect_tier: Optional[str] = None
+    min_invitation_points: Optional[Any] = None
+    caveats: Optional[Any] = None
+    dama_eligibility: Optional[Any] = None
+    ila_eligibility: Optional[Any] = None
     skill_assessment_details: Optional[dict] = None
     visa_pathways: Optional[dict] = None
     state_territory_eligibility: Optional[list] = None
+    state_demand: Optional[dict] = None
+    custom_msa_fee_aud: Optional[int] = None
+    custom_processing_days_min: Optional[int] = None
+    custom_processing_days_max: Optional[int] = None
     status: Optional[str] = None
     linked_product_id: Optional[str] = None
     # Phase 18.1 — workspace expansion fields
@@ -211,7 +221,16 @@ class VerifyRequest(BaseModel):
     typical_tasks: Optional[List[str]] = None
     qualification_rules: Optional[str] = None
     alternative_titles: Optional[List[str]] = None
+    specialisations: Optional[List[str]] = None
+    skill_level: Optional[int] = None
     assessing_authority: Optional[AssessingAuthority] = None
+    assessing_authority_id: Optional[str] = None
+    skillselect_tier: Optional[str] = None
+    min_invitation_points: Optional[Any] = None
+    caveats: Optional[Any] = None
+    skill_assessment_details: Optional[dict] = None
+    visa_pathways: Optional[dict] = None
+    state_territory_eligibility: Optional[list] = None
     required_documents: Optional[List[RequiredDocument]] = None
     similar_codes_override: Optional[List[str]] = None
     recommended_visa_subclass: Optional[Dict[str, str]] = None

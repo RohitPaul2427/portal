@@ -58,6 +58,50 @@ def _load_css() -> str:
         return ""
 
 
+def _find_browser_executable() -> str | None:
+    for p in [
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium-browser",
+        "/usr/bin/chromium",
+    ]:
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def _render_via_browser(html_str: str) -> bytes:
+    import subprocess
+    import tempfile
+
+    browser = _find_browser_executable()
+    if not browser:
+        raise RuntimeError("No headless Chromium/Edge browser found on system")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        in_html = os.path.join(tmpdir, "report.html")
+        out_pdf = os.path.join(tmpdir, "report.pdf")
+        with open(in_html, "w", encoding="utf-8") as f:
+            f.write(html_str)
+
+        cmd = [
+            browser,
+            "--headless",
+            "--disable-gpu",
+            "--no-pdf-header-footer",
+            f"--print-to-pdf={out_pdf}",
+            in_html,
+        ]
+        res = subprocess.run(cmd, capture_output=True, timeout=60)
+        if res.returncode != 0 or not os.path.exists(out_pdf):
+            raise RuntimeError(f"Browser PDF export failed (exit code {res.returncode}): {res.stderr}")
+        with open(out_pdf, "rb") as f:
+            return f.read()
+
+
 def render_pdf_v2(snapshot: Dict[str, Any]) -> bytes:
     """Render the LEAMSS Assessment Report PDF using the v2 (HTML→PDF) engine.
 
@@ -82,12 +126,24 @@ def render_pdf_v2(snapshot: Dict[str, Any]) -> bytes:
         logo_data_uri=logo_uri,
     )
 
+    # 1. Try Headless Browser (Edge / Chrome) for pixel-perfect HTML UI/UX fidelity
+    try:
+        pdf_bytes = _render_via_browser(html_str)
+        logger.info(
+            "Phase 8 PDF v2 rendered via Browser Engine · snapshot=%s · tier=%s · size=%d bytes",
+            snap.get("snapshot_id"), snap.get("render_tier"), len(pdf_bytes),
+        )
+        return pdf_bytes
+    except Exception as browser_err:
+        logger.warning("Browser rendering failed (%s), trying WeasyPrint", browser_err)
+
+    # 2. Try WeasyPrint
     try:
         from weasyprint import HTML
         base_url = str(_HERE)  # so relative @font-face url() resolves
         pdf_bytes = HTML(string=html_str, base_url=base_url).write_pdf()
         logger.info(
-            "Phase 8 PDF v2 rendered · snapshot=%s · tier=%s · size=%d bytes",
+            "Phase 8 PDF v2 rendered via WeasyPrint · snapshot=%s · tier=%s · size=%d bytes",
             snap.get("snapshot_id"), snap.get("render_tier"), len(pdf_bytes),
         )
         return pdf_bytes
@@ -98,3 +154,4 @@ def render_pdf_v2(snapshot: Dict[str, Any]) -> bytes:
 
 
 __all__ = ["render_pdf_v2"]
+

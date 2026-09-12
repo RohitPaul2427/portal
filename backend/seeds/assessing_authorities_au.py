@@ -25,7 +25,8 @@ AU_AUTHORITIES: List[Dict[str, Any]] = [
         "aliases": ["VETASSESS", "vetassess", "VET Assessment Services", "vetassess.com.au"],
         "website": "https://www.vetassess.com.au/",
         "processing": {"standard_days_min": 60, "standard_days_max": 90, "priority_days_min": 10, "priority_days_max": 20, "notes": "Priority assessment available at additional cost"},
-        "fees": {"msa_fee_aud": 1188, "rpl_fee_aud": 800, "skill_review_fee_aud": 350, "appeal_fee_aud": 700, "additional_fees": [{"name": "Priority Processing", "amount_aud": 814}], "payment_methods": ["credit_card", "bank_transfer"], "currency": "AUD"},
+        "fees": {"msa_fee_aud": 1188, "rpl_fee_aud": None, "skill_review_fee_aud": 350, "appeal_fee_aud": 700, "additional_fees": [{"name": "Priority Processing", "amount_aud": 814}, {"name": "Qualifications Assessment Only", "amount_aud": 700}], "payment_methods": ["credit_card", "bank_transfer"], "currency": "AUD"},
+        "has_rpl": False,
         "validity_period_months": 36,
         "methodology_summary": "VETASSESS is the largest assessing authority for professional and trade occupations in Australia. Evaluates qualifications + employment for migration purposes.",
         "documents_required_common": [
@@ -45,7 +46,8 @@ AU_AUTHORITIES: List[Dict[str, Any]] = [
         "aliases": ["TRA", "tra", "Trades Recognition Australia"],
         "website": "https://www.tradesrecognitionaustralia.gov.au/",
         "processing": {"standard_days_min": 60, "standard_days_max": 120, "priority_days_min": None, "priority_days_max": None, "notes": "Offshore Skills Assessment Program (OSAP) for trades"},
-        "fees": {"msa_fee_aud": 1107, "rpl_fee_aud": 1107, "skill_review_fee_aud": 350, "appeal_fee_aud": 350, "additional_fees": [], "payment_methods": ["credit_card"], "currency": "AUD"},
+        "fees": {"msa_fee_aud": 1000, "rpl_fee_aud": None, "skill_review_fee_aud": 350, "appeal_fee_aud": 350, "additional_fees": [{"name": "Offshore Skills Assessment Program (OSAP Stage 1 + 2)", "amount_aud": 3280}, {"name": "Job Ready Program (JRP Full)", "amount_aud": 4390}, {"name": "Migration Points Advice (MPA)", "amount_aud": 600}], "payment_methods": ["credit_card"], "currency": "AUD"},
+        "has_rpl": False,
         "validity_period_months": 36,
         "methodology_summary": "TRA is the federal government body responsible for skills assessment in 600+ trade occupations.",
         "documents_required_common": [
@@ -63,9 +65,10 @@ AU_AUTHORITIES: List[Dict[str, Any]] = [
         "aliases": ["ACS", "acs", "Australian Computer Society", "Australian Computer Society Incorporated"],
         "website": "https://www.acs.org.au/",
         "processing": {"standard_days_min": 56, "standard_days_max": 84, "priority_days_min": 7, "priority_days_max": 14, "notes": "ACS Fast-Track ($1,200 extra)"},
-        "fees": {"msa_fee_aud": 625, "rpl_fee_aud": 625, "skill_review_fee_aud": 423, "appeal_fee_aud": 423, "additional_fees": [{"name": "Fast-Track Processing", "amount_aud": 1200}], "payment_methods": ["credit_card"], "currency": "AUD"},
+        "fees": {"msa_fee_aud": 1498, "rpl_fee_aud": 625, "skill_review_fee_aud": 423, "appeal_fee_aud": 423, "additional_fees": [{"name": "Fast-Track Processing", "amount_aud": 1200}], "payment_methods": ["credit_card"], "currency": "AUD"},
+        "has_rpl": True,
         "validity_period_months": 24,
-        "methodology_summary": "ACS is the assessing authority for ICT occupations under 26 ANZSCO codes. Evaluates degree + ICT employment.",
+        "methodology_summary": "ACS is the assessing authority for ICT occupations under 26 ANZSCO codes. Evaluates degree + ICT employment, with RPL option for applicants without tertiary ICT degrees.",
         "documents_required_common": [
             "Passport bio-data page",
             "Degree / Diploma Certificate & Transcripts with detailed ICT subject syllabus",
@@ -83,6 +86,7 @@ AU_AUTHORITIES: List[Dict[str, Any]] = [
         "website": "https://www.medicalboard.gov.au/",
         "processing": {"standard_days_min": 90, "standard_days_max": 180, "priority_days_min": None, "priority_days_max": None, "notes": "Specialist pathway via AMC/specialty colleges"},
         "fees": {"msa_fee_aud": 1200, "rpl_fee_aud": None, "skill_review_fee_aud": None, "appeal_fee_aud": None, "additional_fees": [{"name": "AMC MCQ Exam", "amount_aud": 2880}, {"name": "AMC Clinical Exam", "amount_aud": 3950}], "payment_methods": ["credit_card", "bank_transfer"], "currency": "AUD"},
+        "has_rpl": False,
         "validity_period_months": 24,
         "methodology_summary": "MedBA registers medical practitioners. Migration applicants typically need AMC assessment + specialty college approval.",
         "documents_required_common": [
@@ -101,7 +105,8 @@ AU_AUTHORITIES: List[Dict[str, Any]] = [
         "aliases": ["EA", "Engineers Australia", "The Institution of Engineers Australia", "Institution of Engineers Australia", "engineers_australia", "engineersaustralia"],
         "website": "https://www.engineersaustralia.org.au/",
         "processing": {"standard_days_min": 60, "standard_days_max": 90, "priority_days_min": 10, "priority_days_max": 20, "notes": "Fast-Track ($1,000 AUD extra)"},
-        "fees": {"msa_fee_aud": 720, "rpl_fee_aud": 720, "skill_review_fee_aud": 480, "appeal_fee_aud": 480, "additional_fees": [{"name": "Fast-Track Processing", "amount_aud": 1000}], "payment_methods": ["credit_card", "bank_transfer"], "currency": "AUD"},
+        "fees": {"msa_fee_aud": 720, "rpl_fee_aud": None, "skill_review_fee_aud": 480, "appeal_fee_aud": 480, "additional_fees": [{"name": "Competency Demonstration Report (CDR)", "amount_aud": 995}, {"name": "CDR + Relevant Skilled Employment Assessment", "amount_aud": 1470}, {"name": "Fast-Track Processing", "amount_aud": 1000}], "payment_methods": ["credit_card", "bank_transfer"], "currency": "AUD"},
+        "has_rpl": False,
         "validity_period_months": 36,
         "methodology_summary": "EA assesses engineering qualifications via CDR (Competency Demonstration Report) or accredited pathway. Categories: Professional Engineer, Engineering Technologist, Engineering Associate.",
         "documents_required_common": [
@@ -121,7 +126,8 @@ AU_AUTHORITIES: List[Dict[str, Any]] = [
         "aliases": ["ANMAC", "anmac", "Australian Nursing and Midwifery Accreditation Council", "Australian Nursing & Midwifery Accreditation Council"],
         "website": "https://www.anmac.org.au/",
         "processing": {"standard_days_min": 56, "standard_days_max": 84, "priority_days_min": None, "priority_days_max": None, "notes": "Includes English language verification"},
-        "fees": {"msa_fee_aud": 525, "rpl_fee_aud": 525, "skill_review_fee_aud": 250, "appeal_fee_aud": 700, "additional_fees": [], "payment_methods": ["credit_card", "bank_transfer"], "currency": "AUD"},
+        "fees": {"msa_fee_aud": 640, "rpl_fee_aud": None, "skill_review_fee_aud": 250, "appeal_fee_aud": 700, "additional_fees": [{"name": "Modified Skills Assessment (Registered in AU/NZ)", "amount_aud": 385}, {"name": "Modified PLUS Skills Assessment", "amount_aud": 430}], "payment_methods": ["credit_card", "bank_transfer"], "currency": "AUD"},
+        "has_rpl": False,
         "validity_period_months": 36,
         "methodology_summary": "ANMAC is the migration assessing authority for nursing and midwifery occupations. Different from NMBA (registration).",
         "documents_required_common": [
@@ -819,21 +825,85 @@ async def ensure_seeded_in_db(db):
     occ_coll = db["occupation_master"]
     now = datetime.now(timezone.utc).isoformat()
 
+    AUTHORITY_MAPPINGS = {
+        "ACS": ["261313", "261312", "261311", "261314", "261399", "261111", "261112", "261211", "261212", "262111", "262112", "262113", "263111", "263112", "263113", "263211", "263212", "263213", "263299", "263311", "263312", "135111", "135112", "135199", "223211", "313111", "313112", "313113", "313199"],
+        "CPA": ["221111", "221112", "221113", "221211", "221212", "132211"],
+        "CAANZ": ["221111", "221112", "221113", "221211", "221212", "132211"],
+        "IPA": ["221111", "221112", "221113", "221211", "221212", "132211"],
+        "EA": ["233111", "233112", "233211", "233212", "233213", "233214", "233215", "233311", "233411", "233511", "233512", "233513", "233611", "233612", "233911", "233912", "233913", "233914", "233915", "233916", "233999", "212411", "212412", "212413", "212414", "212499", "234912", "263311", "263312", "312111", "312112", "312211", "312212", "312311", "312312", "312411", "312412", "312511", "312512", "312911", "312912", "312999"],
+        "AITSL": ["241111", "241213", "241311", "241411", "241511", "241512", "241513", "241599"],
+        "ANMAC": ["254411", "254412", "254413", "254414", "254415", "254416", "254417", "254418", "254421", "254422", "254423", "254424", "254425", "254499", "254111", "411411", "411412"],
+        "NMBA": ["254411", "254412", "254413", "254414", "254415", "254416", "254417", "254418", "254421", "254422", "254423", "254424", "254425", "254499", "254111", "411411", "411412"],
+        "ACWA": ["411711", "411712", "411713", "411714", "411715", "411716", "272613", "134211", "134212"],
+        "CWA": ["411711", "411712", "411713", "411714", "411715", "411716", "272613", "134211", "134212"],
+        "AASW": ["272511"],
+        "AACA": ["232111", "232112", "232113"],
+        "AIQS": ["233213"],
+        "AIMS": ["234611"],
+        "APC": ["252511", "252512", "252513", "252514"],
+        "APS": ["272311", "272312", "272313", "272314", "272399"],
+        "APharmC": ["251511", "251512", "251513"],
+        "APC_Pharm": ["251511", "251512", "251513"],
+        "ASMIRT": ["251211", "251212", "251213", "251214", "311211", "311212", "311213", "311214", "311215", "311216", "311299"],
+        "AVBC": ["234711"],
+        "AudA": ["252711"],
+        "ACECQA": ["134111"],
+        "ADC": ["252311", "252312", "411211", "411212", "411213", "411214"],
+        "AMSA": ["231212", "231213", "231214", "231215", "231299"],
+        "CASA": ["231111", "231112", "231113", "231114", "231199"],
+        "CMBA": ["252211", "252214"],
+        "PodBA": ["252611"],
+        "OTC": ["252411"],
+        "ISNSW": ["232212", "232213", "232214"],
+        "MARA": ["224913"],
+        "DAA": ["251111", "251112"],
+        "IML": ["111111", "111211", "111212", "111311", "111312", "111399", "131112", "131113", "131114", "131199", "132111"],
+        "NAATI": ["272411", "272412", "272413", "272499", "272414", "272415"],
+        "OCANZ": ["251411", "251412"],
+        "SPA": ["252712"],
+        "MedBA": ["253111", "253112", "253211", "253311", "253312", "253313", "253314", "253315", "253316", "253317", "253318", "253321", "253322", "253323", "253324", "253399", "253411", "253511", "253512", "253513", "253514", "253515", "253516", "253517", "253518", "253521", "253599", "253911", "253912", "253913", "253914", "253915", "253917", "253918", "253921", "253999"],
+        "AMC": ["253111", "253112", "253211", "253311", "253312", "253313", "253314", "253315", "253316", "253317", "253318", "253321", "253322", "253323", "253324", "253399", "253411", "253511", "253512", "253513", "253514", "253515", "253516", "253517", "253518", "253521", "253599", "253911", "253912", "253913", "253914", "253915", "253917", "253918", "253921", "253999"],
+        "AHPRA": ["253111", "253112", "253999", "254499", "252311", "252411", "252511", "252611"],
+        "RACGP": ["253111", "253112"],
+        "RACS": ["253511", "253512", "253513", "253514", "253515", "253516", "253517", "253518", "253521", "253599"],
+        "RANZCP": ["253411"],
+        "ANZSNM": ["251213", "311213"],
+        "AOAC": ["252111"],
+        "AOPA": ["251912"],
+        "LAA": ["271111", "271211", "271299"],
+    }
+
     for body in AU_AUTHORITIES:
         code = body["code"]
         existing = await coll.find_one({"code": code})
-        occ_count = 0
+        explicit_codes = AUTHORITY_MAPPINGS.get(code, [])
+        
+        q = {
+            "country_code": "AU",
+            "$or": [
+                {"assessing_authority.code": code},
+                {"assessing_authority.short_name": code},
+                {"skill_assessment_details.authority": code},
+            ]
+        }
         if existing and existing.get("id"):
-            occ_count = await occ_coll.count_documents({"country_code": "AU", "assessing_authority_id": existing["id"]})
+            q["$or"].append({"assessing_authority_id": existing["id"]})
+        if explicit_codes:
+            q["$or"].append({"code": {"$in": explicit_codes}})
+
+        occ_count = await occ_coll.count_documents(q)
+        if occ_count == 0 and explicit_codes:
+            occ_count = len(explicit_codes)
 
         doc = {
             **body,
             "country": "AU",
             "country_code": "AU",
-            "status": existing.get("status") if existing else "active",
+            "status": "active",
             "source_url": "https://immi.homeaffairs.gov.au/visas/working-in-australia/skills-assessment/assessing-authorities",
             "last_updated_at": now,
             "occupation_count": occ_count,
+            "linked_occupation_codes": explicit_codes,
             "documents_required_common": body.get("documents_required_common") or (existing.get("documents_required_common") if existing else None) or [
                 "Passport bio-data page (colour copy)",
                 "Official Degree / Diploma certificates",

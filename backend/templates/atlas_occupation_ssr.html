@@ -291,6 +291,21 @@ footer a{color:var(--muted)}footer a:hover{color:var(--burnt)}
 </div>
 {% endif %}
 
+{% if fees.get("rpl_fee_aud") %}
+<div class="metric">
+    <div class="ml">RPL Pathway Fee</div>
+
+    <div class="mv">
+        {{ fees.get("currency","AUD") }}
+        ${{ "{:,}".format(fees.get("rpl_fee_aud")) }}
+    </div>
+
+    <div class="ms">
+        Recognition of Prior Learning
+    </div>
+</div>
+{% endif %}
+
 
 <div class="metric">
     <div class="ml">Required Documents</div>
@@ -339,11 +354,35 @@ footer a{color:var(--muted)}footer a:hover{color:var(--burnt)}
 </article>
 
       {# 2) About this occupation #}
-      {% if occ.description %}
+      {% if occ.description or occ.specialisations or occ.alternative_titles %}
       <article class="card">
         <span class="card-eyebrow">Overview</span>
         <h2 class="card-title">About this occupation</h2>
+        {% if occ.description %}
         <p style="white-space:pre-line">{{ occ.description }}</p>
+        {% endif %}
+
+        {% if occ.alternative_titles %}
+        <div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--border);">
+          <span style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;display:block;margin-bottom:8px;">Alternative Titles</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            {% for alt in occ.alternative_titles %}
+              <span class="pill pill-slate">{{ alt }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if occ.specialisations %}
+        <div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--border);">
+          <span style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--forest);font-weight:700;display:block;margin-bottom:8px;">Recognised Specialisations</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            {% for spec in occ.specialisations %}
+              <span class="pill pill-glass" style="background:rgba(31,77,68,.08);color:var(--forest);border:1px solid rgba(31,77,68,.2);font-weight:600;">★ {{ spec }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
       </article>
       {% endif %}
 
@@ -1995,6 +2034,28 @@ Moving Out
       </article>
       {% endif %}
 
+      {# Age Profile benchmark #}
+      {% if abs_d.age_profile %}
+      {% set age = abs_d.age_profile %}
+      <article class="card">
+        <span class="card-eyebrow">Workforce demographics</span>
+        <h2 class="card-title">👥 Age distribution</h2>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+          {% set age_bars = [('15–24 years', age.get('15_24')), ('25–34 years', age.get('25_34')), ('35–44 years', age.get('35_44')), ('45–54 years', age.get('45_54')), ('55–64 years', age.get('55_64')), ('65+ years', age.get('65_plus'))] %}
+          {% for label, v in age_bars %}{% if v is not none and v > 0 %}
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:100px;color:var(--muted)">{{ label }}</span>
+            <div style="flex:1;background:var(--border);height:16px;border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:{{ v }}%;background:linear-gradient(90deg,var(--burnt),#f59e0b);"></div>
+            </div>
+            <span style="width:42px;text-align:right;font-weight:700;color:var(--ink)">{{ '%.1f' % v }}%</span>
+          </div>
+          {% endif %}{% endfor %}
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:12px">Source: ABS via JSA Labour Insights Feb 2026</p>
+      </article>
+      {% endif %}
+
       {# Regional labour-market strength (country-level top 5 — not occupation-specific) #}
       {% if strong_regions %}
       <article class="card">
@@ -2006,7 +2067,7 @@ Moving Out
         </p>
         <div style="display:flex;flex-wrap:wrap;gap:8px">
           {% for r in strong_regions %}
-          <span class="pill pill-emerald" title="Unemployment {{ r.indicators.unemployment_rate_pct }}%">{{ r.sa4_name }} &middot; {{ r.state }}</span>
+          <span class="pill pill-emerald" title="Unemployment {{ r.unemployment_rate or (r.indicators or {}).get('unemployment_rate_pct', '—') }}%">{{ r.region_name or r.sa4_name }} &middot; {{ r.state or 'AU' }}</span>
           {% endfor %}
         </div>
         <p style="font-size:11px;color:var(--muted);margin-top:12px">Source: JSA Regional Labour Market Indicator (RLMI) — March 2026</p>
@@ -2228,6 +2289,60 @@ Moving Out
 
 </article>
 {% endif %}
+
+      {# Official JSA SPL State Nomination & Shortage Ratings (AU only) #}
+      {% set jsa_ratings = (occ.jsa_spl or {}).state_ratings or occ.state_ratings %}
+      {% if country_code == 'AU' and jsa_ratings %}
+      <article class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <span class="card-eyebrow">Jobs &amp; Skills Australia (JSA) Official Ratings</span>
+            <h2 class="card-title" style="margin-bottom:0;">State &amp; Territory Shortage Priority</h2>
+          </div>
+          {% if occ.national_shortage_status %}
+          <span class="pill pill-emerald" style="font-weight:700;">{{ occ.national_shortage_status }}</span>
+          {% endif %}
+        </div>
+
+        <div class="sim-grid" style="margin-bottom:14px;">
+          {% for st, r in jsa_ratings.items() %}
+          {% set is_s = (r == 'S') %}
+          {% set is_r = (r == 'R') %}
+          <div class="sim-card" style="border-left: 3px solid {% if is_s %}#e11d48{% elif is_r %}#d97706{% else %}#64748b{% endif %};">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:800;font-size:12px;color:var(--forest);">{{ st }}</span>
+              <span class="pill {% if is_s %}pill-rose{% elif is_r %}pill-amber{% else %}pill-slate{% endif %}" style="padding:2px 8px;font-size:10px;font-weight:800;">
+                {{ r }}
+              </span>
+            </div>
+            <div style="font-weight:700;font-size:13px;margin-top:4px;color:var(--ink);">
+              {% if is_s %}Shortage (Priority){% elif is_r %}Regional Shortage{% else %}No Metro Shortage{% endif %}
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;border-top:1px dashed var(--border);padding-top:4px;">
+              Stream: <b>{% if is_s %}{{ st }} Priority List{% elif is_r %}{{ st }} 491 Regional{% else %}{{ st }} Regional / DAMA{% endif %}</b>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if occ.demand_rationale %}
+        <div style="background:#F0F7F5;border:1px solid #C2DFD9;border-radius:10px;padding:14px 16px;margin-top:12px;">
+          <div style="font-weight:800;font-size:12px;color:var(--forest);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">
+            Why This Occupation Is In Demand (Labour Intelligence &amp; Migration Analysis)
+          </div>
+          <p style="font-size:13px;color:var(--body);line-height:1.6;margin:0;">
+            {{ occ.demand_rationale }}
+          </p>
+        </div>
+        {% endif %}
+
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:14px;">
+          <span><b>Official Instrument:</b> Migration (LIN 19/051) Specification of Occupations</span>
+          <span><b>Labour Market Source:</b> Jobs &amp; Skills Australia SPL (2024–2026)</span>
+          <span><b>Statutory Standard:</b> ABS ANZSCO 1220.0</span>
+        </div>
+      </article>
+      {% endif %}
 
       {# 10b) Phase 19.4d — Top States (AU only) #}
       {% set states = occ.abs_data.state_distribution or occ.state_distribution %}

@@ -385,6 +385,27 @@ export function PublicAtlasOccupation() {
               {occ.skill_level && <Mini label="ANZSCO Skill Level" value={`Level ${occ.skill_level}`} tone="teal" />}
               {occ.teer_category !== undefined && occ.teer_category !== null && <Mini label="TEER Category" value={`TEER ${occ.teer_category}`} tone="teal" />}
               {occ.assessing_authority?.name && <Mini label="Assessing Body" value={occ.assessing_authority.name} tone="gold" />}
+              {occ.assessing_authority?.fees?.msa_fee_aud && (
+                <Mini
+                  label="Skills Assessment Fee"
+                  value={`AUD $${Number(occ.assessing_authority.fees.msa_fee_aud).toLocaleString()}`}
+                  tone="gold"
+                />
+              )}
+              {occ.assessing_authority?.fees?.rpl_fee_aud && (
+                <Mini
+                  label="RPL Pathway Fee"
+                  value={`AUD $${Number(occ.assessing_authority.fees.rpl_fee_aud).toLocaleString()}`}
+                  tone="muted"
+                />
+              )}
+              {occ.assessing_authority?.processing?.standard_days_max && (
+                <Mini
+                  label="Processing Time"
+                  value={`${occ.assessing_authority.processing.standard_days_min || 56}–${occ.assessing_authority.processing.standard_days_max} days`}
+                  tone="teal"
+                />
+              )}
             </div>
             {occ.assessing_authority?.full_name && (
               <p className="text-xs mt-3 italic" style={{ color: C.muted }}>
@@ -512,6 +533,8 @@ export function PublicAtlasOccupation() {
     </PublicShell>
   );
 }
+
+export const PublicAtlasDetail = PublicAtlasOccupation;
 
 // ─── Reusable components ────────────────────────────────────────────────────
 function Section({ title, children, testid }) {

@@ -88,7 +88,7 @@ export default function OccupationMasterAdmin() {
 // ════════════════════════════════════════════════════════════════
 function BrowseAndVerify({ headers }) {
   const [list, setList] = useState([]);
-  const [filters, setFilters] = useState({ status: 'draft', country: '', search: '' });
+  const [filters, setFilters] = useState({ status: 'all', country: 'AU', search: '' });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
 
@@ -96,10 +96,11 @@ function BrowseAndVerify({ headers }) {
     setLoading(true);
     try {
       const p = new URLSearchParams();
-      if (filters.status) p.append('status', filters.status);
-      if (filters.country) p.append('country', filters.country);
+      if (filters.status && filters.status !== 'all') p.append('status', filters.status);
+      else p.append('status', 'all');
+      if (filters.country && filters.country !== 'all') p.append('country', filters.country);
       if (filters.search) p.append('search', filters.search);
-      p.append('limit', '200');
+      p.append('limit', '300');
       const r = await axios.get(`${API}/occupation-master?${p}`, { headers });
       setList(r.data.items || []);
     } catch (e) {
@@ -126,24 +127,24 @@ function BrowseAndVerify({ headers }) {
             <SelectTrigger className="w-32 h-9" data-testid="browse-country"><SelectValue placeholder="Country" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All countries</SelectItem>
-              <SelectItem value="AU">🇦🇺 AU</SelectItem>
-              <SelectItem value="CA">🇨🇦 CA</SelectItem>
-              <SelectItem value="NZ">🇳🇿 NZ</SelectItem>
+              <SelectItem value="AU">🇦🇺 AU (Australia)</SelectItem>
+              <SelectItem value="CA">🇨🇦 CA (Canada)</SelectItem>
+              <SelectItem value="NZ">🇳🇿 NZ (New Zealand)</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={filters.status || 'all'} onValueChange={(v) => setFilters({ ...filters, status: v === 'all' ? '' : v })}>
+          <Select value={filters.status || 'all'} onValueChange={(v) => setFilters({ ...filters, status: v === 'all' ? 'all' : v })}>
             <SelectTrigger className="w-32 h-9" data-testid="browse-status"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="verified">Verified (Active)</SelectItem>
               <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="verified">Verified</SelectItem>
               <SelectItem value="outdated">Outdated</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" className="h-9" onClick={load} data-testid="browse-refresh">
             <RefreshCw className="h-3.5 w-3.5 mr-1" />Refresh
           </Button>
-          <span className="text-xs text-slate-500 ml-auto">{list.length} codes shown</span>
+          <span className="text-xs text-slate-500 ml-auto font-medium">{list.length} codes shown</span>
         </div>
       </Card>
 
@@ -191,14 +192,52 @@ function CodeCard({ item, onOpen }) {
 
 function ThreePanelEditor({ item, headers, onSaved, onCancel }) {
   const [edit, setEdit] = useState(item);
+  const [authorities, setAuthorities] = useState([]);
   const [genLoading, setGenLoading] = useState(false);
   const [polishLoading, setPolishLoading] = useState(null);
   const [saving, setSaving] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
-  const [sourceRef, setSourceRef] = useState('');
-  const [reviewNotes, setReviewNotes] = useState('');
+  const [sourceRef, setSourceRef] = useState(item.verification?.source_reference || '');
+  const [reviewNotes, setReviewNotes] = useState(item.verification?.review_notes || '');
+
+  // Fetch authorities list
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const r = await axios.get(`${API}/assessing-authorities?country=${item.country_code || 'AU'}`, { headers });
+        if (active) setAuthorities(r.data.items || []);
+      } catch (e) {
+        console.error('Failed to load authorities', e);
+      }
+    })();
+    return () => { active = false; };
+  }, [item.country_code, headers]);
 
   const aiDraft = edit.ai_draft || {};
+
+  const handleAuthorityChange = (authCode) => {
+    const selected = authorities.find((a) => a.code === authCode);
+    if (!selected) return;
+    setEdit((s) => ({
+      ...s,
+      assessing_authority_id: selected.id,
+      assessing_authority: {
+        code: selected.code,
+        short_name: selected.code,
+        name: selected.full_name || selected.name,
+        full_name: selected.full_name,
+        website: selected.website,
+      },
+      skill_assessment_details: {
+        ...(s.skill_assessment_details || {}),
+        authority: selected.code,
+        msa_fee_aud: selected.fees?.msa_fee_aud,
+        rpl_fee_aud: selected.fees?.rpl_fee_aud,
+        processing_weeks: selected.processing?.standard_days_max ? `${Math.round(selected.processing.standard_days_min / 7)}–${Math.round(selected.processing.standard_days_max / 7)} weeks` : '8–12 weeks',
+      },
+    }));
+  };
 
   const generate = async () => {
     setGenLoading(true);
@@ -209,6 +248,11 @@ function ThreePanelEditor({ item, headers, onSaved, onCancel }) {
     } catch (e) {
       toast.error(formatApiError(e, 'AI draft failed'));
     } finally { setGenLoading(false); }
+  };
+
+  const copyAiField = (fieldKey, aiValue) => {
+    setEdit((s) => ({ ...s, [fieldKey]: aiValue }));
+    toast.success(`Copied AI ${fieldKey.replace('_', ' ')} to editor`);
   };
 
   const polish = async (fieldKey, fieldLabel) => {
@@ -241,10 +285,20 @@ function ThreePanelEditor({ item, headers, onSaved, onCancel }) {
         typical_tasks: edit.typical_tasks,
         alternative_titles: edit.alternative_titles,
         specialisations: edit.specialisations,
+        skill_level: edit.skill_level ? parseInt(edit.skill_level) : undefined,
+        skillselect_tier: edit.skillselect_tier,
+        assessing_authority: edit.assessing_authority,
+        assessing_authority_id: edit.assessing_authority_id,
+        caveats: edit.caveats,
+        min_invitation_points: edit.min_invitation_points,
+        visa_pathways: edit.visa_pathways,
+        state_territory_eligibility: edit.state_territory_eligibility,
+        state_demand: edit.state_demand,
         skill_assessment_details: edit.skill_assessment_details,
+        classification_version: edit.classification_version,
       };
       await axios.put(`${API}/occupation-master/${item.occupation_id}`, payload, { headers });
-      toast.success('Draft saved');
+      toast.success('Draft saved successfully');
       onSaved();
     } catch (e) {
       toast.error(formatApiError(e, 'Save failed'));
@@ -255,138 +309,272 @@ function ThreePanelEditor({ item, headers, onSaved, onCancel }) {
     if (!sourceRef.trim()) { toast.error('Add an official source URL/reference first'); return; }
     setSaving(true);
     try {
-      await axios.post(`${API}/occupation-master/${item.occupation_id}/verify`, {
-        source_reference: sourceRef, review_notes: reviewNotes,
-      }, { headers });
-      toast.success('✓ Verified & published', { description: 'Now visible to sales as a verified record.' });
+      const payload = {
+        source_reference: sourceRef,
+        review_notes: reviewNotes,
+        title: edit.title,
+        description: edit.description,
+        typical_tasks: edit.typical_tasks,
+        alternative_titles: edit.alternative_titles,
+        specialisations: edit.specialisations,
+        skill_level: edit.skill_level ? parseInt(edit.skill_level) : undefined,
+        skillselect_tier: edit.skillselect_tier,
+        assessing_authority: edit.assessing_authority,
+        assessing_authority_id: edit.assessing_authority_id,
+        caveats: edit.caveats,
+        min_invitation_points: edit.min_invitation_points,
+        visa_pathways: edit.visa_pathways,
+        state_territory_eligibility: edit.state_territory_eligibility,
+        skill_assessment_details: edit.skill_assessment_details,
+      };
+      await axios.post(`${API}/occupation-master/${item.occupation_id}/verify`, payload, { headers });
+      toast.success('✓ Verified & published', { description: 'All changes propagated to Knowledge Base & Sales.' });
       onSaved();
     } catch (e) {
       toast.error(formatApiError(e, 'Verify failed'));
     } finally { setSaving(false); }
   };
 
+  const selectedAuthCode = edit.assessing_authority?.code || edit.assessing_authority?.short_name || edit.skill_assessment_details?.authority || '';
+  const currentAuthDoc = authorities.find((a) => a.code === selectedAuthCode);
+
   return (
-    <Card className="p-4 space-y-3" data-testid="three-panel-editor">
-      <div className="flex items-start justify-between flex-wrap gap-2 pb-2 border-b">
+    <Card className="p-4 space-y-4" data-testid="three-panel-editor">
+      {/* Header with status badges and actions */}
+      <div className="flex items-start justify-between flex-wrap gap-3 pb-3 border-b">
         <div>
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-mono text-slate-500">{item.country_code} · {item.code}</p>
-            <Badge className="text-[9px] bg-amber-100 text-amber-700">{item.status}</Badge>
-            <Badge className="text-[9px] bg-indigo-100 text-indigo-700">{item.classification_type}</Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-700">
+              {item.country_code} · {item.code}
+            </span>
+            <Badge className="text-[10px] bg-emerald-100 text-emerald-800 border-emerald-300">
+              {edit.status || item.status}
+            </Badge>
+            <Badge className="text-[10px] bg-indigo-100 text-indigo-800 border-indigo-300">
+              {edit.classification_type || item.classification_type} (2013 / 2022)
+            </Badge>
+            {edit.skillselect_tier && (
+              <Badge className="text-[10px] bg-teal-100 text-teal-800 border-teal-300">
+                {String(edit.skillselect_tier).replace('_', ' ').toUpperCase()}
+              </Badge>
+            )}
           </div>
-          <h2 className="text-lg font-bold">{item.title}</h2>
+          <h2 className="text-xl font-bold mt-1 text-slate-900">{edit.title || item.title}</h2>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onCancel} data-testid="editor-cancel">Back</Button>
+          <Button variant="outline" size="sm" onClick={onCancel} data-testid="editor-cancel">
+            Back
+          </Button>
           <Button size="sm" onClick={save} disabled={saving} className="bg-slate-700 hover:bg-slate-800" data-testid="editor-save-draft">
             {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Save className="h-3 w-3 mr-1" />}
             Save Draft
           </Button>
-          <Button size="sm" onClick={() => setVerifyOpen(true)} className="bg-emerald-600 hover:bg-emerald-700" data-testid="editor-open-verify">
-            <CheckCircle2 className="h-3 w-3 mr-1" />Verify &amp; Publish
+          <Button size="sm" onClick={() => setVerifyOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium" data-testid="editor-open-verify">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Verify &amp; Publish
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        {/* LEFT — AI Draft (read-only) */}
-        <Card className="p-3 bg-purple-50/40 border-purple-200">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-bold uppercase text-purple-800">🤖 AI Draft (not verified)</h3>
-            <Button size="sm" variant="outline" onClick={generate} disabled={genLoading} className="h-7 text-[10px] border-purple-300" data-testid="generate-ai-draft">
-              {genLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-              Generate
+      {/* 3-Panel Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* PANEL 1: LEFT — AI Draft & Baseline (Read + Apply) */}
+        <Card className="p-3 bg-purple-50/40 border-purple-200 space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-purple-100">
+            <h3 className="text-xs font-bold uppercase text-purple-900 flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-purple-600" />
+              AI Draft (Baseline Insights)
+            </h3>
+            <Button size="sm" variant="outline" onClick={generate} disabled={genLoading} className="h-7 text-[10px] border-purple-300 bg-white" data-testid="generate-ai-draft">
+              {genLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Wand2 className="h-3 w-3 mr-1 text-purple-600" />}
+              Generate Draft
             </Button>
           </div>
+
           {aiDraft.generated_at ? (
-            <div className="space-y-2 text-xs">
+            <div className="space-y-3 text-xs">
               <div>
-                <p className="font-semibold text-purple-700">Description</p>
-                <p className="bg-white p-2 rounded border whitespace-pre-wrap">{aiDraft.description || '—'}</p>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-semibold text-purple-800">Draft Description</span>
+                  <button onClick={() => copyAiField('description', aiDraft.description)} className="text-[10px] text-purple-600 hover:underline">Apply →</button>
+                </div>
+                <p className="bg-white p-2 rounded border border-purple-100 whitespace-pre-wrap text-[11px] leading-relaxed">{aiDraft.description || '—'}</p>
               </div>
+
               <div>
-                <p className="font-semibold text-purple-700">Typical Tasks</p>
-                <ul className="list-disc list-inside bg-white p-2 rounded border space-y-0.5">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-semibold text-purple-800">Draft Tasks</span>
+                  <button onClick={() => copyAiField('typical_tasks', aiDraft.typical_tasks)} className="text-[10px] text-purple-600 hover:underline">Apply →</button>
+                </div>
+                <ul className="list-disc list-inside bg-white p-2 rounded border border-purple-100 space-y-1 text-[11px]">
                   {(aiDraft.typical_tasks || []).map((t, i) => <li key={i}>{t}</li>)}
                 </ul>
               </div>
-              <div>
-                <p className="font-semibold text-purple-700">Qualification Rules</p>
-                <p className="bg-white p-2 rounded border whitespace-pre-wrap">{aiDraft.qualification_rules || '—'}</p>
-              </div>
-              {aiDraft.ai_confidence_note && (
-                <div className="bg-amber-50 border border-amber-200 p-2 rounded text-[10px]">
-                  <strong>⚠️ Verify:</strong> {aiDraft.ai_confidence_note}
+
+              {aiDraft.qualification_rules && (
+                <div>
+                  <span className="font-semibold text-purple-800 block mb-1">Qualification Guidance</span>
+                  <p className="bg-white p-2 rounded border border-purple-100 text-[11px]">{aiDraft.qualification_rules}</p>
                 </div>
               )}
-              <p className="text-[9px] text-slate-500">
-                Generated {aiDraft.generated_at ? new Date(aiDraft.generated_at).toLocaleString() : ''}
-                {' '}· {aiDraft.generated_by_model || ''}
-              </p>
+
+              {aiDraft.ai_confidence_note && (
+                <div className="bg-amber-50 border border-amber-200 p-2 rounded text-[10px] text-amber-900">
+                  <strong>⚠️ AI Note:</strong> {aiDraft.ai_confidence_note}
+                </div>
+              )}
             </div>
           ) : (
-            <div className="text-xs text-slate-500 text-center py-8">
-              <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              Click "Generate" to draft baseline content with Claude Sonnet.
-              <br /><span className="text-[10px]">AI assistance · You verify against official sources.</span>
+            <div className="text-xs text-slate-500 text-center py-10 space-y-2">
+              <Sparkles className="h-8 w-8 mx-auto text-purple-400 opacity-60" />
+              <p className="font-medium text-slate-700">No AI Draft Cached</p>
+              <p className="text-[11px] text-slate-500">Click &quot;Generate Draft&quot; to fetch Claude Sonnet baseline recommendations.</p>
             </div>
           )}
         </Card>
 
-        {/* MIDDLE — Admin Edit (editable) */}
-        <Card className="p-3 bg-emerald-50/40 border-emerald-200">
-          <h3 className="text-xs font-bold uppercase text-emerald-800 mb-2">✏️ Admin Edit (you verify)</h3>
-          <div className="space-y-2">
-            <Field label="Title">
-              <Input value={edit.title || ''} onChange={(e) => setEdit({ ...edit, title: e.target.value })} className="h-8 text-xs" data-testid="edit-title" />
+        {/* PANEL 2: MIDDLE — Admin Edit & Classification Master */}
+        <Card className="p-3 bg-emerald-50/40 border-emerald-200 space-y-3">
+          <h3 className="text-xs font-bold uppercase text-emerald-900 pb-2 border-b border-emerald-100 flex items-center gap-1.5">
+            ✏️ Admin Master Edit (Single Source of Truth)
+          </h3>
+          <div className="space-y-3">
+            <Field label="Occupation Title">
+              <Input value={edit.title || ''} onChange={(e) => setEdit({ ...edit, title: e.target.value })} className="h-8 text-xs bg-white" data-testid="edit-title" />
             </Field>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Skill Level (1–5)">
+                <Input type="number" min="1" max="5" value={edit.skill_level || ''} onChange={(e) => setEdit({ ...edit, skill_level: e.target.value })} className="h-8 text-xs bg-white" />
+              </Field>
+              <Field label="SkillSelect Tier">
+                <Select
+                  value={typeof edit.skillselect_tier === 'object' && edit.skillselect_tier !== null
+                    ? (edit.skillselect_tier.tier || 'tier_4')
+                    : (edit.skillselect_tier || 'tier_4')}
+                  onValueChange={(v) => setEdit({ ...edit, skillselect_tier: v })}
+                >
+                  <SelectTrigger className="h-8 text-xs bg-white"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tier_1">Tier 1 (Priority Health & Education)</SelectItem>
+                    <SelectItem value="tier_2">Tier 2 (Core Skills / CSOL)</SelectItem>
+                    <SelectItem value="tier_3">Tier 3 (MLTSSL Strategic Trades & Mgmt)</SelectItem>
+                    <SelectItem value="tier_4">Tier 4 (Short-Term / Regional)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
+
             <Field label={<>Description <PolishBtn loading={polishLoading === 'description'} onClick={() => polish('description', 'Description')} /></>}>
-              <Textarea value={edit.description || ''} onChange={(e) => setEdit({ ...edit, description: e.target.value })} className="text-xs min-h-[80px]" data-testid="edit-description" />
+              <Textarea value={edit.description || ''} onChange={(e) => setEdit({ ...edit, description: e.target.value })} className="text-xs min-h-[75px] bg-white leading-relaxed" data-testid="edit-description" />
             </Field>
+
             <Field label={<>Typical Tasks (one per line) <PolishBtn loading={polishLoading === 'typical_tasks'} onClick={() => polish('typical_tasks', 'Typical Tasks')} /></>}>
               <Textarea value={(edit.typical_tasks || []).join('\n')}
                 onChange={(e) => setEdit({ ...edit, typical_tasks: e.target.value.split('\n').filter(Boolean) })}
-                className="text-xs min-h-[120px]" data-testid="edit-tasks" />
+                className="text-xs min-h-[95px] bg-white" data-testid="edit-tasks" />
             </Field>
+
             <Field label="Alternative Titles (comma-separated)">
               <Input value={(edit.alternative_titles || []).join(', ')}
                 onChange={(e) => setEdit({ ...edit, alternative_titles: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
-                className="h-8 text-xs" data-testid="edit-alt-titles" />
+                className="h-8 text-xs bg-white" data-testid="edit-alt-titles" />
+            </Field>
+
+            <Field label="Specialisations (comma-separated)">
+              <Input value={(edit.specialisations || []).join(', ')}
+                onChange={(e) => setEdit({ ...edit, specialisations: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
+                className="h-8 text-xs bg-white" />
+            </Field>
+
+            <Field label="Caveats / Regulatory Notes">
+              <Textarea value={typeof edit.caveats === 'string' ? edit.caveats : Array.isArray(edit.caveats) ? edit.caveats.join('\n') : (edit.caveats?.notes || '')}
+                onChange={(e) => setEdit({ ...edit, caveats: e.target.value })}
+                placeholder="e.g. Caveat 1: Minimum annual remuneration AUD $73,150..."
+                className="text-xs min-h-[50px] bg-white" />
             </Field>
           </div>
         </Card>
 
-        {/* RIGHT — Official Source */}
-        <Card className="p-3 bg-blue-50/40 border-blue-200">
-          <h3 className="text-xs font-bold uppercase text-blue-800 mb-2">📚 Official Source</h3>
-          <p className="text-[11px] text-blue-700 mb-2">
-            Paste the official URL you used to verify (ABS ANZSCO, IRCC NOC, etc.) — required for Verify &amp; Publish.
-          </p>
-          <div className="space-y-2">
-            <Field label="Source URL / reference">
+        {/* PANEL 3: RIGHT — Assessing Authority & Verification Hub Control */}
+        <Card className="p-3 bg-blue-50/40 border-blue-200 space-y-3">
+          <h3 className="text-xs font-bold uppercase text-blue-900 pb-2 border-b border-blue-100 flex items-center gap-1.5">
+            🛡️ Verification Hub &amp; Assessing Body Control
+          </h3>
+
+          <div className="space-y-3">
+            <Field label="Assessing Authority (Designated Body)">
+              <Select value={selectedAuthCode} onValueChange={handleAuthorityChange}>
+                <SelectTrigger className="h-8 text-xs bg-white font-medium text-slate-800">
+                  <SelectValue placeholder="Select assessing body…" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {authorities.map((a) => (
+                    <SelectItem key={a.code} value={a.code}>
+                      <span className="font-bold">{a.code}</span> — {a.full_name || a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            {/* Live Authority Details & Cascaded Fees */}
+            {currentAuthDoc && (
+              <div className="p-2.5 rounded border border-blue-200 bg-white space-y-1.5 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-blue-950">{currentAuthDoc.full_name}</span>
+                  <Badge className="text-[9px] bg-blue-100 text-blue-800">{currentAuthDoc.code}</Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-1 text-[11px] pt-1 border-t border-slate-100">
+                  <div>
+                    <span className="text-slate-500">Standard Fee:</span>{' '}
+                    <strong className="text-emerald-700">AUD ${currentAuthDoc.fees?.msa_fee_aud || '—'}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">RPL Fee:</span>{' '}
+                    <strong className="text-emerald-700">AUD ${currentAuthDoc.fees?.rpl_fee_aud || '—'}</strong>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-slate-500">Turnaround:</span>{' '}
+                    <strong>{Math.round((currentAuthDoc.processing?.standard_days_min || 60) / 7)}–{Math.round((currentAuthDoc.processing?.standard_days_max || 90) / 7)} weeks</strong>
+                  </div>
+                </div>
+                {currentAuthDoc.website && (
+                  <a href={currentAuthDoc.website} target="_blank" rel="noreferrer" className="text-[10px] text-blue-600 hover:underline flex items-center gap-1 pt-1">
+                    <ExternalLink className="h-2.5 w-2.5" /> Official Website
+                  </a>
+                )}
+              </div>
+            )}
+
+            <Field label="Official Source URL (ABS ANZSCO / Home Affairs)">
               <Input value={sourceRef} onChange={(e) => setSourceRef(e.target.value)}
-                placeholder="https://www.abs.gov.au/anzsco/..." className="h-8 text-xs" data-testid="source-ref" />
+                placeholder="https://www.abs.gov.au/anzsco/..." className="h-8 text-xs bg-white" data-testid="source-ref" />
             </Field>
-            <Field label="Review notes (optional)">
+
+            <Field label="Review Notes (Audit Record)">
               <Textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)}
-                className="text-xs min-h-[80px]" placeholder="What did you double-check…" data-testid="review-notes" />
+                className="text-xs min-h-[60px] bg-white" placeholder="What did you double-check in official gazettes…" data-testid="review-notes" />
             </Field>
+
             {item.verification?.source_reference && (
-              <p className="text-[10px] text-slate-500 italic">
-                Previous: {item.verification.source_reference}
+              <p className="text-[10px] text-slate-500 italic bg-white p-1.5 rounded border border-slate-200">
+                Last verified: {item.verification.source_reference}
               </p>
             )}
+
+            {verifyOpen && (
+              <div className="mt-3 pt-3 border-t border-blue-200 space-y-2 bg-blue-100/50 p-2.5 rounded">
+                <p className="text-xs font-bold text-blue-950">Confirm Verification &amp; Publishing</p>
+                <p className="text-[11px] text-blue-800">All changes will immediately cascade to Smart Sales and Knowledge Hub.</p>
+                <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold" onClick={verify} disabled={saving || !sourceRef.trim()} data-testid="confirm-verify">
+                  {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
+                  Publish Changes Now
+                </Button>
+                <Button size="sm" variant="outline" className="w-full bg-white" onClick={() => setVerifyOpen(false)}>Cancel</Button>
+              </div>
+            )}
           </div>
-          {verifyOpen && (
-            <div className="mt-3 pt-3 border-t border-blue-200 space-y-2">
-              <p className="text-xs font-semibold text-blue-900">Confirm Verify &amp; Publish</p>
-              <Button size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700" onClick={verify} disabled={saving || !sourceRef.trim()} data-testid="confirm-verify">
-                {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
-                Publish as Verified
-              </Button>
-              <Button size="sm" variant="outline" className="w-full" onClick={() => setVerifyOpen(false)}>Cancel</Button>
-            </div>
-          )}
         </Card>
       </div>
     </Card>

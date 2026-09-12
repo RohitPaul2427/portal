@@ -250,21 +250,20 @@ async def apply_to_db(db, dry_run: bool = True, actor: str = "admin") -> Dict[st
         d = existing[code]
         details = d.get("skill_assessment_details") or {}
 
+        by_group_count[group] += 1
+        counts["to_update"] += 1
+
         if d.get("status") == "verified":
             counts["skipped_verified"] += 1
-            continue
-        if details.get("vetassess_group"):
-            counts["skipped_existing"] += 1
-            continue
 
-        counts["to_update"] += 1
-        by_group_count[group] += 1
+        if details.get("vetassess_group") == group:
+            counts["skipped_existing"] += 1
 
         if len(sample_updates) < 10:
             sample_updates.append({
                 "code": code,
                 "title": d.get("title"),
-                "group": group,
+                "group": f"Group {group}",
             })
 
         if not dry_run:

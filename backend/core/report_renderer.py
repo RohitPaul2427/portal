@@ -331,20 +331,40 @@ def _section_country(country: Dict[str, Any], snap, styles, idx: int):
         flow.append(t)
 
     # State demand (AU)
-    state_elig = occ.get("state_territory_eligibility") or []
-    if state_elig:
-        flow.append(Paragraph("State / Territory Demand", styles["h2"]))
-        rows = [["State", "Demand", "190 Eligible", "491 Eligible"]]
-        for s in state_elig:
-            rows.append([
-                _safe(s.get("state")),
-                _safe(s.get("demand", "")).replace("_", " ").title() if s.get("demand") else "—",
-                "✓" if s.get("sc190") else "—",
-                "✓" if s.get("sc491") else "—",
-            ])
-        t = Table(rows, colWidths=[3.5 * cm, 4 * cm, 4 * cm, 4 * cm])
-        t.setStyle(_table_style())
-        flow.append(t)
+    raw_state_elig = occ.get("state_territory_eligibility") or []
+    if raw_state_elig:
+        state_list = []
+        if isinstance(raw_state_elig, dict):
+            for st_k, st_v in raw_state_elig.items():
+                if isinstance(st_v, dict):
+                    state_list.append({
+                        "state": st_k,
+                        "demand": st_v.get("demand", "High"),
+                        "sc190": st_v.get("eligible_190") or st_v.get("sc190", True),
+                        "sc491": st_v.get("eligible_491") or st_v.get("sc491", True),
+                    })
+                else:
+                    state_list.append({"state": st_k, "demand": str(st_v), "sc190": True, "sc491": True})
+        elif isinstance(raw_state_elig, list):
+            for s in raw_state_elig:
+                if isinstance(s, dict):
+                    state_list.append(s)
+                elif isinstance(s, str):
+                    state_list.append({"state": s, "demand": "Medium", "sc190": True, "sc491": True})
+
+        if state_list:
+            flow.append(Paragraph("State / Territory Demand", styles["h2"]))
+            rows = [["State", "Demand", "190 Eligible", "491 Eligible"]]
+            for s in state_list:
+                rows.append([
+                    _safe(s.get("state")),
+                    _safe(s.get("demand", "")).replace("_", " ").title() if s.get("demand") else "—",
+                    "✓" if s.get("sc190") else "—",
+                    "✓" if s.get("sc491") else "—",
+                ])
+            t = Table(rows, colWidths=[3.5 * cm, 4 * cm, 4 * cm, 4 * cm])
+            t.setStyle(_table_style())
+            flow.append(t)
 
     # Points breakdown
     breakdown = country.get("breakdown") or {}
@@ -650,7 +670,7 @@ def _section_service_packages(snap, styles):
     rows.append(["100% Govt Fee Refund"] + ["✓ Yes" if p.get("govt_fee_refund") else "✗ No" for p in pkgs])
     # Addon
     rows.append(["Optional Add-on"] + [
-        f"+ INR {p.get('addon', {}).get('amount', 0):,.0f} (Enabled)" if p.get("addon", {}).get("enabled")
+        f"+ INR {(p.get('addon') or {}).get('amount', 0):,.0f} (Enabled)" if (p.get("addon") or {}).get("enabled")
         else ("Available on request" if p.get("addon") else "—")
         for p in pkgs
     ])

@@ -118,6 +118,35 @@ def _has_value(doc: dict, field: str) -> bool:
     return True
 
 
+def _normalize_state_territory_eligibility(existing: Any) -> List[Dict[str, Any]]:
+    """Safely normalizes state eligibility list or dict into list of dicts."""
+    if not existing:
+        return []
+    if isinstance(existing, list):
+        out = []
+        for e in existing:
+            if isinstance(e, dict):
+                out.append(dict(e))
+            elif isinstance(e, str):
+                out.append({"state": e})
+        return out
+    if isinstance(existing, dict):
+        out = []
+        for state_k, val in existing.items():
+            if isinstance(val, dict):
+                entry = dict(val)
+                entry.setdefault("state", state_k)
+                out.append(entry)
+            elif isinstance(val, bool):
+                out.append({"state": state_k, "eligible": val})
+            elif isinstance(val, str):
+                out.append({"state": state_k, "status": val})
+            else:
+                out.append({"state": state_k})
+        return out
+    return []
+
+
 @router.get("/audit-summary")
 async def audit_summary(current_user: dict = Depends(get_current_user)):
     """High-level KB coverage summary — used for hero stats on audit page."""
@@ -2005,8 +2034,8 @@ async def ai_extract_commit(
     elif intent == "state_nomination":
         st = (extracted.get("state") or "").upper()
         if st:
-            existing = list(ex.get("state_territory_eligibility") or [])
-            existing = [e for e in existing if e.get("state") != st]
+            existing = _normalize_state_territory_eligibility(ex.get("state_territory_eligibility"))
+            existing = [e for e in existing if (e.get("state") or "").upper() != st]
             existing.append({
                 "state": st,
                 "demand": extracted.get("demand_level"),
@@ -2091,7 +2120,7 @@ async def verify_in_atlas(
     vp = d.get("visa_pathways") or {}
     visas = vp.get("visa_eligibility") or []
 
-    state_arr = d.get("state_territory_eligibility") or []
+    state_arr = _normalize_state_territory_eligibility(d.get("state_territory_eligibility"))
     state_matrix = {}
     for entry in state_arr:
         st = (entry.get("state") or "").upper()
@@ -2394,7 +2423,7 @@ async def ai_extract_state_bulk_commit(
             if d.get("status") == "verified":
                 skipped_verified += 1
                 continue
-            merged = [e for e in (d.get("state_territory_eligibility") or []) if (e.get("state") or "").upper() != state]
+            merged = [e for e in _normalize_state_territory_eligibility(d.get("state_territory_eligibility")) if (e.get("state") or "").upper() != state]
             merged.append(new_entry)
             await db["occupation_master"].update_one(
                 {"_id": d["_id"]},

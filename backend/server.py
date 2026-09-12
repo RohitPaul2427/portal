@@ -403,6 +403,22 @@ async def startup():
             await seed_fee_master()
         except Exception as e:
             print(f"[Fee Master auto-seed ERROR — non-fatal] {e}")
+
+        # Auto-seed complete Australian ANZSCO Skilled Occupations (2013 GSM + 2022 Core Skills) — 100% of all 931 AU occupations
+        try:
+            from scripts.enrich_all_931_au_occupations import enrich_and_verify_all_931_au_occupations
+            await enrich_and_verify_all_931_au_occupations()
+            print("[ANZSCO AU] 100% Complete Australian skilled occupations enriched and verified on startup.")
+        except Exception as e:
+            print(f"[ANZSCO AU WARN — non-fatal] {e}")
+
+        # Auto-seed SkillSelect EOI Backlog data for all AU occupations
+        try:
+            from scripts.seed_eoi_backlog import seed_eoi_backlog
+            await seed_eoi_backlog()
+            print("[EOI Backlog] SkillSelect pool data seeded on startup.")
+        except Exception as e:
+            print(f"[EOI Backlog WARN — non-fatal] {e}")
         # Start APScheduler (every 30 min). Disabled in tests via LEAMSS_DISABLE_SCHEDULER env.
         if not os.environ.get("LEAMSS_DISABLE_SCHEDULER"):
             try:

@@ -92,7 +92,7 @@ body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-
     <div class="hero">
       <div class="eyebrow">🇦🇺 Australian State / Territory · {{ state.state_code }}</div>
       <h1 class="h1">{{ state.state_name }}{% if state.immigration_friendly_score %}<span class="score-chip">⭐ {{ state.immigration_friendly_score }}/10 Migration-Friendly</span>{% endif %}</h1>
-      <p class="lead">{{ state.tagline }} · Capital: <strong>{{ state.capital_city }}</strong> · Population: <strong>{{ '{:,.0f}'.format(state.population) }}</strong></p>
+      <p class="lead">{{ state.tagline or 'Premier Australian migration and employment destination' }} · Capital: <strong>{{ state.capital_city or 'Major City' }}</strong> · Population: <strong>{{ '{:,.0f}'.format(state.population or 0) }}</strong></p>
       <div class="tags">
         {% for v in state.primary_visa_subclasses %}<span class="tag">Subclass {{ v }}</span>{% endfor %}
         {% if state.cost_of_living_index %}<span class="tag">Cost-of-living {{ state.cost_of_living_index }}</span>{% endif %}
@@ -105,7 +105,7 @@ body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-
     <div class="stat-grid">
       <div class="stat">
         <div class="sl">Active job ads</div>
-        <div class="sv">{{ '{:,.0f}'.format(state.vacancy_data.monthly_ads) }}{% if state.vacancy_data.national_monthly_change_pct %}<span class="delta">{{ '+{:.1f}'.format(state.vacancy_data.national_monthly_change_pct) }}% nat.</span>{% endif %}</div>
+        <div class="sv">{{ '{:,.0f}'.format(state.vacancy_data.monthly_ads or 0) }}{% if state.vacancy_data.national_monthly_change_pct is defined and state.vacancy_data.national_monthly_change_pct is not none %}<span class="delta">{{ '+{:.1f}'.format(state.vacancy_data.national_monthly_change_pct) }}% nat.</span>{% endif %}</div>
       </div>
       <div class="stat">
         <div class="sl">Period</div>
@@ -208,11 +208,11 @@ body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-
       {% endif %}
       <div class="stat">
         <div class="sl">Area</div>
-        <div class="sv">{{ '{:,.0f}'.format(state.area_sq_km) }} km²</div>
+        <div class="sv">{{ '{:,.0f}'.format(state.area_sq_km or 0) }} km²</div>
       </div>
       <div class="stat">
         <div class="sl">Population</div>
-        <div class="sv">{{ '{:,.0f}'.format(state.population) }}</div>
+        <div class="sv">{{ '{:,.0f}'.format(state.population or 0) }}</div>
       </div>
     </div>
     {% if state.lifestyle_highlights %}

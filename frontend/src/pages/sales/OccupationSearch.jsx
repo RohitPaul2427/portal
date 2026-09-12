@@ -23,8 +23,7 @@ import {
 } from 'lucide-react';
 
 import { formatApiError } from '@/lib/apiErrors';
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from './lib/constants';
 
 const COUNTRY_META = {
   AU: { flag: '🇦🇺', name: 'Australia', color: 'bg-blue-50 border-blue-200 text-blue-800' },
@@ -303,17 +302,17 @@ export default function OccupationSearch() {
                   data-testid={`occupation-card-${item.code}`}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <Badge className={`${meta.color} text-[10px] border`}>
+                    <Badge variant="outline" className={`${meta.color} text-[11px] font-mono font-bold px-2 py-0.5`}>
                       {meta.flag} {item.code}
                     </Badge>
                     <div className="flex items-center gap-1">
                       {item.in_demand && (
-                        <Badge className="bg-emerald-100 text-emerald-700 text-[9px]">
+                        <Badge className="bg-emerald-100 text-emerald-700 text-[9px] font-bold">
                           <TrendingUp className="h-2.5 w-2.5 mr-0.5" />In Demand
                         </Badge>
                       )}
                       {item.confidence !== null && item.confidence !== undefined && (
-                        <Badge className="bg-indigo-100 text-indigo-700 text-[9px]">{item.confidence}%</Badge>
+                        <Badge className="bg-indigo-100 text-indigo-700 text-[9px] font-bold">{item.confidence}%</Badge>
                       )}
                     </div>
                   </div>

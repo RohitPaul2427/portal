@@ -45,6 +45,7 @@ Countries:
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Dict, Optional
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -106,12 +107,6 @@ def _merge_authority_into_occupation_shape(
     if override_msa is not None:
         eff_fees["msa_fee_aud"] = override_msa
         eff_fees["_override_msa"] = True
-    print("=" * 60)
-    print("MERGED FEES")
-    print(eff_fees)
-    print("MERGED PROCESSING")
-    print(eff_processing)
-    print("=" * 60)
     return {
         # Back-compat trio
         "short_name": short,
@@ -172,6 +167,20 @@ async def resolve_authority(
         logger.warning("Authority FK %s not found in collection for occ %s",
                        authority_id, occ.get("occupation_id"))
 
+    # Match by code or name from assessing_authority dict
+    if isinstance(aa_raw, dict) and aa_raw:
+        code_token = aa_raw.get("code") or aa_raw.get("short_name") or aa_raw.get("name")
+        if code_token:
+            auth = await db[AUTHORITY_COLLECTION].find_one({
+                "$or": [
+                    {"code": {"$regex": f"^{re.escape(str(code_token).strip())}$", "$options": "i"}},
+                    {"aliases": {"$regex": f"^{re.escape(str(code_token).strip())}$", "$options": "i"}},
+                    {"full_name": {"$regex": f"^{re.escape(str(code_token).strip())}$", "$options": "i"}},
+                ]
+            })
+            if auth:
+                return _merge_authority_into_occupation_shape(auth, occ)
+
     # Fallback: legacy dict still present from pre-migration
     if isinstance(aa_raw, dict) and aa_raw and (aa_raw.get("short_name") or aa_raw.get("name")):
         return _normalise_legacy_au_dict(aa_raw)
@@ -207,6 +216,19 @@ def resolve_authority_sync(
         auth = db_sync[AUTHORITY_COLLECTION].find_one({"id": authority_id})
         if auth:
             return _merge_authority_into_occupation_shape(auth, occ)
+
+    if isinstance(aa_raw, dict) and aa_raw:
+        code_token = aa_raw.get("code") or aa_raw.get("short_name") or aa_raw.get("name")
+        if code_token:
+            auth = db_sync[AUTHORITY_COLLECTION].find_one({
+                "$or": [
+                    {"code": {"$regex": f"^{re.escape(str(code_token).strip())}$", "$options": "i"}},
+                    {"aliases": {"$regex": f"^{re.escape(str(code_token).strip())}$", "$options": "i"}},
+                    {"full_name": {"$regex": f"^{re.escape(str(code_token).strip())}$", "$options": "i"}},
+                ]
+            })
+            if auth:
+                return _merge_authority_into_occupation_shape(auth, occ)
 
     if isinstance(aa_raw, dict) and aa_raw and (aa_raw.get("short_name") or aa_raw.get("name")):
         return _normalise_legacy_au_dict(aa_raw)

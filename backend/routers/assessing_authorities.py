@@ -102,10 +102,28 @@ async def list_authority_occupations(
 ):
     if not _can_read(current_user):
         raise HTTPException(status_code=403, detail="Forbidden")
-    auth = await db["assessing_authorities"].find_one({"code": code}, {"id": 1, "code": 1, "full_name": 1})
+    auth = await db["assessing_authorities"].find_one({"code": code})
     if not auth:
         raise HTTPException(status_code=404, detail=f"Authority {code} not found")
-    q = {"country_code": "AU", "assessing_authority_id": auth["id"]}
+    
+    explicit_codes = auth.get("linked_occupation_codes") or []
+    auth_id = auth.get("id")
+    
+    conditions: List[Dict[str, Any]] = [
+        {"assessing_authority.code": code},
+        {"assessing_authority.short_name": code},
+        {"skill_assessment_details.authority": code},
+    ]
+    if auth_id:
+        conditions.append({"assessing_authority_id": auth_id})
+    if explicit_codes:
+        conditions.append({"code": {"$in": explicit_codes}})
+    
+    for alias in (auth.get("aliases") or []):
+        conditions.append({"assessing_authority.name": {"$regex": f"^{alias}$", "$options": "i"}})
+        conditions.append({"assessing_authority.short_name": {"$regex": f"^{alias}$", "$options": "i"}})
+
+    q = {"country_code": "AU", "$or": conditions}
     total = await db["occupation_master"].count_documents(q)
     cursor = (db["occupation_master"]
               .find(q, {"_id": 0, "occupation_id": 1, "code": 1, "title": 1,

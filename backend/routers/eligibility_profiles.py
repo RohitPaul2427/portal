@@ -810,7 +810,9 @@ async def resume_extract(
         raise HTTPException(status_code=502, detail=parsed["_error"])
 
     import io
-    file_id = await _resume_gridfs.upload_from_stream(
+    from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+    gridfs = AsyncIOMotorGridFSBucket(db, bucket_name="bulk_resumes")
+    file_id = await gridfs.upload_from_stream(
         file.filename or "resume.pdf",
         io.BytesIO(raw),
         metadata={"user_id": current_user.get("id"), "uploaded_at": datetime.now(timezone.utc).isoformat()}

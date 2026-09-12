@@ -128,6 +128,7 @@ import ClientPortalLogin from '@/pages/client-portal/ClientPortalLogin';
 import ClientPortalDashboard from '@/pages/client-portal/ClientPortalDashboard';
 import AdminClientPortalPreview from '@/pages/admin/AdminClientPortalPreview';
 import PublicProposalView from '@/pages/PublicProposalView';
+import { PublicAtlasHub, PublicAtlasCountry, PublicAtlasDetail } from '@/pages/PublicAtlas';
 import { useLocation } from 'react-router-dom';
 import '@/App.css';
 
@@ -164,11 +165,13 @@ function App() {
           <Route path="/" element={<Login />} />
           {/* ─── Phase 14: LEAMSS Public Brand Experience (no auth) ─── */}
           <Route path="/start" element={<MegaLanding />} />
-          {/* Phase 19: /atlas/* paths are served by setupProxy.js as static SSR HTML files.
-              We intentionally do NOT mount React routes for them so that ANY navigation
-              (direct, refresh, or click from inside the SPA) triggers a full page reload
-              and the bot/user receives the pre-rendered, SEO-optimised HTML from
-              frontend/public/atlas/... See Phase 19 CHANGELOG. */}
+          {/* Public Atlas routes (No auth required) */}
+          <Route path="/atlas" element={<PublicAtlasHub />} />
+          <Route path="/atlas/australia" element={<Navigate to="/atlas/au" replace />} />
+          <Route path="/atlas/canada" element={<Navigate to="/atlas/ca" replace />} />
+          <Route path="/atlas/new-zealand" element={<Navigate to="/atlas/nz" replace />} />
+          <Route path="/atlas/:country" element={<PublicAtlasCountry />} />
+          <Route path="/atlas/:country/:code" element={<PublicAtlasDetail />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/analytics" element={<AnalyticsDashboard />} />
           <Route path="/admin/activity" element={<ActivityLog />} />
