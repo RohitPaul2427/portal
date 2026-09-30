@@ -192,18 +192,43 @@ def calculate_au_points(profile: Dict[str, Any], visa_subclass: str = "189", rul
     breakdown["english"] = {"overall": overall, "min_band": min_band, "bucket": eng_bucket, "points": eng_pts}
     total += eng_pts
 
-    # 3) SKILLED EMPLOYMENT — Outside AU + Inside AU (separate)
+    # 3) SKILLED EMPLOYMENT — Outside AU + Inside AU (accounting for Assessing Authority qualifying deduction)
     years_total = _to_float(professional.get("years_experience_total"))
     years_au = _to_float(professional.get("years_experience_australia"))
-    years_overseas = max(0.0, years_total - years_au)
+    raw_overseas = max(0.0, years_total - years_au)
 
-    # Outside AU
+    # Perform Skills Assessment evaluation if occupation or assessing body is available
+    occ_info = profile.get("occupation") or {}
+    if not occ_info and (profile.get("occupation_code") or primary.get("occupation_code")):
+        occ_info = {
+            "code": profile.get("occupation_code") or primary.get("occupation_code"),
+            "title": profile.get("occupation_title") or primary.get("occupation_title"),
+            "assessing_body": profile.get("occupation_body") or primary.get("occupation_body"),
+        }
+
+    from core.skills_assessment_engine import evaluate_skills_assessment
+    sa_eval = evaluate_skills_assessment(occ_info, profile)
+    
+    # Points-claimable experience after Assessing Authority qualifying period deduction (Requirement Met Date)
+    if sa_eval and "deducted_years" in sa_eval and sa_eval["deducted_years"] > 0:
+        years_overseas = sa_eval.get("points_claimable_years", raw_overseas)
+    else:
+        years_overseas = raw_overseas
+
+    # Outside AU points
     out_pts, out_bucket = _lookup_band_points(
         rules, "overseas_experience", years_overseas,
         default_band=(0, "less_than_3"),
         default_bands=[(0, 2, 0), (3, 4, 5), (5, 7, 10), (8, 99, 15)],
     )
-    breakdown["experience_overseas"] = {"value": years_overseas, "bucket": out_bucket, "points": out_pts}
+    breakdown["experience_overseas"] = {
+        "value": years_overseas,
+        "raw_value": raw_overseas,
+        "deducted_years": sa_eval.get("deducted_years", 0.0),
+        "bucket": out_bucket,
+        "points": out_pts,
+        "note": sa_eval.get("deemed_skilled_summary") if sa_eval else "",
+    }
     total += out_pts
 
     # Inside AU
@@ -325,6 +350,7 @@ def calculate_au_points(profile: Dict[str, Any], visa_subclass: str = "189", rul
         "total": total,
         "visa_eligibility": visa_eligibility,
         "recommendation": recommendation,
+        "skills_assessment": sa_eval,
     }
 
 

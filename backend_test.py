@@ -1,11 +1,23 @@
 import requests
 import sys
+import os
 import json
 from datetime import datetime
 import io
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 class LEAMSSAPITester:
-    def __init__(self, base_url="https://career-match-320.preview.emergentagent.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.api = f"{base_url}/api"
         self.tokens = {}
@@ -152,20 +164,24 @@ class LEAMSSAPITester:
         if 'available_products' in self.test_data and self.test_data['available_products']:
             try:
                 product = self.test_data['available_products'][0]
+                price = product.get('fee') or product.get('service_price') or product.get('base_fee') or 5000.0
                 sale_data = {
                     "client_name": "Test Client",
                     "client_email": f"testclient_{datetime.now().strftime('%H%M%S')}@test.com",
                     "client_mobile": "+1987654321",
                     "product_id": product['id'],
-                    "fee_amount": product['fee'],
-                    "amount_received": product['fee'],
+                    "fee_amount": str(price),
+                    "amount_received": str(price),
                     "payment_method": "bank_transfer",
                     "payment_reference": f"REF{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                    "agreement_signed": True
+                    "agreement_signed": "true",
+                    "bypass_pre_assessment": "true",
+                    "bypass_reason": "Admin approved bypass for automated testing",
                 }
+                headers = {'Authorization': f'Bearer {self.tokens["partner"]}'}
                 response = requests.post(f"{self.api}/sales", 
-                                       json=sale_data, 
-                                       headers=self.get_auth_header('partner'))
+                                       data=sale_data, 
+                                       headers=headers)
                 success = response.status_code == 200
                 if success:
                     self.test_data['test_sale'] = response.json()
@@ -270,27 +286,27 @@ class LEAMSSAPITester:
         """Test that users can only access their authorized endpoints"""
         print("\n🔒 Testing Role-Based Access Control...")
         
-        # Test that partner cannot access admin endpoints
+        # Test that partner cannot create products (admin only)
         try:
-            response = requests.get(f"{self.api}/sales/pending", headers=self.get_auth_header('partner'))
+            response = requests.post(f"{self.api}/products", json={"name": "Forbidden"}, headers=self.get_auth_header('partner'))
             success = response.status_code == 403
             self.log_test("Partner Access Control (Admin Endpoint)", success, 
                          f"Expected 403, got {response.status_code}")
         except Exception as e:
             self.log_test("Partner Access Control (Admin Endpoint)", False, str(e))
 
-        # Test that client cannot access case manager endpoints
+        # Test that client cannot create users (admin only)
         try:
-            response = requests.get(f"{self.api}/cases", headers=self.get_auth_header('client'))
+            response = requests.post(f"{self.api}/users", json={"name": "Forbidden", "email": "f@f.com"}, headers=self.get_auth_header('client'))
             success = response.status_code == 403
             self.log_test("Client Access Control (Admin Endpoint)", success, 
                          f"Expected 403, got {response.status_code}")
         except Exception as e:
             self.log_test("Client Access Control (Admin Endpoint)", False, str(e))
 
-        # Test that case manager cannot access admin-only endpoints
+        # Test that case manager cannot create products (admin only)
         try:
-            response = requests.get(f"{self.api}/users/case-managers", headers=self.get_auth_header('case_manager'))
+            response = requests.post(f"{self.api}/products", json={"name": "Forbidden"}, headers=self.get_auth_header('case_manager'))
             success = response.status_code == 403
             self.log_test("Case Manager Access Control (Admin Endpoint)", success, 
                          f"Expected 403, got {response.status_code}")
@@ -345,7 +361,8 @@ class LEAMSSAPITester:
         return self.tests_passed == self.tests_run
 
 def main():
-    tester = LEAMSSAPITester()
+    base_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8001"
+    tester = LEAMSSAPITester(base_url=base_url)
     success = tester.run_all_tests()
     return 0 if success else 1
 

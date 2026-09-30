@@ -26,8 +26,10 @@ export function PreAssessmentReportButton({ countryCode, occupationCode, occupat
     email: defaultClient.email || '',
     phone: defaultClient.phone || '',
     age: defaultClient.age || '',
+    education: defaultClient.education || defaultClient.qualification || '',
+    field_of_study: defaultClient.field_of_study || '',
     english_score: defaultClient.english_score || '',
-    work_exp_years: defaultClient.work_exp_years || '',
+    work_exp_years: defaultClient.work_exp_years || defaultClient.years_experience_total || '',
   });
   const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -40,6 +42,9 @@ export function PreAssessmentReportButton({ countryCode, occupationCode, occupat
           email: client.email,
           phone: client.phone,
           age: client.age ? Number(client.age) : null,
+          education: client.education,
+          qualification: client.education,
+          field_of_study: client.field_of_study,
           english_score: client.english_score,
           work_exp_years: client.work_exp_years ? Number(client.work_exp_years) : null,
         },
@@ -109,21 +114,30 @@ export function PreAssessmentReportButton({ countryCode, occupationCode, occupat
                 <Input value={client.phone} onChange={e => setClient({...client, phone: e.target.value})} placeholder="+91 ..." data-testid="pa-client-phone" />
               </div>
               <div>
+                <label className="text-[10px] font-semibold text-slate-700 uppercase">Highest Qualification</label>
+                <Input value={client.education} onChange={e => setClient({...client, education: e.target.value})} placeholder="e.g. Bachelor of Commerce / B.Tech / Diploma" data-testid="pa-client-education" />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-slate-700 uppercase">Field of Study / Major</label>
+                <Input value={client.field_of_study} onChange={e => setClient({...client, field_of_study: e.target.value})} placeholder="e.g. Accounting & Finance / Computer Science" data-testid="pa-client-field" />
+              </div>
+              <div>
                 <label className="text-[10px] font-semibold text-slate-700 uppercase">Age</label>
                 <Input type="number" value={client.age} onChange={e => setClient({...client, age: e.target.value})} placeholder="29" data-testid="pa-client-age" />
               </div>
               <div>
                 <label className="text-[10px] font-semibold text-slate-700 uppercase">English Score</label>
-                <Input value={client.english_score} onChange={e => setClient({...client, english_score: e.target.value})} placeholder="IELTS 7.5" data-testid="pa-client-english" />
+                <Input value={client.english_score} onChange={e => setClient({...client, english_score: e.target.value})} placeholder="IELTS 7.5 / PTE 65" data-testid="pa-client-english" />
               </div>
               <div className="col-span-2">
-                <label className="text-[10px] font-semibold text-slate-700 uppercase">Work Experience (years)</label>
-                <Input type="number" value={client.work_exp_years} onChange={e => setClient({...client, work_exp_years: e.target.value})} placeholder="6" data-testid="pa-client-experience" />
+                <label className="text-[10px] font-semibold text-slate-700 uppercase">Work Experience (Total Years)</label>
+                <Input type="number" step="0.5" value={client.work_exp_years} onChange={e => setClient({...client, work_exp_years: e.target.value})} placeholder="6" data-testid="pa-client-experience" />
               </div>
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-3 text-[10px] text-amber-800">
-              Report ships in PDF format (WeasyPrint, Phase 19.11). Includes salary + INR conversion, growth projection, assessing body, state nomination demand, visa pathways, indicative timeline (8-18 months), and next-steps CTA. Cached 5 mins per client.
+            <div className="bg-amber-50 border border-amber-200 rounded p-2.5 mt-3 text-[10px] text-amber-800 space-y-1">
+              <p className="font-semibold">⚡ Skills Assessment Intelligence &amp; Deduction Rules Applied:</p>
+              <p>Evaluates ACS, VETASSESS (Groups A-F) &amp; TRA trade criteria. Automatically calculates qualifying period deductions (Requirement Met Date), RPL requirements, points-claimable work experience, and official document checklists.</p>
             </div>
 
             <div className="flex justify-end gap-2 mt-4 pt-3 border-t">

@@ -68,6 +68,32 @@ export default function Step5Calculator({ results, calculating, data, update, he
                 <Badge className="bg-indigo-600 text-white">{r.country_code}</Badge>
                 {r.visa_subclass && <Badge variant="outline" className="text-[10px]">Subclass {r.visa_subclass}</Badge>}
               </div>
+
+              {r.skills_assessment && (
+                <div className="mb-2.5 p-2 bg-amber-50/80 border border-amber-200 rounded-md text-[10px]" data-testid="skills-assessment-card">
+                  <div className="flex items-center justify-between font-semibold text-amber-900 mb-1">
+                    <span>{r.skills_assessment.authority_code} · {r.skills_assessment.vetassess_group ? `Group ${r.skills_assessment.vetassess_group}` : (r.skills_assessment.qualification_bucket || 'Skills Assessment')}</span>
+                    <Badge className={r.skills_assessment.is_positive ? 'bg-emerald-600 text-white text-[8px]' : 'bg-amber-600 text-white text-[8px]'}>
+                      {r.skills_assessment.assessment_outcome === 'Positive via RPL Pathway' ? 'RPL Positive' : (r.skills_assessment.is_positive ? 'Positive' : 'Review')}
+                    </Badge>
+                  </div>
+                  {r.skills_assessment.deducted_years > 0 ? (
+                    <div className="text-slate-600 leading-tight">
+                      <span className="text-rose-700 font-bold">-{r.skills_assessment.deducted_years} yrs</span> qualifying deduction (Req. Met Date) · <span className="text-emerald-700 font-bold">{r.skills_assessment.points_claimable_years} yrs</span> points-claimable
+                    </div>
+                  ) : (
+                    <div className="text-slate-600 leading-tight">
+                      Standard assessment · <span className="text-emerald-700 font-bold">{r.skills_assessment.points_claimable_years} yrs</span> points-claimable
+                    </div>
+                  )}
+                  {r.skills_assessment.rpl_required && (
+                    <div className="mt-1 text-[9px] text-amber-800 font-medium">
+                      📝 2 ACS RPL Project Reports Required
+                    </div>
+                  )}
+                </div>
+              )}
+
               {r.template_status && r.template_status !== 'verified' && (
                 <div className="text-[9px] mb-2 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 inline-block" data-testid={`template-status-${r.country_code}`}>
                   ⚠️ Template {r.template_status} · admin verification pending

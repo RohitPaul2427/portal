@@ -20,6 +20,15 @@ async def get_users(role: str = None, current_user: dict = Depends(get_current_u
     return users
 
 
+@router.get("/case-managers")
+async def get_case_managers(current_user: dict = Depends(get_current_user)):
+    users = await users_col.find({"role": "case_manager"}, {"_id": 0, "password": 0}).to_list(500)
+    for u in users:
+        if isinstance(u.get("created_at"), datetime):
+            u["created_at"] = u["created_at"].isoformat()
+    return users
+
+
 @router.get("/{user_id}")
 async def get_user(user_id: str, current_user: dict = Depends(get_current_user)):
     user = await users_col.find_one({"id": user_id}, {"_id": 0, "password": 0})

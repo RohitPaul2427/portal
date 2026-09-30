@@ -318,10 +318,108 @@
 
 {% endif %}
 
-<!-- ─── 3. ASSESSING BODY (Phase 20.7 — AU/NZ only) ─── -->
+<!-- ─── 3. SKILLS ASSESSMENT & EXPERIENCE DEDUCTION ANALYSIS (Phase 21) ─── -->
 {% if country.code in ['AU', 'NZ'] %}
-<h2>3. Assessing Body</h2>
-{% if assessing_body and assessing_body.name %}
+<h2>3. Skills Assessment & Experience Deduction Analysis</h2>
+
+{% if skills_assessment %}
+  <div style="background: #f8fafc; border: 1.5pt solid {% if skills_assessment.is_positive %}#10b981{% else %}#f59e0b{% endif %}; border-radius: 6pt; padding: 10pt; margin: 8pt 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6pt;">
+      <div>
+        <span style="font-size: 8pt; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.5pt;">Assessing Authority &amp; Pathway</span>
+        <div style="font-size: 13pt; font-weight: 700; color: #1F4D44;">
+          {{ skills_assessment.authority_name or assessing_body.name }}
+          {% if skills_assessment.vetassess_group %}<span class="badge indigo" style="margin-left: 4pt;">Group {{ skills_assessment.vetassess_group }}</span>{% endif %}
+          {% if skills_assessment.rpl_required %}<span class="badge amber" style="margin-left: 4pt;">RPL Pathway Required</span>{% endif %}
+        </div>
+      </div>
+      <div>
+        {% if skills_assessment.assessment_outcome == "Positive via RPL Pathway" %}
+          <span class="badge green" style="font-size: 9pt; padding: 4pt 8pt;">✓ POSITIVE VIA RPL PATHWAY</span>
+        {% elif skills_assessment.is_positive %}
+          <span class="badge green" style="font-size: 9pt; padding: 4pt 8pt;">✓ LIKELY POSITIVE ASSESSMENT</span>
+        {% else %}
+          <span class="badge amber" style="font-size: 9pt; padding: 4pt 8pt;">⚠ {{ skills_assessment.assessment_outcome | upper }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <table>
+      <tr>
+        <th style="width: 28%;">Assessment Pathway</th>
+        <td><b>{{ skills_assessment.pathway_name }}</b></td>
+      </tr>
+      <tr>
+        <th>Qualification Mapping</th>
+        <td>
+          <b>{{ client.education or client.qualification or "Tertiary Qualification" }}</b>
+          {% if client.field_of_study %} in <i>{{ client.field_of_study }}</i>{% endif %}
+          {% if skills_assessment.qualification_bucket %} · <span class="badge {% if skills_assessment.qualification_bucket == 'IT Major' %}green{% elif skills_assessment.qualification_bucket == 'IT Minor' %}indigo{% else %}amber{% endif %}">{{ skills_assessment.qualification_bucket }}</span>{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>Qualifying Experience Deduction</th>
+        <td>
+          <b style="color: #b91c1c;">-{{ "%.1f"|format(skills_assessment.deducted_years) }} years</b>
+          <span class="small">(consumed to establish skills suitability / Requirement Met Date)</span>
+        </td>
+      </tr>
+      <tr>
+        <th>Points-Claimable Work Experience</th>
+        <td>
+          <b style="color: #047857;">{{ "%.1f"|format(skills_assessment.points_claimable_years) }} years</b>
+          &nbsp;·&nbsp;
+          <span class="badge indigo">{{ skills_assessment.points_description or (skills_assessment.points_claimable_points|string ~ " GSM Points") }}</span>
+        </td>
+      </tr>
+      {% if assessing_body and assessing_body.fee_display %}
+      <tr>
+        <th>Standard Assessment Fee</th>
+        <td>{{ assessing_body.fee_display }}{% if assessing_body.fee_inr_display %} (approx {{ assessing_body.fee_inr_display }}){% endif %}</td>
+      </tr>
+      {% endif %}
+      {% if skills_assessment.rpl_required and skills_assessment.rpl_details %}
+      <tr>
+        <th>RPL Documentation Required</th>
+        <td>
+          <b>{{ skills_assessment.rpl_details.reports_needed }} Formal Project Reports</b> in official ACS RPL template ({{ skills_assessment.rpl_details.report_timeline }})
+          {% if skills_assessment.rpl_details.acs_rpl_review_fee_aud %}<br><span class="small">RPL Review Fee: AUD ${{ skills_assessment.rpl_details.acs_rpl_review_fee_aud }}</span>{% endif %}
+        </td>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+
+  {% if skills_assessment.justification %}
+  <div style="background: #fffbeb; border-left: 3pt solid #f59e0b; padding: 8pt 10pt; margin: 8pt 0; font-size: 8.5pt; line-height: 1.5;">
+    <b style="color: #92400e; text-transform: uppercase; font-size: 8pt; letter-spacing: 0.5pt; display: block; margin-bottom: 4pt;">
+      Adviser Screening Rationale &amp; Client Justification
+    </b>
+    <div style="color: #78350f; white-space: pre-line;">{{ skills_assessment.justification }}</div>
+  </div>
+  {% endif %}
+
+  {% if skills_assessment.required_documents %}
+  <h3 style="margin-top: 10pt;">Mandatory Evidence &amp; Documents to Screen Before Lodgement</h3>
+  <ul class="tight">
+    {% for doc in skills_assessment.required_documents %}
+      <li><b>{{ doc }}</b></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if skills_assessment.risk_warnings %}
+  <div style="background: #fef2f2; border: 1pt solid #fecaca; border-radius: 4pt; padding: 6pt 8pt; margin-top: 8pt; font-size: 8pt; color: #991b1b;">
+    <b>Important Pre-Lodgement Precautions:</b>
+    <ul class="tight" style="margin-top: 2pt;">
+      {% for w in skills_assessment.risk_warnings %}
+        <li>{{ w }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+{% elif assessing_body and assessing_body.name %}
 <table>
 <tr><th style="width:30%">Body</th><td><b>{{ assessing_body.name }}</b>{% if assessing_body.short_name %} ({{ assessing_body.short_name }}){% endif %}</td></tr>
 <tr><th>Website</th><td>{{ assessing_body.url or "—" }}</td></tr>
@@ -331,12 +429,7 @@
 {% if assessing_body.documents_required %}
 <tr><th>Standard Documents</th><td><ul class="tight">{% for d in assessing_body.documents_required[:10] %}<li>{{ d }}</li>{% endfor %}</ul></td></tr>
 {% endif %}
-{% if assessing_body.methodology_summary %}
-<tr><th>Methodology</th><td>{{ assessing_body.methodology_summary }}</td></tr>
-{% endif %}
 </table>
-{% else %}
-<p class="small">Assessing body has not yet been assigned for this occupation. LEAMSS will identify the correct body during full case review.</p>
 {% endif %}
 {% endif %}
 

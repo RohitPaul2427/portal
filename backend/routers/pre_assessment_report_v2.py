@@ -51,6 +51,8 @@ class ClientProfile(BaseModel):
     age: Optional[int] = None
     english_score: Optional[str] = None  # "IELTS 7.5", "PTE 65" etc.
     education: Optional[str] = None
+    qualification: Optional[str] = None
+    field_of_study: Optional[str] = None
     work_exp_years: Optional[int] = None
     notes: Optional[str] = None
 
@@ -172,7 +174,7 @@ async def _build_context(req: ReportRequest, user: Dict[str, Any]) -> Dict[str, 
 
     # Top industries (from abs_data)
     top_industries = [
-        {"name": i.get("name") or i.get("industry"), "pct": i.get("pct") or i.get("share_pct")}
+        {"name": (i.get("name") or i.get("industry")) if isinstance(i, dict) else str(i), "pct": (i.get("pct") or i.get("share_pct")) if isinstance(i, dict) else None}
         for i in (abs_data.get("top_industries") or [])[:5]
     ]
 
@@ -230,10 +232,14 @@ async def _build_context(req: ReportRequest, user: Dict[str, Any]) -> Dict[str, 
             "methodology_summary": aa.get("methodology_summary") or "",
         }
 
+    # Skills Assessment Analysis (Phase 21)
+    from core.skills_assessment_engine import evaluate_skills_assessment
+    skills_assessment = evaluate_skills_assessment(occ, default_client=req.client.dict())
+
     return {
         "client": req.client.dict(),
         "country": {"code": cc, "name": {"AU": "Australia", "CA": "Canada", "NZ": "New Zealand"}.get(cc, cc)},
-                "occupations": [
+        "occupations": [
             {
                 "code": o.get("code"),
                 "title": o.get("title") or "",
@@ -257,6 +263,7 @@ async def _build_context(req: ReportRequest, user: Dict[str, Any]) -> Dict[str, 
             },
         },
         "assessing_body": assessing_body,
+        "skills_assessment": skills_assessment,
         "salary": salary,
         "growth": growth,
         "workforce": workforce,

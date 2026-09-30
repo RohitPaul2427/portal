@@ -307,17 +307,25 @@ footer a{color:var(--muted)}footer a:hover{color:var(--burnt)}
 {% endif %}
 
 
-<div class="metric">
-    <div class="ml">Required Documents</div>
+          {% if occ.vetassess_group %}
+            <div class="metric"><div class="ml">VETASSESS Group</div><div class="mv">Group {{ occ.vetassess_group }}</div><div class="ms">{% if occ.vetassess_group in ['A','B'] %}AQF Bachelor+ Level{% elif occ.vetassess_group in ['C','E'] %}AQF Diploma Level{% else %}AQF Cert III/IV Level{% endif %}</div></div>
+          {% elif occ.acs_category %}
+            <div class="metric"><div class="ml">ACS Category</div><div class="mv" style="font-size:16px;">{{ occ.acs_category }}</div><div class="ms">ICT Skills Assessment</div></div>
+          {% elif occ.vetassess_approved_rto %}
+            <div class="metric"><div class="ml">Trade Program</div><div class="mv" style="font-size:15px;">TRA / RTO Pathway</div><div class="ms">VETASSESS Approved RTO</div></div>
+          {% endif %}
 
-    <div class="mv">
-        {{ (occ.required_documents or [])|length }}
-    </div>
+          <div class="metric">
+              <div class="ml">Required Documents</div>
 
-    <div class="ms">
-        items in checklist
-    </div>
-</div>
+              <div class="mv">
+                  {{ (occ.required_documents or [])|length }}
+              </div>
+
+              <div class="ms">
+                  items in checklist
+              </div>
+          </div>
 
 
 {% set aa = occ.assessing_authority or {} %}
