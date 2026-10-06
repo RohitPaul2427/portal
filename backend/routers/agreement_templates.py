@@ -52,7 +52,9 @@ AGREEMENT_PDF_DIR = "/app/uploads/agreements"
 SIG_DIR = "/app/uploads/signatures"
 os.makedirs(AGREEMENT_PDF_DIR, exist_ok=True)
 
-jinja_env = Environment(autoescape=False)  # templates are admin-controlled HTML
+# SECURITY: template *markup* is admin-controlled, but the values merged into it
+# (client name, address, etc.) are user-supplied - escape them to prevent XSS.
+jinja_env = Environment(autoescape=True)
 
 
 def _iso(v):

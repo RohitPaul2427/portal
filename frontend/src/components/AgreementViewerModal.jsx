@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, Download, RefreshCw, FileText } from 'lucide-react';
 import './agreement-doc.css';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -82,7 +83,7 @@ export default function AgreementViewerModal({ pa, onClose, onRegenerate }) {
             </div>
 
             <div className="flex-1 overflow-y-auto agreement-doc-wrap" data-testid="agreement-body-viewer">
-              <div dangerouslySetInnerHTML={{ __html: agreement.rendered_html }} />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(agreement.rendered_html) }} />
             </div>
 
             <div className="p-3 border-t bg-slate-50 flex items-center justify-between">

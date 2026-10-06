@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { X, FileText, Send, ChevronRight, ChevronLeft, Eye, Sparkles } from 'lucide-react';
 import './agreement-doc.css';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -180,7 +181,7 @@ export default function AgreementGenerator({ pa, onClose, onGenerated }) {
           {step === 3 && (
             <div data-testid="step-preview">
               <div className="agreement-doc-wrap rounded-lg max-h-[480px] overflow-y-auto border">
-                <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(previewHtml) }} />
               </div>
             </div>
           )}

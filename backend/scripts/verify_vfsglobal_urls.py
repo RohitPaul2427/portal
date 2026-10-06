@@ -8,6 +8,10 @@ Output: /app/memory/seeds/vfsglobal_url_health.json
 """
 from __future__ import annotations
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from core.net import HTTP_VERIFY  # noqa: E402
 import asyncio
 import json
 import time
@@ -103,7 +107,7 @@ async def main():
     print(f"Loaded {len(countries)} countries · {len(targets)} have VFS slug · {null_count} marked null")
 
     sem = asyncio.Semaphore(SEMAPHORE_LIMIT)
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient(verify=HTTP_VERIFY) as client:
         results = await asyncio.gather(*[
             check_one(client, c, s, sem) for c, s in targets
         ])

@@ -1,9 +1,12 @@
 """Auth Router"""
-from fastapi import APIRouter, HTTPException, Depends
+import re
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 from datetime import datetime, timezone, timedelta
 from core.database import users_col, audit_logs_col
-from core.auth import verify_password, get_password_hash, create_access_token, get_current_user, build_token_payload
+from core.auth import (verify_password, get_password_hash, create_access_token, get_current_user,
+                       build_token_payload, get_optional_user)
+from core import login_throttle
 import uuid
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -30,37 +33,34 @@ async def _log(user_id, action, entity_type, entity_id=None, details=None):
 
 
 @router.post("/login")
-async def login(request: LoginRequest):
+async def login(request: LoginRequest, http_request: Request):
     try:
         email_clean = request.email.strip().lower()
-        user = await users_col.find_one({"email": {"$regex": f"^{email_clean}$", "$options": "i"}}, {"_id": 0})
-        
-        # If admin user not found in DB at all, auto-create it
-        if not user and email_clean == "admin@leamss.com" and request.password in ["Admin@123", "admin@123"]:
-            admin_doc = {
-                "id": str(uuid.uuid4()),
-                "email": "admin@leamss.com",
-                "password": get_password_hash("Admin@123"),
-                "name": "System Administrator",
-                "role": "admin",
-                "rbac_role": "admin",
-                "user_type": "internal",
-                "status": "active",
-                "created_at": datetime.now(timezone.utc),
-            }
-            await users_col.insert_one(admin_doc)
-            user = admin_doc
+        ip = login_throttle.client_ip(http_request)
+        await login_throttle.check_allowed("staff", email_clean, ip)
+
+        # SECURITY: escape user input before using it in a regex (prevents
+        # `.*`-style matching of arbitrary accounts).
+        user = await users_col.find_one(
+            {"email": {"$regex": f"^{re.escape(email_clean)}$", "$options": "i"}}, {"_id": 0}
+        )
+
+        # SECURITY: the previous hard-coded admin@leamss.com / Admin@123
+        # auto-create + password bypass has been removed. Create the first admin
+        # via the INITIAL_ADMIN_EMAIL / INITIAL_ADMIN_PASSWORD env vars instead.
 
         if not user:
+            await login_throttle.record_failure("staff", email_clean, ip)
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         pwd_field = user.get("password") or user.get("hashed_password") or ""
         is_valid = verify_password(request.password, pwd_field)
-        if not is_valid and email_clean == "admin@leamss.com" and request.password in ["Admin@123", "admin@123"]:
-            is_valid = True
 
         if not is_valid:
+            await login_throttle.record_failure("staff", email_clean, ip)
             raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        await login_throttle.clear_failures("staff", email_clean)
         
         if user.get("status") != "active":
             raise HTTPException(status_code=401, detail="Account is inactive")
@@ -95,27 +95,51 @@ async def login(request: LoginRequest):
         }
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Login error: {str(e)}")
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("Login error")
+        raise HTTPException(status_code=500, detail="Login error")
 
 
 @router.post("/register")
-async def register(request: RegisterRequest):
-    existing = await users_col.find_one({"email": request.email})
+async def register(request: RegisterRequest, current_user: dict = Depends(get_optional_user)):
+    """Create a user.
+
+    SECURITY: only an authenticated admin may choose the role. Anonymous
+    sign-ups are always created as ``client`` (and only if public sign-up is
+    enabled via ALLOW_PUBLIC_SIGNUP=1).
+    """
+    import os
+    from core.auth import validate_password_strength
+
+    is_admin = bool(current_user) and (
+        current_user.get("role") == "admin" or current_user.get("rbac_role") in ("admin", "super_admin")
+    )
+    if not is_admin and os.environ.get("ALLOW_PUBLIC_SIGNUP") != "1":
+        raise HTTPException(status_code=403, detail="Public registration is disabled")
+    role = request.role if is_admin else "client"
+
+    ok, msg = validate_password_strength(request.password)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+
+    email_clean = request.email.strip().lower()
+    existing = await users_col.find_one({"email": email_clean})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     user = {
-        "id": str(uuid.uuid4()), "email": request.email,
+        "id": str(uuid.uuid4()), "email": email_clean,
         "password": get_password_hash(request.password),
-        "name": request.name, "role": request.role,
+        "name": request.name, "role": role,
         "mobile": request.mobile, "status": "active",
         "commission_rate": 0.0,
         "created_at": datetime.now(timezone.utc)
     }
     await users_col.insert_one(user)
-    
-    token = create_access_token({"sub": user["id"], "role": user["role"]})
+
+    # An admin creating a staff account must not receive that account's token.
+    token = None if is_admin else create_access_token(build_token_payload(user))
     return {
         "token": token,
         "user": {"id": user["id"], "email": user["email"], "name": user["name"], "role": user["role"], "status": "active"}

@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = process.env.REACT_APP_BACKEND_URL || "http://localhost:8001/api";
+const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:8001"}/api`;
+const authHeader = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
 
 export default function AtlasCountryManager() {
   const [countries, setCountries] = useState([]);
 
   const loadCountries = async () => {
     try {
-      const res = await axios.get(`${API}/atlas/admin/countries`);
+      const res = await axios.get(`${API}/atlas/admin/countries`, authHeader());
       setCountries(res.data);
     } catch (err) {
       console.error(err);

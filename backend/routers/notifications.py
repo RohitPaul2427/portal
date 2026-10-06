@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import StreamingResponse
 from core.database import notifications_col
-from core.auth import get_current_user
+from core.auth import JWT_SECRET, get_current_user
 from datetime import datetime, timezone
 import asyncio
 import json
@@ -62,7 +62,7 @@ async def mark_all_read(current_user: dict = Depends(get_current_user)):
 async def notification_stream(token: str = Query(...)):
     """SSE endpoint for real-time notifications"""
     try:
-        payload = jwt.decode(token, os.environ.get("JWT_SECRET", "leamss-portal-secret-key-2024-secure"), algorithms=["HS256"])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
         user_id = payload.get("sub")
         if not user_id:
             return StreamingResponse(iter([]), status_code=401)

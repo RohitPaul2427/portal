@@ -37,9 +37,8 @@ PROP_COLL = "proposals"
 DENYLIST_COLL = "proposal_link_denylist"
 
 # Separate secret (falls back to JWT_SECRET if not set)
-PROPOSAL_LINK_SECRET = os.environ.get("PROPOSAL_LINK_SECRET") or os.environ.get(
-    "JWT_SECRET", "dev_proposal_link_secret_change_me"
-)
+from core.auth import JWT_SECRET as _JWT_SECRET  # validated; no public fallback
+PROPOSAL_LINK_SECRET = os.environ.get("PROPOSAL_LINK_SECRET") or _JWT_SECRET
 LINK_PURPOSE = "proposal_view"
 LINK_TTL_DAYS = 30
 ADMIN_ROLES = {"admin", "admin_owner", "super_admin", "case_manager",

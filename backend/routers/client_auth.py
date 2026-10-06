@@ -17,6 +17,7 @@ JWT claim: {user_type: "client", client_id: uuid, email, name}
 """
 from __future__ import annotations
 
+import hmac
 import logging
 import os
 import secrets
@@ -104,9 +105,11 @@ async def get_current_client(
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 @router.post("/login")
 async def client_login(body: ClientLoginIn, request: Request):
-    email = body.email.lower()
+    from core import login_throttle
+    email = body.email.strip().lower()
+    ip = login_throttle.client_ip(request)
+    await login_throttle.check_allowed("client", email, ip)
     portal = await db[PORTAL_COLL].find_one({"client_email": email})
-    ip = request.client.host if request.client else "unknown"
 
     async def _audit(status: str, portal_id: Optional[str] = None):
         await db[LOGIN_AUDIT_COLL].insert_one({
@@ -116,6 +119,7 @@ async def client_login(body: ClientLoginIn, request: Request):
         })
 
     if not portal:
+        await login_throttle.record_failure("client", email, ip)
         await _audit("unknown_email")
         raise HTTPException(401, "Invalid email or password")
     if portal.get("locked"):
@@ -131,19 +135,22 @@ async def client_login(body: ClientLoginIn, request: Request):
             ok = verify_password(body.password, pwd_hash)
         except Exception:
             ok = False
-    if not ok and temp_pwd and body.password == temp_pwd:
+    if not ok and temp_pwd and hmac.compare_digest(str(body.password), str(temp_pwd)):
         # First-time login with temp password — auto-hash for next time
         ok = True
         await db[PORTAL_COLL].update_one(
             {"id": portal["id"]},
             {"$set": {"password_hash": get_password_hash(body.password),
-                      "last_login_at": datetime.now(timezone.utc)}},
+                      "last_login_at": datetime.now(timezone.utc)},
+             "$unset": {"temp_password": ""}},
         )
 
     if not ok:
+        await login_throttle.record_failure("client", email, ip)
         await _audit("bad_password", portal.get("id"))
         raise HTTPException(401, "Invalid email or password")
 
+    await login_throttle.clear_failures("client", email)
     await db[PORTAL_COLL].update_one(
         {"id": portal["id"]},
         {"$set": {"last_login_at": datetime.now(timezone.utc),

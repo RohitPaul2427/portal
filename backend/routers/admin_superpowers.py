@@ -190,13 +190,15 @@ async def quick_approval_action(data: QuickApproveRequest, current_user: dict = 
 
             # Create or get client
             client = await users_col.find_one({"email": sale["client_email"]}, {"_id": 0})
-            client_password = "Client@123"
+            import secrets as _secrets
+            # SECURITY: unique random temporary password per client (was a shared "Client@123").
+            client_password = _secrets.token_urlsafe(9) + "@A1"
             client_is_new = False
             if not client:
                 client_is_new = True
                 client = {
                     "id": str(uuid.uuid4()), "email": sale["client_email"],
-                    "password": get_password_hash(client_password),
+                    "password": get_password_hash(client_password), "must_change_password_on_next_login": True,
                     "name": sale["client_name"], "role": "client",
                     "mobile": sale.get("client_mobile", ""), "status": "active",
                     "commission_rate": 0.0, "created_at": datetime.now(timezone.utc)

@@ -10,6 +10,7 @@ For rows where the consultant left the ANZSCO code blank but provided a public
 The picked code is flagged as AI-suggested (review pending) so the consultant keeps
 final control in the per-client edit dialog.
 """
+from core.net import HTTP_VERIFY
 import asyncio
 import json
 import logging
@@ -129,7 +130,7 @@ async def fetch_resume_bytes(url: str) -> Tuple[Optional[bytes], Optional[str], 
                         follow_redirects=True,
                         timeout=httpx.Timeout(45.0, connect=15.0),
                         headers=_UA,
-                        verify=False,
+                        verify=HTTP_VERIFY,
                         limits=httpx.Limits(max_connections=4, max_keepalive_connections=0),
                     ) as client:
                         resp = await client.get(fetch_url)
@@ -241,7 +242,7 @@ async def match_anzsco(db, description: str, max_candidates: int = 120) -> Dict[
     )
 
     try:
-        _http = httpx.AsyncClient(verify=False, timeout=60)
+        _http = httpx.AsyncClient(verify=HTTP_VERIFY, timeout=60)
         client = AsyncOpenAI(
             api_key=api_key,
             base_url="https://api.perplexity.ai",

@@ -1,6 +1,7 @@
 """LEAMSS Portal - FastAPI Backend with MongoDB"""
 import os
 import sys
+import logging
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -193,12 +194,23 @@ from routers.public_resume import router as public_resume_router
 
 app = FastAPI(title="LEAMSS Portal API", version="3.0")
 
+# SECURITY: only trusted front-end origins may call the API from a browser.
+# Override with CORS_ORIGINS="https://a.com,https://b.com" (comma-separated).
+_DEFAULT_CORS_ORIGINS = (
+    "https://leamss.com,https://www.leamss.com,https://portal.leamss.com,https://app.leamss.com,"
+    "http://localhost:3000,http://127.0.0.1:3000"
+)
+CORS_ORIGINS = [o.strip() for o in os.environ.get("CORS_ORIGINS", _DEFAULT_CORS_ORIGINS).split(",") if o.strip()]
+if "*" in CORS_ORIGINS:
+    raise RuntimeError("CORS_ORIGINS must not contain '*' when credentials are allowed")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_origin_regex=os.environ.get("CORS_ORIGIN_REGEX") or None,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"],
 )
 
 
@@ -479,18 +491,50 @@ async def seed_database():
     from datetime import datetime, timezone
     
     # Create users
+    # SECURITY: no hard-coded passwords. The first admin is taken from
+    # INITIAL_ADMIN_EMAIL / INITIAL_ADMIN_PASSWORD; any password not supplied
+    # via env is randomly generated, logged ONCE at first boot, and the user is
+    # forced to change it on first login.
+    import secrets as _secrets
+    _generated = {}
+
+    # Local automated test suites expect the historical demo passwords. They are
+    # only used when SEED_LEGACY_TEST_PASSWORDS=1 AND ENVIRONMENT is not production.
+    _legacy = {
+        "admin": "Admin@123", "manager": "Manager@123", "partner": "Partner@123",
+        "client": "Client@123", "client2": "Client@123",
+    }
+    _use_legacy = (os.environ.get("SEED_LEGACY_TEST_PASSWORDS") == "1"
+                   and os.environ.get("ENVIRONMENT", "").lower() != "production")
+
+    def _seed_pw(env_key: str, label: str) -> str:
+        if _use_legacy:
+            return get_password_hash(_legacy.get(label.split("@")[0], "Client@123"))
+        pw = os.environ.get(env_key)
+        if not pw:
+            pw = _secrets.token_urlsafe(12) + "!A1"
+            _generated[label] = pw
+        return get_password_hash(pw)
+
+    admin_email = os.environ.get("INITIAL_ADMIN_EMAIL", "admin@leamss.com").strip().lower()
+    _common = {"status": "active", "must_change_password_on_next_login": True}
     users = [
-        {"id": str(uuid.uuid4()), "email": "admin@leamss.com", "password": get_password_hash("Admin@123"),
-         "name": "Admin User", "role": "admin", "mobile": "+1-555-0001", "status": "active", "commission_rate": 0.0, "created_at": datetime.now(timezone.utc)},
-        {"id": str(uuid.uuid4()), "email": "manager@leamss.com", "password": get_password_hash("Manager@123"),
-         "name": "Case Manager", "role": "case_manager", "mobile": "+1-555-0002", "status": "active", "commission_rate": 0.0, "created_at": datetime.now(timezone.utc)},
-        {"id": str(uuid.uuid4()), "email": "partner@leamss.com", "password": get_password_hash("Partner@123"),
-         "name": "Partner User", "role": "partner", "mobile": "+1-555-0003", "status": "active", "commission_rate": 10.0, "created_at": datetime.now(timezone.utc)},
-        {"id": str(uuid.uuid4()), "email": "client@leamss.com", "password": get_password_hash("Client@123"),
-         "name": "Jane Smith", "role": "client", "mobile": "+1-555-0004", "status": "active", "commission_rate": 0.0, "created_at": datetime.now(timezone.utc)},
-        {"id": str(uuid.uuid4()), "email": "client2@leamss.com", "password": get_password_hash("Client@123"),
-         "name": "Bob Johnson", "role": "client", "mobile": "+1-555-0005", "status": "active", "commission_rate": 0.0, "created_at": datetime.now(timezone.utc)},
+        {"id": str(uuid.uuid4()), "email": admin_email, "password": _seed_pw("INITIAL_ADMIN_PASSWORD", admin_email),
+         "name": "Admin User", "role": "admin", "mobile": "+1-555-0001", **_common, "commission_rate": 0.0, "created_at": datetime.now(timezone.utc)},
+        {"id": str(uuid.uuid4()), "email": "manager@leamss.com", "password": _seed_pw("SEED_DEMO_PASSWORD", "manager@leamss.com"),
+         "name": "Case Manager", "role": "case_manager", "mobile": "+1-555-0002", **_common, "commission_rate": 0.0, "created_at": datetime.now(timezone.utc)},
+        {"id": str(uuid.uuid4()), "email": "partner@leamss.com", "password": _seed_pw("SEED_DEMO_PASSWORD", "partner@leamss.com"),
+         "name": "Partner User", "role": "partner", "mobile": "+1-555-0003", **_common, "commission_rate": 10.0, "created_at": datetime.now(timezone.utc)},
+        {"id": str(uuid.uuid4()), "email": "client@leamss.com", "password": _seed_pw("SEED_DEMO_PASSWORD", "client@leamss.com"),
+         "name": "Jane Smith", "role": "client", "mobile": "+1-555-0004", **_common, "commission_rate": 0.0, "created_at": datetime.now(timezone.utc)},
+        {"id": str(uuid.uuid4()), "email": "client2@leamss.com", "password": _seed_pw("SEED_DEMO_PASSWORD", "client2@leamss.com"),
+         "name": "Bob Johnson", "role": "client", "mobile": "+1-555-0005", **_common, "commission_rate": 0.0, "created_at": datetime.now(timezone.utc)},
     ]
+    if _generated:
+        logging.getLogger("leamss.seed").warning(
+            "Generated one-time passwords for seeded accounts (change on first login): %s",
+            ", ".join(f"{k} => {v}" for k, v in _generated.items()),
+        )
     await users_col.insert_many(users)
     
     admin, manager, partner, client1, client2 = users
@@ -603,10 +647,7 @@ async def seed_database():
     })
     
     print(f"Seeded: 5 users, 3 products, 2 sales, 1 case, 1 ticket")
-    print(f"  Admin: admin@leamss.com / Admin@123")
-    print(f"  Manager: manager@leamss.com / Manager@123")
-    print(f"  Partner: partner@leamss.com / Partner@123")
-    print(f"  Client: client@leamss.com / Client@123")
+    print("  Seeded account passwords: see the one-time 'Generated one-time passwords' log line above (or your INITIAL_ADMIN_PASSWORD / SEED_DEMO_PASSWORD env vars).")
 
 
 # Include all routers

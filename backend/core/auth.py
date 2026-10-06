@@ -1,6 +1,8 @@
 """Authentication utilities"""
 import os
 import re
+import hmac
+import logging
 import jwt
 from datetime import datetime, timedelta, timezone
 import bcrypt
@@ -15,9 +17,38 @@ if not hasattr(bcrypt, "__about__"):
         __version__ = getattr(bcrypt, "__version__", "4.0.0")
     bcrypt.__about__ = _About()
 
-JWT_SECRET = os.environ.get("JWT_SECRET", "leamss-portal-secret-key-2024-secure")
+logger = logging.getLogger(__name__)
+
+_INSECURE_DEFAULT_SECRETS = {"", "leamss-portal-secret-key-2024-secure", "changeme", "secret"}
+
+
+def _load_jwt_secret() -> str:
+    """Load the JWT signing secret from the environment.
+
+    SECURITY: there is intentionally NO hard-coded fallback. A public fallback
+    secret lets anyone forge admin tokens. In development you may set
+    ALLOW_INSECURE_DEV_SECRET=1 to auto-generate an ephemeral secret (tokens
+    will be invalidated on every restart).
+    """
+    secret = os.environ.get("JWT_SECRET", "")
+    if secret in _INSECURE_DEFAULT_SECRETS or len(secret) < 32:
+        if os.environ.get("ALLOW_INSECURE_DEV_SECRET") == "1":
+            import secrets as _secrets
+            logger.warning("JWT_SECRET missing/weak - using an ephemeral DEV secret. Never do this in production.")
+            return _secrets.token_urlsafe(48)
+        raise RuntimeError(
+            "JWT_SECRET environment variable is missing or too short (min 32 chars). "
+            "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(48))\""
+        )
+    return secret
+
+
+JWT_SECRET = _load_jwt_secret()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
+
+_HASH_PREFIXES = ("$2a$", "$2b$", "$2y$", "$argon2", "$pbkdf2", "$5$", "$6$")
 
 
 def get_password_hash(password: str) -> str:
@@ -33,8 +64,12 @@ def get_password_hash(password: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     if not plain or not hashed:
         return False
-    if plain == hashed:
-        return True
+    # SECURITY: never accept the stored hash itself as a password. Plain-text
+    # comparison is only allowed for legacy records that were stored un-hashed,
+    # and uses a constant-time compare.
+    if isinstance(hashed, str) and not hashed.startswith(_HASH_PREFIXES):
+        logger.warning("Legacy plain-text password record encountered - it should be re-hashed.")
+        return hmac.compare_digest(plain.encode("utf-8"), hashed.encode("utf-8"))
     try:
         if isinstance(hashed, str) and hashed.startswith(("$2a$", "$2b$", "$2y$")):
             return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
@@ -101,8 +136,18 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         return user
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.DecodeError:
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(optional_security)):
+    """Return the authenticated user, or None when no/invalid token is supplied."""
+    if not credentials:
+        return None
+    try:
+        return await get_current_user(credentials)
+    except HTTPException:
+        return None
 
 
 def require_role(allowed_roles: list):

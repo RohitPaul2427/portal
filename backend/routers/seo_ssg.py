@@ -978,7 +978,9 @@ async def admin_regen_all(current_user: dict = Depends(get_current_user)) -> Dic
 
 
 @router.post("/regenerate-one")
-async def admin_regen_one(body: RegenOneBody) -> Dict[str, Any]:
+async def admin_regen_one(body: RegenOneBody, current_user: dict = Depends(get_current_user)) -> Dict[str, Any]:
+    if not _is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Admin only")
 
     path = await regenerate_one(body.country_code, body.code)
 

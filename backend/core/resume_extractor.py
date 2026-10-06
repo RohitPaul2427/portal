@@ -7,6 +7,7 @@ Extracts structured candidate profile fields from a resume (PDF or DOCX) using:
 Output schema matches the Phase 6.7 ProfileCreate model so it can be used to
 prefill the wizard directly.
 """
+from core.net import HTTP_VERIFY
 import asyncio
 import io
 import json
@@ -201,7 +202,7 @@ async def ocr_images_to_text(images_b64: List[str], model: Optional[str] = None)
     })
 
     try:
-        async with httpx.AsyncClient(verify=False, timeout=60) as client:
+        async with httpx.AsyncClient(verify=HTTP_VERIFY, timeout=60) as client:
             resp = await client.post(
                 "https://api.anthropic.com/v1/messages",
                 headers={
@@ -817,7 +818,7 @@ async def parse_resume_with_ai(
 
     try:
         import httpx as _httpx
-        _http = _httpx.AsyncClient(verify=False, timeout=60)
+        _http = _httpx.AsyncClient(verify=HTTP_VERIFY, timeout=60)
         client = AsyncOpenAI(
             api_key=key,
             base_url="https://api.perplexity.ai",

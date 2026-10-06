@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileCheck, CheckCircle2, Download } from 'lucide-react';
 import SignatureCanvas from '@/components/SignatureCanvas';
 import './agreement-doc.css';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -123,7 +124,7 @@ export default function ClientAgreementSigning({ paId, onSigned }) {
         onScroll={handleScroll}
         data-testid="agreement-body"
       >
-        <div dangerouslySetInnerHTML={{ __html: agreement.rendered_html }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(agreement.rendered_html) }} />
       </div>
       {!scrolledToEnd ? (
         <div className="p-4 text-center bg-amber-50">
