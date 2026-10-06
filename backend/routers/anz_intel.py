@@ -15,6 +15,7 @@ ZERO mutations — purely diagnostic.
 """
 from __future__ import annotations
 
+from core.net import HTTP_VERIFY
 import os
 import openpyxl
 from datetime import datetime, timezone
@@ -1630,7 +1631,10 @@ import traceback
 async def preview_state_excel(
     state: str = Form(...),
     file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
 ):
+    if not _is_admin(current_user):
+        raise HTTPException(403, "Admin only")
     try:
         print("========== ENTERED PREVIEW ==========")
 
@@ -1899,7 +1903,7 @@ async def ai_extract_preview(
 
     import json as _json
     import httpx as _httpx
-    _http = _httpx.AsyncClient(verify=False, timeout=60)
+    _http = _httpx.AsyncClient(verify=HTTP_VERIFY, timeout=60)
 
     client = AsyncOpenAI(
         api_key=PERPLEXITY_API_KEY,
@@ -2270,7 +2274,7 @@ Do not explain anything.
 Return JSON only.
 """
     import httpx as _httpx
-    _http = _httpx.AsyncClient(verify=False, timeout=60)
+    _http = _httpx.AsyncClient(verify=HTTP_VERIFY, timeout=60)
     client = AsyncOpenAI(
         api_key=PERPLEXITY_API_KEY,
         base_url="https://api.perplexity.ai",

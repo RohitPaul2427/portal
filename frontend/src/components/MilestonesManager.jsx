@@ -56,7 +56,13 @@ export default function MilestonesManager({ caseId, role }) {
     try {
       await axios.post(`${API}/milestones/${mid}/mock-pay`, {}, getAuth());
       toast.success('Paid (mock)'); load();
-    } catch (e) { toast.error(e.response?.data?.detail || 'Failed'); }
+    } catch (e) {
+      if (e.response?.status === 404) {
+        toast.error('Online milestone payment is not enabled yet. Please contact your consultant for payment details.');
+      } else {
+        toast.error(e.response?.data?.detail || 'Failed');
+      }
+    }
   };
 
   const markPaid = async (mid) => {

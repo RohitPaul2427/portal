@@ -9,6 +9,7 @@ Per Sir's dispatch (Feb 27, 2026 B.4.1).
 """
 from __future__ import annotations
 
+from core.net import HTTP_VERIFY
 import asyncio
 import logging
 import os
@@ -52,7 +53,7 @@ async def call_perplexity_sonar_pro(
     from openai import AsyncOpenAI
     import httpx as _httpx
 
-    _http = _httpx.AsyncClient(verify=False, timeout=timeout_seconds)
+    _http = _httpx.AsyncClient(verify=HTTP_VERIFY, timeout=timeout_seconds)
     client = AsyncOpenAI(
         api_key=api_key,
         base_url=PERPLEXITY_BASE_URL,

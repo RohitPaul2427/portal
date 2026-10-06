@@ -6,6 +6,7 @@ Endpoints:
   POST /api/sales/ai/suggest-occupation — free-text description → top 3-5 code suggestions
   (Resume parser already lives at /api/eligibility/profiles/resume-extract — reused.)
 """
+from core.net import HTTP_VERIFY
 import json
 import logging
 import os
@@ -703,7 +704,7 @@ async def suggest_occupation(
     client = AsyncOpenAI(
         api_key=api_key,
         base_url="https://api.perplexity.ai",
-        http_client=httpx.AsyncClient(verify=False, timeout=25)
+        http_client=httpx.AsyncClient(verify=HTTP_VERIFY, timeout=25)
     )
 
     try:

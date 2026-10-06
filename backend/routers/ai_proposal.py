@@ -3,6 +3,7 @@
 Used by Partners to generate a professional proposal narrative for a client
 based on the pre-assessment profile. Output is editable before sending.
 """
+from core.net import HTTP_VERIFY
 import os
 import uuid
 import logging
@@ -109,7 +110,7 @@ Uses Perplexity Sonar models.
     client = AsyncOpenAI(
         api_key=PERPLEXITY_API_KEY,
         base_url="https://api.perplexity.ai",
-        http_client=httpx.AsyncClient(verify=False, timeout=60)
+        http_client=httpx.AsyncClient(verify=HTTP_VERIFY, timeout=60)
     )
 
     # Standard AI -> Sonar

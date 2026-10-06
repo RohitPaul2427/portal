@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   ArrowLeft, MessageCircleQuestion, Mic, Sparkles, Loader2, Wand2, Copy, X,
 } from 'lucide-react';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' && window.location.hostname.includes('leamss.com') ? 'https://api.leamss.com' : 'http://localhost:8001');
 const API = `${BACKEND_URL}/api`;
@@ -204,7 +205,7 @@ export default function AEOToolsHub() {
                     <span className="text-[11px] text-slate-500 italic">Target: {snippetResult.target_query}</span>
                   </div>
                   <p className="text-[11px] text-slate-500 mb-2">Why this type: {snippetResult.rationale}</p>
-                  <div className="bg-slate-50 p-3 rounded border" dangerouslySetInnerHTML={{ __html: snippetResult.draft_content }} />
+                  <div className="bg-slate-50 p-3 rounded border" dangerouslySetInnerHTML={{ __html: sanitizeHtml(snippetResult.draft_content) }} />
                   <Button size="sm" variant="outline" className="mt-2" onClick={() => copy(snippetResult.draft_content)} data-testid="copy-snippet">
                     <Copy className="h-3 w-3 mr-1" /> Copy HTML
                   </Button>

@@ -5,6 +5,7 @@ Direct, reliable implementation of Razorpay API with:
 - Utility (verify_payment_signature with HMAC SHA256)
 - SSL-resilient transport for Windows environments
 """
+from core.net import HTTP_VERIFY
 import os
 import hmac
 import hashlib
@@ -30,7 +31,7 @@ class RazorpayOrder:
         self.base_url = base_url
 
     def create(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        with httpx.Client(verify=False, auth=(self.key_id, self.key_secret), timeout=30.0) as client:
+        with httpx.Client(verify=HTTP_VERIFY, auth=(self.key_id, self.key_secret), timeout=30.0) as client:
             resp = client.post(f"{self.base_url}/orders", json=data)
             if resp.status_code not in (200, 201):
                 logger.error("Razorpay order creation failed: %s", resp.text)

@@ -1,3 +1,4 @@
+from core.net import HTTP_VERIFY
 import os
 import json
 import httpx
@@ -18,7 +19,7 @@ async def extract_state_nomination_excel(state: str, excel_text: str):
     client = AsyncOpenAI(
         api_key=api_key,
         base_url="https://api.perplexity.ai",
-        http_client=httpx.AsyncClient(verify=False, timeout=60)
+        http_client=httpx.AsyncClient(verify=HTTP_VERIFY, timeout=60)
     )
 
     system_prompt = """

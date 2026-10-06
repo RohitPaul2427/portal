@@ -237,17 +237,10 @@ useEffect(() => {
                 <Button
                   className="w-full mt-5 bg-emerald-600 hover:bg-emerald-700 h-12"
                   data-testid="pay-token-btn"
-                  onClick={async () => {
-                    try {
-                      const r = await axios.post(`${API}/pre-assess-portal/public/mock-pay`, { token });
-                      if (r.data?.ok) {
-                        toast.success(`Token of ₹${Math.round(tokenAmount).toLocaleString('en-IN')} received! Your consultant will share the full proposal shortly.`);
-                        load();
-                      }
-                    } catch (e) { toast.error(e?.response?.data?.detail || 'Payment failed'); }
-                  }}
+                  disabled={paying}
+                  onClick={handlePay}
                 >
-                  Pay Token ₹{Math.round(tokenAmount).toLocaleString('en-IN')} (Mock)
+                  {paying ? 'Processing…' : `Pay Token ₹${Math.round(tokenAmount).toLocaleString('en-IN')}`}
                 </Button>
               </>
 ): entering ? (

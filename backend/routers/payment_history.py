@@ -11,6 +11,7 @@ Endpoints:
 """
 import uuid
 from datetime import datetime, timezone
+from core.payment_mode import require_mock_payments
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
@@ -240,6 +241,7 @@ async def list_milestones(case_id: str, current_user: dict = Depends(get_current
 
 @milestones_router.post("/{mid}/mock-pay")
 async def mock_pay_milestone(mid: str, current_user: dict = Depends(get_current_user)):
+    require_mock_payments()  # dev/demo only - disabled unless PAYMENT_MODE=mock
     m = await milestones_col.find_one({"id": mid}, {"_id": 0})
     if not m:
         raise HTTPException(status_code=404, detail="Milestone not found")

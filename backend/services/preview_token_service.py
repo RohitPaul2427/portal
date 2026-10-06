@@ -19,7 +19,10 @@ TOKEN_LIFETIME_SECONDS = 300  # 5 minutes
 
 
 def _signing_key() -> bytes:
-    secret = os.environ.get("JWT_SECRET") or os.environ.get("PREVIEW_TOKEN_SECRET") or "phase19.6-default-key"
+    secret = os.environ.get("PREVIEW_TOKEN_SECRET")
+    if not secret:
+        from core.auth import JWT_SECRET  # validated at import; no public fallback
+        secret = JWT_SECRET
     return secret.encode()
 
 

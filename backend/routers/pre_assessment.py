@@ -8,6 +8,7 @@ import os
 import uuid
 import logging
 from datetime import datetime, timezone
+from core.payment_mode import require_mock_payments, mock_payments_enabled
 from fastapi import APIRouter, HTTPException, Depends, Request, UploadFile, File, Form
 from pydantic import BaseModel
 from typing import Optional, List
@@ -479,6 +480,8 @@ async def send_payment_link(pa_id: str, http_request: Request, current_user: dic
     pa_fee = int(pa.get("pre_assessment_fee") or PRE_ASSESSMENT_FEE)
 
     if not STRIPE_API_KEY:
+        if not mock_payments_enabled():
+            raise HTTPException(status_code=503, detail="Online payment is not configured. Use the Razorpay payment link instead.")
         # Mock mode — simulate payment link
         mock_link = f"{str(http_request.base_url)}api/pre-assessment/{pa_id}/mock-payment"
         await pre_assessments_col.update_one({"id": pa_id}, {"$set": {
@@ -536,7 +539,8 @@ async def send_payment_link(pa_id: str, http_request: Request, current_user: dic
 
 @router.post("/{pa_id}/mock-payment")
 async def mock_payment_received(pa_id: str):
-    """Mock endpoint to simulate payment (for testing without Stripe)"""
+    """Mock endpoint to simulate payment (dev/demo only - disabled unless PAYMENT_MODE=mock)"""
+    require_mock_payments()
     pa = await pre_assessments_col.find_one({"id": pa_id}, {"_id": 0})
     if not pa:
         raise HTTPException(status_code=404, detail="Pre-assessment not found")

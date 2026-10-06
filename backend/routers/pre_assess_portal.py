@@ -19,6 +19,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, EmailStr
+from core.payment_mode import require_mock_payments, mock_payments_enabled
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from core.auth import get_current_user, get_password_hash, create_access_token
@@ -452,7 +453,14 @@ async def public_view(token: str, request: Request):
 
 @router.post("/public/mock-pay")
 async def public_mock_pay(data: PublicMockPayRequest):
-    """Mock payment for testing. Creates client user + magic link. Sets stage=payment_received."""
+    """MOCK payment (dev/demo only - disabled unless PAYMENT_MODE=mock)."""
+    require_mock_payments()
+    return await _public_mark_paid(data)
+
+
+async def _public_mark_paid(data: PublicMockPayRequest):
+    """Internal: mark the PA fee paid, create client user + magic link, stage=payment_received.
+    Only call this AFTER a payment has been verified (or from the mock route)."""
     pa = await pre_assessments_col.find_one({"share_token": data.token}, {"_id": 0})
     if not pa:
         raise HTTPException(status_code=404, detail="Link not found")
@@ -739,7 +747,7 @@ async def verify_payment(data: PublicVerifyPaymentRequest):
         raise HTTPException(status_code=400, detail="Payment verification failed — signature mismatch")
 
     # ---- Reuse existing paid-logic (same as mock-pay) ----
-    result = await public_mock_pay(PublicMockPayRequest(token=data.token))
+    result = await _public_mark_paid(PublicMockPayRequest(token=data.token))
     await pre_assessments_col.update_one({"share_token": data.token}, {"$set": {
         "razorpay_order_id": data.order_id,
         "razorpay_payment_id": data.payment_id,
@@ -1608,7 +1616,15 @@ async def proposal_bank_details(pa_id: str, current_user: dict = Depends(get_cur
     return account
 
 @router.post("/client/mock-pay-proposal/{pa_id}")
-async def client_mock_pay_proposal(pa_id: str, current_user: dict = Depends(get_current_user)):
+async def client_mock_pay_proposal_route(pa_id: str, current_user: dict = Depends(get_current_user)):
+    """MOCK main-fee payment (dev/demo only - disabled unless PAYMENT_MODE=mock)."""
+    require_mock_payments()
+    return await client_mock_pay_proposal(pa_id, current_user)
+
+
+async def client_mock_pay_proposal(pa_id: str, current_user: dict):
+    """Internal: record the next main-fee payment part as paid. Called by the mock
+    route above and by the Razorpay-verified route after signature verification."""
     """MOCK main-fee payment — pays the NEXT pending payment part (full / 50-50 / installment).
     Only moves to 'proposal_paid' once ALL parts are paid.
     """

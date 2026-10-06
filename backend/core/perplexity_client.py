@@ -18,6 +18,7 @@ Usage:
 """
 from __future__ import annotations
 
+from core.net import HTTP_VERIFY
 import asyncio
 import logging
 import os
@@ -44,7 +45,7 @@ def _make_client(timeout: float = 60.0) -> AsyncOpenAI:
     if not api_key:
         raise RuntimeError("PERPLEXITY_API_KEY not configured")
 
-    http_client = httpx.AsyncClient(verify=False, timeout=timeout)
+    http_client = httpx.AsyncClient(verify=HTTP_VERIFY, timeout=timeout)
     return AsyncOpenAI(
         api_key=api_key,
         base_url=PERPLEXITY_BASE_URL,

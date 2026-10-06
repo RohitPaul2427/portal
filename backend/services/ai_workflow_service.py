@@ -6,6 +6,7 @@ structured immigration workflow generation, plus quality bar enforcement
 """
 from __future__ import annotations
 
+from core.net import HTTP_VERIFY
 import asyncio
 import json
 import logging
@@ -25,7 +26,7 @@ EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
 # anthropic_client = AsyncAnthropic(
 #     api_key=os.getenv("ANTHROPIC_API_KEY")
 # )
-_pplx_http = httpx.AsyncClient(verify=False, timeout=120)
+_pplx_http = httpx.AsyncClient(verify=HTTP_VERIFY, timeout=120)
 perplexity_client = AsyncOpenAI(
     api_key=os.getenv("PERPLEXITY_API_KEY"),
     base_url="https://api.perplexity.ai",
