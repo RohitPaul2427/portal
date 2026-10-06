@@ -25,12 +25,12 @@ node_modules/
 next-env.d.ts
 *.tsbuildinfo
 
-# Production builds
+# Production builds (built in CI / Docker / Vercel - never commit)
 /build
+frontend/build/
 dist/
-!frontend/build
-!frontend/build/**
 dist
+*.js.map
 
 # Environment files (comprehensive coverage)
 
@@ -176,6 +176,7 @@ frontend/node_modules/.cache/default-development/70.pack
 # Environment and credential files
 .env
 .env.*
+!.env.example
 *.env
 credentials.json
 *.pem
@@ -232,3 +233,15 @@ backend/venv/
 frontend/node_modules/
 .emergent/
 
+
+
+# ── LEAMSS runtime data (never commit) ─────────────────────────────────────
+/uploads/
+backend/uploads/
+backend/storage/
+backups/
+test_reports/
+backend/test_reports/
+.emergent/
+memory/test_credentials.md
+perf_baseline.json

@@ -4,7 +4,7 @@ Reads `backend/data/vfsglobal_country_map.json`, pings every non-null URL using
 httpx async client with 10s timeout + follow redirects, categorises results.
 
 Run: cd /app/backend && python3 scripts/verify_vfsglobal_urls.py
-Output: /app/memory/seeds/vfsglobal_url_health.json
+Output: backend/seeds/reference/vfsglobal_url_health.json
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ import httpx
 
 
 MAP_PATH = Path(__file__).resolve().parent.parent / "data" / "vfsglobal_country_map.json"
-OUT_PATH = Path(f"{APP_ROOT}/memory/seeds/vfsglobal_url_health.json")
+OUT_PATH = Path(f"{APP_ROOT}/backend/seeds/reference/vfsglobal_url_health.json")
 OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 SEMAPHORE_LIMIT = 10

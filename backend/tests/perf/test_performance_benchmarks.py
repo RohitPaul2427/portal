@@ -4,7 +4,7 @@ Asserts p95 latency budgets on critical endpoints. Run via:
     pytest backend/tests/perf/ -v
 
 Optional baseline export:
-    pytest backend/tests/perf/ --benchmark-json=/app/memory/perf_baseline_2026_06_20.json
+    pytest backend/tests/perf/ --benchmark-json=perf_baseline.json
     (requires pytest-benchmark; this suite degrades gracefully without it)
 
 Budgets are 95th-percentile wall-clock measurements for a SINGLE call,

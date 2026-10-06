@@ -9,16 +9,16 @@
 #
 # USAGE:
 #   chmod +x scripts/seed_all_atlas.sh
-#   BASE_URL=http://localhost:8001 ADMIN_EMAIL=admin@leamss.com ADMIN_PASS=Admin@123 \
+#   BASE_URL=http://localhost:8001 ADMIN_EMAIL=admin@leamss.com ADMIN_PASS=<admin password> \
 #     ./scripts/seed_all_atlas.sh
 #
-# Defaults: BASE_URL=http://localhost:8001, admin@leamss.com / Admin@123
+# Defaults: BASE_URL=http://localhost:8001, admin@leamss.com (ADMIN_PASS is required)
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:8001}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@leamss.com}"
-ADMIN_PASS="${ADMIN_PASS:-Admin@123}"
+ADMIN_PASS="${ADMIN_PASS:?Set ADMIN_PASS to the admin password}"
 
 echo "▶ Base URL: $BASE_URL"
 echo "▶ Logging in as $ADMIN_EMAIL ..."

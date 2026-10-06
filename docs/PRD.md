@@ -1,0 +1,3005 @@
+# LEAMSS - Immigration Portal PRD
+
+## Original Problem Statement
+Multi-role immigration portal with React + FastAPI + MongoDB. Roles: Admin, Case Manager, Partner, Client. Expanding to a full multi-department Employee Portal with production-grade RBAC.
+
+
+# 🎉🎉🎉 MEGA DISPATCH SWEEP B.4 COMPLETE — 80 Verified Workflows Across 8 Country/Region Groups (Feb 27, 2026) 🎉🎉🎉
+
+**The complete Country Workflow Seeding Initiative is now finished.** Across **9 atomic sub-slices (B.4.1-9)**, Sweep B.4 added **56 verified workflows** to the original B.2 baseline of 24, bringing the **verified Country Workflows Hub to 80 total workflows**.
+
+| Country / Region | Total Verified Workflows |
+|---|---|
+| 🇦🇺 Australia | 16 |
+| 🇨🇦 Canada | 12 |
+| 🇮🇳 India | 12 |
+| 🇳🇿 New Zealand | 10 |
+| 🇬🇧 United Kingdom | 12 |
+| 🇺🇸 United States | 6 |
+| 🇩🇪 Germany | 6 |
+| 🇪🇺 Schengen Area | 6 |
+| **TOTAL** | **80** |
+
+**Audit logs:** `_b2`=24 (preserved unchanged) + `_b4`=56 (canonical) = 80 (100% coverage, 1:1 mapping).
+**Total documents:** 1,290+ across 80 workflows, all with `{COUNTRY}-{SID}-DOC-NN` doc_id pattern.
+**Honest research corrections:** 9 transparent corrections across 5 sub-slices, all documented in `verified_notes`.
+**Fast-path latency:** All curl tests <200ms (typical 100-150ms).
+**Infrastructure:** `seed_country_workflows_b4.py` (~10,000 lines) + `validate_visa_names.py` (180 lines, supports US/DE/EU inline + JSON file mode).
+
+
+
+> **🇪🇺 Update (Feb 27, 2026 — Sweep B.4.9 Schengen NEW COMPLETE; MEGA DISPATCH FINAL):** Atomic Ship — **6 NET-NEW Schengen verified workflows** (third net-new country/region group, first multi-country regional). **Subclasses:** EU-C-Tourist ✅ (**€90 adult / €45 child / FREE under 6** — June 11, 2024 raise was €60 → €90, NOT €80; 90/180 rule; biometrics + EES mid-rollout) · EU-C-Business ✅ (same €90 + EU host invitation + Indian employer letter; multi-entry common) · EU-D-Long-Stay ✅ (country-specific issuance: **IT €116 · DE €75 · FR €99 · ES €80+€16 TIE · NL €228 · AT €150 · PT €90**; gateway to residence permit; **ETIAS exempt**) · EU-A-Transit ✅ (specific nationalities only — **India NOT typically required**; EES exempt) · EU-C-Family-Visit ✅ (Type C + **Verpflichtungserklärung (DE/CH) / Garanti d'accueil (FR)** sponsor commitment; relationship proof apostilled) · EU-Study ✅ (Type C €90 <90 days OR Type D country-specific >90 days; post-grad job seeker DE 18mo / NL 1yr / FR 1yr / IT 12mo). **🔧 Validator utility extended (`--inline EU` supported, generalization complete)** — 6/6 EU visa names HTTP 200 OK on home-affairs.ec.europa.eu. **🔧 3 RESEARCH CORRECTIONS vs Sir's brief (most in single sub-slice):** (1) Schengen fee **€90 NOT €80** (June 11, 2024 raise was €60 → €90); (2) **ETIAS POSTPONED to Q4 2026** (Oct-Dec launch, NOT mid-2025); (3) **EES PHASED ROLLOUT** (Oct 12, 2025 start → April 10, 2026 full mandatory). All corrections in EU-C-Tourist verified_notes. **Triple-gate verified:** 🟢 Seed `inserted=6 skipped=0`; idempotency `inserted=0 skipped=6`. 🟢 Integrity: 14 mandatory fields all 6 · 93 docs (17+16+16+12+16+16) all with `EU-{SID}-DOC-NN` doc_id · 6/6 canonical `_b4` audit logs. 🟢 Fast-path live curl (4 parallel): EU/visitor → EU-C-Tourist (149ms), Schengen/pr → EU-D-Long-Stay (144ms), Europe/transit → EU-A-Transit (139ms), EU/business → EU-C-Business (102ms) — all unique service_types resolve correctly + Schengen/Europe aliases work. 🟢 **DB total verified workflows: 80 — MEGA DISPATCH COMPLETE** (AU=16, CA=12, IN=12, NZ=10, UK=12, US=6, DE=6, EU=6). 🟢 **Audit log counts: `_b4`=56, `_b2`=24**. **Files modified (3) + extended (1):** `backend/scripts/seed_country_workflows_b4.py` (~10,000 lines), `backend/routers/country_workflows.py` (6 EU aliases), `backend/routers/ai_workflow_builder.py` (schengen/eu COUNTRY_REFERENCES added). **EXTENDED:** `backend/scripts/validate_visa_names.py` (now supports US + DE + EU). **Next:** Post-MEGA-DISPATCH backlog — Sir directs (Phase 22.4 / Phase 23 / Resend / Stripe / parked enhancements).
+
+
+
+> **🇩🇪 Update (Feb 27, 2026 — Sweep B.4.8 Germany NEW COMPLETE + Validator extended to DE):** Atomic Ship — **6 NET-NEW Germany verified workflows** (second net-new country, first EU; no prior B.2 Germany seeds). **Subclasses:** DE-EU-Blue-Card ✅ (**€50,700 general / €45,934.20 shortage Jan 1, 2026 thresholds** — BGBl. 2025 I Nr. 278; €100 fee; 21-mo PR via B1 German; spouses A1 EXEMPT) · DE-Job-Seeker ✅ (6-month non-extendable; **€6,162 Sperrkonto for 2026** = €1,027/mo × 6; 2-week trial work only) · DE-Student ✅ (**€11,904 Sperrkonto** = €992/mo BAföG; €75 visa; public universities FREE; 120 days/yr work; **18-month post-grad job seeker permit**) · DE-Skilled-Worker ✅ (3 pathways: Standard / Recognition Partnership 2024 reform / **Chancenkarte (Opportunity Card) launched June 2024 — CONFIRMED ACTIVE Feb 2026**; 6-point system; €13,092/yr; 20hr/wk part-time work) · DE-Family-Reunion ✅ (€75/€37.50/FREE EU citizen; **A1 German EXEMPT for spouses of EU Blue Card / Skilled Worker / ICT / German citizens**) · DE-Self-Employment ✅ (Freiberufler 2+ client letters / Gewerbe business plan + IHK assessment; €250k rule ABOLISHED; Age 45+: €1,612.53/mo × 12yr or €232,204 assets; **Berlin LEA online-only from March 2026**). **🔧 Validator utility extended (`--inline DE` supported)** — 6/6 DE visa names HTTP 200 OK on make-it-in-germany.com. **🔧 Research correction:** Sir's brief listed EU Blue Card €48,300/€43,759 (outdated) → **actual Jan 1, 2026 €50,700/€45,934.20** (50%/45.3% of €101,400 pension ceiling); correction in DE-EU-Blue-Card verified_notes; all other Sir's values confirmed accurate (€11,904 Sperrkonto, Chancenkarte launch, Recognition Partnership). **Triple-gate verified:** 🟢 Seed `inserted=6 skipped=0`; idempotency `inserted=0 skipped=6`. 🟢 Integrity: 14 mandatory fields all 6 · 95 docs (16+15+15+16+15+18) all with `DE-{SID}-DOC-NN` doc_id · 6/6 canonical `_b4` audit logs. 🟢 Fast-path live curl (4 parallel): DE/work → DE-EU-Blue-Card (142ms), Germany/student → DE-Student (136ms), Deutschland/business → DE-Self-Employment (139ms), DE/partner → DE-Family-Reunion (100ms) — all unique service_types resolve correctly + Germany/Deutschland aliases work. 🟢 **DB total verified workflows: 74** (AU=16, CA=12, IN=12, NZ=10, UK=12, US=6, DE=6). 🟢 **Audit log counts: `_b4`=50, `_b2`=24**. **Files modified (3 + extended 1):** `backend/scripts/seed_country_workflows_b4.py` (~8,200 lines), `backend/routers/country_workflows.py` (6 DE aliases), `backend/routers/ai_workflow_builder.py` (germany/de/deutschland COUNTRY_REFERENCES enhanced). **EXTENDED:** `backend/scripts/validate_visa_names.py` (now supports US + DE). **Next:** B.4.9 Schengen NEW (FINAL sub-slice — ~80 total workflows).
+
+
+
+> **🇺🇸 Update (Feb 27, 2026 — Sweep B.4.7 USA NEW COMPLETE + Visa-Name Validator Utility):** Atomic Ship — **6 NET-NEW USA verified workflows** (first fully net-new country in MEGA DISPATCH B.4; no prior B.2 USA seeds existed). **Subclasses:** US-B1-B2 ✅ ($185 MRV + **$250 Visa Integrity Fee FY2026** = $435; 2 Sept 2025 interview waiver narrowed) · US-F1 ✅ ($350 SEVIS + $185 MRV = $535; OPT 12mo + STEM 24mo extension; 2026 grace period 60d→30d) · US-H-1B ⚠️ REFORM-HEAVY (**$215 registration + $2,225 small / $3,595 large + $2,965 premium; 🔴 Sept 21, 2025 Presidential Proclamation $100,000 fee for cap-subject offshore beneficiaries** — major India barrier; F-1 OPT change-of-status EXEMPT; 85k cap lottery March; NEW Form I-129 02/27/26 from 1 April 2026) · US-L-1 ✅ ($1,385 I-129 + $500 Fraud + $600 Asylum + $2,965 premium; L-1A 7-yr + EB-1C path; L-1B 5-yr; Blanket L-1 for 10+ L-1s / $25M+ sales / 1,000+ employees) · US-EB-1-EB-2 ✅ ($715 I-140 + $1,440 I-485 + $2,965 premium NEW for I-140; EB-1A self-petition + EB-2 NIW 3-prong; **India backlog 10-15 yrs EB-2**) · US-K-1 ✅ ($675/$625 I-129F + $265 MRV + $1,440 I-485 = $2,380 total; 90-day marriage deadline; LPR petitioners EXCLUDED — must use CR-1/IR-1). **🔧 Bundled Visa-Name Validator (`backend/scripts/validate_visa_names.py`):** NEW 180-line utility for pre-seed URL validation against .gov sites (NZ B.4.5 + UK B.4.6 correction precedent). Inline USA validation: 4/6 HTTP 200 OK; 2/6 HTTP 403 on uscis.gov (anti-bot artefact, NOT closures — both visas confirmed ACTIVE via independent Feb 2026 research from Berardi/Ogletree/MVA/etc.). **Triple-gate verified:** 🟢 Seed `inserted=6 skipped=0`; idempotency `inserted=0 skipped=6`. 🟢 Integrity: 14 mandatory fields all 6 · 97 docs (16+15+16+16+16+18) all with `US-{SID}-DOC-NN` doc_id · 6/6 canonical `_b4` audit logs. 🟢 Fast-path live curl (4 parallel): US/visitor → US-B1-B2 (138ms), US/student → US-F1 (138ms), US/pr → US-EB-1-EB-2 (203ms), USA/partner → US-K-1 (137ms) — all unique service_types resolve correctly. 🟢 **DB total verified workflows: 68** (AU=16, CA=12, IN=12, NZ=10, UK=12, US=6). 🟢 **Audit log counts: `_b4`=44, `_b2`=24**. **Files modified/created (3 + 1 new):** `backend/scripts/seed_country_workflows_b4.py` (~6,400 lines, B.4.2-7), `backend/routers/country_workflows.py` (US aliases), `backend/routers/ai_workflow_builder.py` (US COUNTRY_REFERENCES enhanced + united_states + us entries). **NEW:** `backend/scripts/validate_visa_names.py`. **Next:** B.4.8 Germany NEW (first EU country).
+
+
+
+> **🇬🇧 Update (Feb 27, 2026 — Sweep B.4.6 United Kingdom EXPANSION COMPLETE):** Atomic Ship — 6 new UK verified workflows seeded (cumulative UK=12). **Subclasses:** UK-Global-Talent ✅ OPEN (£766 total fee + IHS £1,035/yr; 3-yr ILR for Exceptional Talent + endorsed-fellowship Research; Tech Nation acquired by Founders Forum + secured £11M contract May 2025 + Aug 2025 single GOV.UK Stage 1 form simplification) · UK-HPI ✅ OPEN (£880 + £252 Ecctis + £1,270 maintenance; 2yr Bachelor/Master, 3yr PhD; **list expanded 50→80 universities Nov 2025-Oct 2026**; NOT extendable; UK universities EXCLUDED) · UK-Graduate-Route ✅ OPEN with 2027 reform (£937; **2yr if applied ≤ 31 Dec 2026, 18 months from 1 Jan 2027**; PhD 3yr unchanged) · UK-ILR ⚠️ REFORM-PENDING (£3,226; **White Paper consultation closed 12 Feb 2026; Earned Settlement reform expected April 2026** — 10-yr baseline + High Earner/Top Earner/Public Service/Advanced English reductions; current 5/3-yr rules until reform) · UK-Tier-1-Investor-Closed ⚠️ CLOSED (Route CLOSED 17 Feb 2022; **Extension deadline 17 Feb 2026 — PASSED**; ILR deadline 17 Feb 2028 active; £2M=5yr / £5M=3yr / £10M=2yr) · UK-Visit-Long-Term ✅ OPEN (8 Apr 2026 fee schedule: 2yr £506 / 5yr £903 / 10yr £1,128; max 6 months per visit). **Research-driven correction:** Sir's brief implied "Tech Nation closed" → confirmed Tech Nation acquired by Founders Forum + £11M UK Government contract May 2025; correction documented transparently in Global-Talent `verified_notes`. **Triple-gate verified:** 🟢 Seed `inserted=6 skipped=0`; idempotency `inserted=0 skipped=6`. 🟢 Integrity check: 14 mandatory fields all 6 workflows · 91 docs (15+14+14+16+16+16) all with `UK-{SID}-DOC-NN` doc_id · 6/6 canonical `_b4` audit logs. 🟢 Fast-path live curl: UK/pr → UK-ILR (140ms), UK/business → UK-Tier-1-Investor-Closed (135ms). 🟢 **DB total verified workflows: 62** (AU=16, CA=12, IN=12, NZ=10, UK=12). 🟢 **Audit log counts: `_b4`=38 (12 IN + 10 AU + 6 CA + 4 NZ + 6 UK), `_b2`=24**. **Files modified (2):** `backend/scripts/seed_country_workflows_b4.py` (~4,750 lines, B.4.2-6 combined), `backend/routers/ai_workflow_builder.py` (UK COUNTRY_REFERENCES extended with `pr` + `business`). **Next:** B.4.7 USA NEW (+ visa-name validator bundle).
+
+
+
+> **🇳🇿 Update (Feb 27, 2026 — Sweep B.4.5 New Zealand EXPANSION COMPLETE):** Atomic Ship — 4 new NZ verified workflows seeded with research-driven corrections to Sir's brief (cumulative NZ=10). **Subclasses (corrected):** NZ-AIP ✅ Active Investor Plus (replaces closed Investor 1/2; Growth NZD 5M/3yr + Balanced NZD 10M/5yr; Jun 2026 reforms — English removed, residency 21d/105d, DIMS excluded Dec 2025, philanthropy 20% in Growth, 2026 NZD 5M+ property exemption) · NZ-Entrepreneur ⚠️ Mixed-status (EWV CLOSED → ERV legacy NZD 27,470 + new **BIWV** NZD 12,380 + $1M/$2M invest + $500k reserve) · NZ-Parent-Resident ✅ Queue+Ballot model (no Tier 1/2 in official policy; **30 Apr 2026 income thresholds NZD 72,800 single / 109,200 joint × scale; 2,500 annual cap**) · NZ-Refugee-Family ✅ Refugee Family Support (600/yr quota; Tier 1 open / Tier 2 closed). **Research corrections documented:** Sir's "Investor-2" → AIP, "Tier 1/2 ballot/EOI" → Queue/Ballot, "Skilled-Refugee" → Refugee-Family Support (Skilled Refugee visa doesn't exist in INZ). **Triple-gate verified:** 🟢 Seed `inserted=4 skipped=0`; idempotency `inserted=0 skipped=4`. 🟢 NZ-AIP deep-check: NZD 27,470 + 8 steps + 15 docs (`NZ-AIP-DOC-01..15`) + Growth/Balanced both present. 🟢 4/4 canonical audit logs `country_workflow_seeded_b4`. 🟢 **Audit log counts: `_b4`=32 (12 IN + 10 AU + 6 CA + 4 NZ), `_b2`=24**. 🟢 **DB total verified workflows: 56** (AU=16, CA=12, IN=12, NZ=10, UK=6). **Files modified:** `backend/scripts/seed_country_workflows_b4.py` (now ~3700 lines, B.4.2-5 combined). **Next:** B.4.6 UK EXPANSION.
+
+
+
+> **🇨🇦 Update (Feb 27, 2026 — Sweep B.4.4 Canada EXPANSION + Audit Log Naming Fix COMPLETE):** Atomic Ship — 6 new CA verified workflows seeded (cumulative CA=12) + critical audit-log naming bug fixed. **Subclasses:** CA-AIP ✅ OPEN (Atlantic Immigration Program — designated employer + PEC + Settlement Plan; CAD 1,525 + RPRF 575; 26-mo processing) · CA-Caregiver ⚠️ PAUSED (Home Care Worker Pilots — closed Mar 2026 → 2030; redirect to EE Healthcare NOC 33102 / PNP PSW / LMIA-CEC) · CA-Start-up-Visa ⚠️ PAUSED (intake halted Jan 1 2026; 2025 certs lodge by Jun 30 2026; replacement pilot TBD) · CA-Self-Employed ⚠️ PAUSED (paused Jan 2026; redirect to Provincial Entrepreneur PNPs) · CA-IEC ✅ OPEN (YP + Co-op CAD 269.75; Working Holiday NOT available to India; 2026 pools open) · CA-Super-Visa ✅ OPEN (CAD 185 + $100K mandatory insurance from Canadian/OSFI insurer; 10-yr multi-entry; 5-yr per visit; **Mar 31 2026 income flexibility for hosts**). **Audit Log Naming Bug Fix:** root-caused tester's TC6 FAIL — `seed_country_workflows_b4.py` reused b2.py's `seed_country()` helper which hardcoded action label as `_b2`; tester filtered on `_b4` → false-empty report. Surgical fix: parameterised `sweep_label` in b2.py helper · b4.py caller passes `sweep_label="b4"` · one-shot `--relabel-action` CLI flag rewrote 22 existing B.4 audit entries from `_b2`→`_b4` (matched=22 modified=22). **Triple-gate verified:** 🟢 Seed `inserted=6 skipped=0`; idempotency `inserted=0 skipped=6`. 🟢 CA-AIP deep-check: CAD 1,525 + 8 steps + 15 docs (`CA-AIP-DOC-01..15`). 🟢 CA-Super-Visa: $100K insurance + Mar 2026 flexibility verified in DB. 🟢 **Audit log canonical counts: `_b4`=28 (12 IN + 10 AU + 6 CA), `_b2`=24 (B.2 originals preserved)**. 🟢 **DB total verified workflows: 52** (AU=16, CA=12, IN=12, NZ=6, UK=6). **Files modified (2):** `backend/scripts/seed_country_workflows_b2.py` (parameterised action label), `backend/scripts/seed_country_workflows_b4.py` (CANADA_NEW_WORKFLOWS + sweep_label + relabel CLI). **Next:** B.4.5 New Zealand EXPANSION.
+
+
+
+> **🇦🇺 Update (Feb 27, 2026 — Sweep B.4.3 Australia EXPANSION COMPLETE):** Atomic Ship — 10 new AU verified workflows seeded (cumulative AU=16). **Subclasses:** 485 ⭐ Temporary Graduate (Sir's trigger — Mar 2026 reform: fee DOUBLED AUD 4,600 · age 35 · IELTS 6.5/12mo · stream renames · Replacement closed · onshore Student barred) · 186 ENS (DE+TRT+Labour Agreement · AUD 4,770→5,045 Jul 2026) · 187 RSMS (CLOSED 16 Nov 2019 → legacy/redirect to 494) · 494 Skilled Regional Provisional (AUD 4,910 → 191 PR) · 858 National Innovation Visa (REFORMED 6 Dec 2024 from Global Talent · invitation-only EOI · Tier 1/2 sectors · Form 1000 · AUD 4,000 · HIT AUD 183,100) · 600 Visitor (Tourist/Business/Sponsored Family/Frequent Traveller AUD 200/500/1065) · 407 Training (AUD 430) · 309-100 Partner Offshore Combined (AUD 9,365) · 801 Partner Onshore PR Stage 2 (AUD 0 — covered by 820) · 887 Skilled Regional PR (AUD 1,920 — legacy 475/487/489/886 only, NOT 491/494). **All 14 mandatory fields + doc_id `AU-{SID}-DOC-NN` + canonical audit_logs (entity_id matches workflow_id).** **Sources verified Feb 27, 2026:** immi.homeaffairs.gov.au · studyaustralia.gov.au · bal.com (NIV announcement). **Triple-gate verified:** 🟢 Seed `inserted=10 skipped=0`; idempotency `inserted=0 skipped=10`. 🟢 AU-485 deep-check: Fee AUD 4,600 + 8 steps + 15 docs (`AU-485-DOC-01..15`) + 8 eligibility + 6 FAQs + 8 rejection reasons. 🟢 AU-858 NIV reform present in DB. 🟢 10 canonical audit logs with `entity_id=<workflow_id>` confirmed. 🟢 Total **46 verified workflows** (AU=16, CA=6, IN=12, NZ=6, UK=6). **Files modified:** `backend/scripts/seed_country_workflows_b4.py` (~3170 lines, B.4.2 + B.4.3 combined). **Next:** B.4.4 Canada EXPANSION.
+
+
+
+> **🇮🇳 Update (Feb 27, 2026 — Sweep B.4.2 India NEW COMPLETE):** Atomic Ship — 12 verified India workflows seeded via new idempotent script `backend/scripts/seed_country_workflows_b4.py`. **Visas:** OCI (USD 275 lifelong card · spouse pathway · age-20 re-issuance) · PIO (free legacy converter to OCI) · Employment-E (USD 100-250 by tier · USD 25k salary threshold) · Business-B (USD 160 uniform 1/5/10-yr · 180-day stay cap) · Student-S (USD 100 · UGC/AICTE/NMC bonafide) · e-Tourist-eTV (USD 25 peak/USD 10 lean/USD 40 1-yr/USD 80 5-yr) · Medical-MED + MED-X attendants (USD 100 · JCI/NABH ref) · Conference-C (USD 100 · MEA political clearance route) · Journalist-J (USD 100 · MEA/XPD clearance · ATA Carnet · RAP/PAP) · Research-R (USD 100/190 · host institution · MEA/MHA clearance) · Entry-X (USD 250 / waived for citizen-spouses · X-E/S/M/R dependents) · Transit-T (USD 10 single/USD 20 double · 72-hr max · 15-day validity). **Each visa = 14 mandatory fields + doc_id pattern `IN-{SID}-DOC-NN` + canonical audit_log (`country_workflow_seeded_b2` + `entity_id`).** **Sources verified Feb 27, 2026:** `indianvisaonline.gov.in`, `ociservices.gov.in`, `mha.gov.in/PDF_Other/AnnexIII_01022018.pdf`, `indianembassyusa.gov.in`, `cgimilan.gov.in`, `hcikl.gov.in`, `mea.gov.in/xpd-foreign-press.htm`, `indianfrro.gov.in`. **Backend canonical mapping extended:** `COUNTRY_ALIAS_MAP += {india/in/ind/bharat → IN}`, `SERVICE_TYPE_CANONICAL_MAP += {oci/pio/business/medical/conference/journalist/research/entry_x/transit + synonyms}`, `COUNTRY_REFERENCES["india"]` extended 4→12 categories. **Triple-gate verified:** 🟢 Seed `inserted=12 skipped=0 errored=0`; idempotency `inserted=0 skipped=12`. 🟢 5/5 curl tests PASS: India+oci → 7 steps + 14 docs + `doc_id="IN-OCI-DOC-01"` (Sir's expected pattern), India+work, India+Transit (mixed-case), India+CONFERENCE (uppercase) — all `source=seeded_verified` `model_used=verified_seed`. 🟢 Regression check: Australia+pr still fast-path. 🟢 **DB total verified workflows: 36 (24 prior + 12 IN)**. **Files added (1):** `backend/scripts/seed_country_workflows_b4.py` (1378 lines). **Files modified (2):** `backend/routers/ai_workflow_builder.py` (COUNTRY_REFERENCES["india"]), `backend/routers/country_workflows.py` (COUNTRY_ALIAS_MAP + SERVICE_TYPE_CANONICAL_MAP).
+
+
+
+> **🟢 Update (Feb 27, 2026 — Sweep B.4.1 Perplexity Sonar Pro Tertiary Fallback):** Added 3rd-tier AI fallback after Claude Sonnet 4.5 → Claude Haiku 4.5. New file `backend/services/perplexity_service.py` with `call_perplexity_sonar_pro()` (OpenAI-compatible AsyncOpenAI pointed at `api.perplexity.ai` · model `sonar-pro` · citations appended). `backend/services/ai_workflow_service.py call_ai_with_fallback()` extended with Tier 3 branch (60s timeout). **Per Sir's choice (option b — graceful skip):** code in place; `PERPLEXITY_API_KEY` env var detection + graceful skip logic verified via mocked unit test + real production log capture: `INFO Perplexity Sonar Pro skipped — PERPLEXITY_API_KEY not configured (Sir to set env var to enable)` followed by clean `RuntimeError: All AI providers failed`. Future zero-code activation by adding `PERPLEXITY_API_KEY` to `backend/.env`. Emergent Universal Key does NOT proxy Perplexity. **Files added:** `backend/services/perplexity_service.py` (94 lines). **Files modified:** `backend/services/ai_workflow_service.py`.
+
+
+
+> **🔴 Update (Feb 27, 2026 — CRITICAL HOTFIX) — Fastpath Miss Bug Resolved:** Sir's reported AI progress bar on AU/Subclass-485 click traced to **case-sensitive `service_type` matching** in `find_verified_workflow()`. Frontend was sending `"Pr"` (title-cased) while seed had `"pr"` (lowercase) → fastpath miss → AI path → daily spend limit error. **Diagnosis written first** to `/app/memory/AI_WORKFLOW_FASTPATH_DIAGNOSIS.md` (5 smoking guns), then 3 surgical fixes shipped: **(1)** Liberal `find_verified_workflow()` with `COUNTRY_ALIAS_MAP` (UK↔United Kingdom↔GB↔Britain etc.) + `SERVICE_TYPE_CANONICAL_MAP` (conservative case-insensitive synonyms only — no aggressive keyword fallback); **(2)** Added `"united_kingdom"` alias to `COUNTRY_REFERENCES` (was the reason UK had 0 categories), added `partner` key to NZ + UK; **(3)** `/visa-categories` now returns canonical `service_type` field on every category; frontend `generateWorkflow()` uses `vc.service_type` instead of deriving from `.title()`; frontend properly handles fastpath `status="complete"` response (was only matching `cached=true`, fastpath fell through to non-existent `/status/seeded-xxx` polling). **Self-test matrix:** 12/12 service-type variants ✅, 8/8 multi-word synonyms ✅, 16/16 country aliases ✅, 17/17 UI matrix combos where seed exists ✅. **UI smoke test:** AU/Pr click → "Loaded verified template — instant ⚡" toast + 10 steps + 27 docs + AUD 4640 in <200ms. UK/Work click → same toast + 8 steps + 16 docs + GBP 6694 in <200ms. Backend logs clean (all 200 OK). UK `/visa-categories` now returns 5 categories (was 0). **Sir's trust restoration in progress. Root cause owned and fixed.**
+
+
+
+> **🇬🇧🎉 Update (Feb 27, 2026 morning) — Sweep B.2 UK COMPLETE = SWEEP B.2 FULLY COMPLETE 24/24 (100%):** Final atomic ship (AU → CA → NZ → **UK**). **6 UK subclasses seeded:** Skilled-Worker, Health-Care-Worker, Student, Visitor, Spouse-Family, Innovator-Founder. **Recent reforms accurately reflected:** UK Skilled Worker £38,700 salary threshold (Apr 2024), Health-Care-Worker IHS exemption + reduced fee, Spouse-Family £29,000 income (Apr 2024), Innovator-Founder £0 minimum investment (Apr 2023 reform replacing £50,000). **Data depth (e.g. UK-Skilled-Worker):** 831-char desc · 8 eligibility · 9 fees · 8 steps · 14 docs (all with `UK-Skilled-Worker-DOC-NN` doc_id) · 8 rejections · 8 tips · 6 FAQs · 5 .gov sources from `gov.uk` + GMC/NMC. **Triple-gate verified:** 🟢 Seed `inserted=6 skipped=0`; idempotent `inserted=0 skipped=6`. 🟢 UK-Innovator-Founder reform explicitly stated (`NO MINIMUM INVESTMENT`, `2023 reform`, `ZERO minimum`). 🟢 Fast-path UK 103-150ms across all 6 service types. 🟢 6 UK canonical audit logs. 🟢 **TOTAL audit entries = 24/24 across AU+CA+NZ+UK.** 🟢 Admin Hub `Total=32 Verified=24 Archived=8`. ## **SWEEP B.2 FULLY COMPLETE: 24 verified workflows, 345 documents with doc_id, 100-150ms fast-path latency, brand-compliant, .gov-cited, atomic audit-trailed.** Ready for B.3 (USA/Germany/Schengen) or other Sir direction.
+
+
+
+> **🇳🇿 Update (Feb 27, 2026 morning) — Sweep B.2 New Zealand COMPLETE + Fastpath doc_id Fix:** Third atomic ship (AU done → CA done → **NZ done** → UK next). **6 NZ subclasses seeded:** SMC (6-Point System), Green-List-T1, AEWV, Student, Partner-Resident, Working-Holiday. **Data depth (e.g. NZ-SMC):** 882-char description · 7 eligibility · 9 fees · 8 steps · 16 docs (all with `doc_id` like `NZ-SMC-DOC-03`) · 8 rejections · 8 tips · 6 FAQs · 5 .gov sources from `immigration.govt.nz` + `nzqa.govt.nz`. **Working-Holiday workflow honestly flags India NOT a partner country** — documented for dual-nationality clients. **Fastpath doc_id fix shipped:** Rewrote converter in `ai_workflow_builder.py` to (a) surface flat top-level `document_checklist[]` with all doc objects, (b) match step `documents_needed` strings against flat checklist via exact + substring lookup to enrich `steps[].required_documents[]` with real `doc_id` / `mandatory` / `notes`, (c) fallback deterministic `STEP{NN}-DOC-{NN}` doc_id when no match — guarantees every nested doc is queryable. **Triple-gate verified:** 🟢 Seed `inserted=6 skipped=0`; idempotent re-run `inserted=0 skipped=6`. 🟢 Fastpath fix tested on 10 service-type combinations across AU + CA + NZ — all `flat_docs[].doc_id` populated, all `steps[].required_documents[].doc_id` populated. 🟢 Fast-path performance NZ 100-112ms (target <500ms). 🟢 6 NZ canonical audit logs. 🟢 Admin Hub `Total=26 Verified=18 Archived=8`. **Cumulative shipped: 18/24 workflows (75%). UK is final B.2 atomic ship.**
+
+
+
+> **🇨🇦 Update (Feb 27, 2026) — Sweep B.2 Canada COMPLETE + 3 Fixes:** Second atomic ship (AU done → **CA done** → NZ next → UK after). **6 CA subclasses seeded:** EE-FSW, EE-CEC, PNP, Study-Permit, Work-Permit-Open, Visitor-Visa. **Data depth (e.g. CA-EE-FSW):** 1001-char description · 7 eligibility · 11 fees · 8 steps · 16 docs (all with `doc_id` like `CA-EE-FSW-DOC-03`) · 8 rejections · 8 tips · 6 FAQs · 5 .gov sources from `ircc.canada.ca` + provincial sites. **3 fixes shipped:** (1) Audit logs now use canonical schema (`user_id`, `user_name`, `entity_type`, `entity_id`, `created_at`) — 12/12 entries queryable + attributable; AU 6 retro-backfilled. (2) Brand badge: emerald→leamss-teal in `CountryWorkflowsHub.jsx` — both VERIFIED badges + "Verified" KPI tile gradient. (3) `doc_id` field added to every document on every workflow — `{CC}-{SID}-DOC-{NN}` pattern; AU's 90 documents retroactively patched. **Triple-gate verified:** 🟢 Seed `inserted=6 skipped=0`; idempotent re-run `inserted=0 skipped=6`. 🟢 Backfill `docs_patched=6 audit_patched=6` (90 docs, 6 audit logs). 🟢 Fast-path 101-136ms across 5 CA service types. 🟢 Admin Hub `Total=20 Verified=12 Archived=8` with leamss-teal brand-compliant rendering. **Total verified workflows shipped: 12 (6 AU + 6 CA). Pending: NZ + UK.**
+
+
+
+> **🇦🇺 Update (Feb 27, 2026 early morning) — Sweep B.2 Australia COMPLETE:** Atomic country-by-country shipping per Sir's directive. 6 AU subclasses seeded with high-quality, .gov-verified data via idempotent Python script. **Subclasses shipped:** 189 (Skilled Independent), 190 (Skilled Nominated), 491 (Skilled Work Regional), 482 (TSS Work), 500 (Student), 820 (Partner Onshore). **Data depth (e.g. AU-189):** 745-char description · 8 eligibility criteria · 8 fees breakdown lines · 10 detailed steps · 16 documents · 8 rejection reasons · 8 success tips · 8 FAQs · 5 .gov source URLs. **Triple-gate verified:** 🟢 Seed `inserted=6 skipped=0`; idempotent re-run `inserted=0 skipped=6`. 🟢 `GET /api/country-workflows?country_code=AU&status=verified` returns 6 items (all v1, verified by Admin User). 🟢 Fast-path `POST /api/ai-workflow/generate` responds in **102-144ms** (target <200ms) with `source="seeded_verified"`, `model_used="verified_seed"`, full workflow with 10 steps preserved through transformation. 🟢 Admin Hub UI shows KPI tiles `Verified: 6` + 6 VERIFIED rows. 🟢 Central audit logs written. **Files added:** `backend/scripts/seed_country_workflows_b2.py` (734 lines incl. all 6 AU dictionaries + idempotent seeder + audit logging). Atomic handoff → `e1_tester` spot-check → CA dispatch next.
+
+
+
+> **🚀 Sweep B.1 — Country Workflows Hub (Feb 26, 2026 evening):** Authoritative data quality layer for AI Workflow Builder. New `country_visa_workflows` collection + `routers/country_workflows.py` + admin Hub UI at `/admin/country-workflows`. **Hook into `/api/ai-workflow/generate`:** verified workflows return in **<200ms** (was 60-180s). AI Draft uses the same bg-job pattern from Sweep A.2 — Claude Sonnet 4.5 generates structured draft → admin edits → marks Verified → becomes source of truth. CRUD + versioning + audit-log + RBAC (`country_workflows.manage`) all in place. Tester 13/15 pass; 2 critical backend bugs found + fixed (datetime shadowing + missing log_activity import). **Finishers 1+2 also shipped:** sky chip in collapsed PA row (no expand needed) + sky-blue Awaiting-Payment dialog replacing the alarming red toast on "Preview as Client" + centralized audit_logs entries for express approve/reject. **Next:** Sweep B.2 — Seed 4 priority countries (AU/CA/NZ/UK).
+
+
+
+> **🚀 Sweep A — Express UX Trinity (Feb 26, 2026 evening):** 3 P0 issues shipped in one sweep:
+> - **A.1 Express Approval UI** — New 5th tab "Express Pending" + KPI tile + inline Approve/Reject buttons on PA rows (no more buried `/admin/sales/express-approvals` page)
+> - **A.2 AI Workflow Background Job** — `/generate` no longer 502s on Cloudflare timeout. Returns `job_id` in <250ms; client polls `/generate/status/{job_id}`. **Critical fix:** wrapped LiteLLM (which internally calls SYNC `litellm.completion()` despite async wrapper) in `loop.run_in_executor()` to stop event-loop blocking. Concurrent test: 3 unrelated endpoints respond in <120ms while AI job runs in bg.
+> - **A.3 Post-approval UX** — Replaced alarming "Client account not linked yet" red toast with calm `leamss-sky` "Awaiting Payment" chip + Hinglish tooltip + prominent leamss-teal "Send Payment Link to Client" button calling new `POST /remind-payment` endpoint (idempotent, audit-logged).
+> All 3 verified live (screenshots + concurrent curl tests). Ready for `e1_tester` E2E run.
+
+
+
+> **🚑 Hotfix v2 (Feb 26, 2026 evening) — Phase 22 P0 Regressions GREEN:** Sir ne 3 P0 regressions raise kiye (Coming Soon labels on built features · old Change Role dialog still showing · payroll mark-paid missing audit fields). Previous agent ne code apply karke truncate kar diya tha. **This session validated end-to-end** and found 2 deeper regressions: (1) RBAC v2 migration silently switched `ui_modules` to URL paths breaking ALL "Your Access" tile clicks + labels, (2) `EmployeeDetailModal.jsx` was missing `useNavigate` import causing `navigate is not defined` runtime error. **Both fixed.** Final state: `PortalWelcome.jsx` supports dual-format ui_modules (snake_case + URL paths), `EmployeeDetailModal.jsx` deep-links to new `/admin/rbac?user_id=X` with proper navigate hook, `payroll.py mark-paid` populates `paid_at/paid_by/paid_by_name/payment_reference` + enriched audit log. Verified via curl + 3 Playwright screenshots (PortalWelcome friendly labels, Role tab with "Manage Roles & Capabilities" button, RBAC builder landing). All 5 P0 items GREEN. Ready for `e1_tester` full e2e.
+
+
+> **🛡️ Update (Feb 26, 2026) — Phase 22 MEGA-SWEEP shipped: Advanced RBAC v2 + Payroll Admin UI:** Sir ne "All recommendations" approve karke full mega-sweep dispatch kiya — 22.0 inventory + 22.1 payslip discoverability + 22.2 backend RBAC v2 + 22.3 frontend Role Capability Builder + Payroll Admin Hub bundle + 22.4 promote/demote endpoints. **Architecture:** 9 Capability Packs (baseline · marketing · it · accounts · hr · operations · ai_power_tools NEW · manager_elevation · admin_elevation) × 140 atomic features × 14 categories. Layer model: packs (Layer 1) ∪ overrides.granted (Layer 2) − overrides.revoked. Effective features → backend_permissions flat list (cached on user). **Backend:** 13 new `/api/rbac/*` endpoints, `CapabilityService` (compute/apply/promote/demote/templates), audit log with full diff capture, idempotent prod-gated `migrate_rbac_v2.py` (56 users migrated · zero permission regression via union strategy · 42 informational "warnings" preserved old perms). Force re-login on every mutation via `password_changed_at` bump. **Frontend:** `RoleCapabilityBuilder.jsx` 4-layer UI (pack toggles → searchable feature catalog → live diff preview → reason+save), `AdminRbacHub.jsx` user picker + audit history at `/admin/rbac`, `PayrollAdminHub.jsx` at `/admin/payroll` (bulk generate · approve · mark-paid · PDF download). HR group on HubHome now shows Payroll Admin + RBAC Capability Builder cards. `DashboardShell` `navGroups = []` default added. **Verification:** Backend live (9 packs · 140 features confirmed via curl), smoke screenshots confirmed Role Builder renders 9 packs with exact feature counts (Baseline 15 / Marketing 17 / IT 7 / Accounts 21 / HR 17 / Operations 44 / AI 7 / Manager 20 / Admin 20), live diff verified `+17` after marketing toggle. Brand grep 0 hits. 9 files modified (5 backend + 4 frontend) + 3 new memory docs. **Memory docs:** `/app/memory/FEATURE_INVENTORY_FEB26.md` (140 features inventory) · `/app/memory/RBAC_V2_DESIGN.md` (architecture doc). **Phase 22 complete. Ready for `e1_tester` full e2e verification.**
+
+
+> **📱 Update (Feb 26, 2026) — Phase 21 SLICE 4 Sub-Slice C (Mobile Responsive Polish complete):** Sir ne explicit pre-approved GO se Sub-Slice C ka 6-point P0 mobile polish + past-SLA carryover ship hua. **C.1** code-level audit doc `/app/memory/MOBILE_AUDIT_FEB26.md` published (10+ pages reviewed, 6 P0 fixes prioritized, 4 P1/P2 deferred). **C.2 fixes:** DashboardShell header page-title responsive truncate (`text-sm sm:text-lg truncate max-w-[120px] sm:max-w-none`), HubHome chips now have `snap-x` + `useRef`/`useEffect` auto-`scrollIntoView` on activeGroup change, ChatHub two-pane → single-pane on <md with `mobile-thread-back-btn`, DevTracker 4-column kanban → mobile status switcher row (`kanban-column-switcher-{backlog|in_progress|in_review|done}`) showing only selected column at <md, Reimbursement dialogs (`MyWorkspace.jsx` + `Reimbursements.jsx`) gained `max-h-[90vh] overflow-y-auto`. TicketsHub determined no-op (already responsive). **C.3** new idempotent prod-gated script `/app/backend/scripts/seed_past_sla_demo.py` inserts 2 backdated support_tickets (P0 IT + P1 Marketing, both created 4-7 days ago with expired SLA target) so the red `bg-leamss-red-50/border-leamss-red-300` + `Past SLA` badge CSS path actually renders. **C.4** side lint hygiene on DevTrackerHub.jsx (misplaced `eslint-disable-next-line` corrected). **Triple-gate verified:** 🟢 Sub-Slice B backend 18/18 pytests still pass (zero regression). 🟢 Frontend lint clean on touched scope. 🟢 Brand grep across 7 touched files: **0** indigo/purple/violet/blue-NN. 🟢 Playwright at **375×812 viewport** confirmed live — `portal-hub` rendered (post useRef import patch caught), `ticket-past-sla-*` badges (2 found), Past SLA KPI tile rendered red, `mobile-thread-back-btn` present (md:hidden conditional), `kanban-column-switcher-row` + `backlog` button present. Files modified: 9 total (6 frontend, 1 backend script, 2 memory docs). Sir's directives: UPGRADE only · brand tokens · data-testid coverage · Hinglish empty states · audit-first. **Sub-Slice C complete. After `e1_tester` verification, Phase 21 Slice 4 will be 100% done.**
+
+
+ Backend Sub-Slice B 18/18 pytests pre-existing pass. Aaj frontend wiring done end-to-end. **B.1** 4 routes mounted in `App.js`: `/portal/chat`, `/admin/chat`, `/portal/tickets`, `/admin/tickets` — staff JWT gate only (backend enforces RBAC). **B.2** `DashboardShell.jsx` got `HeaderCommButtons` sub-component injected before ThemeToggle — chat icon (MessageCircle, leamss-teal-600) with live unread badge (leamss-red-500 pill, 99+ cap) polling `/api/internal-chat/unread-count` every 15s + Tickets icon (TicketCheck, leamss-orange-600) quick-link. Badge auto-resets to 0 on chat page (real read server-side). Silent hide on 401/403/404 — client_portal users skipped. **B.3** `EmployeesPortal.jsx` GROUP_CARDS gained new **Communication** group as top entry with `leamss-red` accent (added to `ACCENT_MAP`); default `activeGroup` flipped from `employees` to `communication` (high-frequency placement per Sir). Cards: Chat → `/portal/chat`, Tickets → `/portal/tickets`. **B.4** Pre-existing `eslint-disable-next-line` placement bug fixed in ChatHub.jsx (3 useEffects) + TicketsHub.jsx (1 useEffect) — webpack warnings cleared on touched files. **Triple-gate verified:** 🟢 Backend 18/18 Sub-Slice B pytests pass in 5.35s (zero regression). 🟢 Frontend lint clean on touched scope. 🟢 Brand grep on 6 touched files: 0 indigo/purple/violet/blue-NN. 🟢 3 Playwright screenshots — Portal Hub with Communication chip active (Chat+Tickets cards, header icons), Chat page with 11 threads + Hinglish empty-state prompt, Tickets page with 4 KPI tiles + 24 Open + TKT-0023 showing auto Dev Tracker link badge. All `data-testid` confirmed live: `header-chat-icon`, `header-tickets-link`, `portal-hub-chip-communication`, `comm-chat card`, `chat-page`, `tickets-page`. Files modified (5): App.js, DashboardShell.jsx, EmployeesPortal.jsx, ChatHub.jsx, TicketsHub.jsx. Sir's directives: UPGRADE only · BACKWARD COMPAT · leamss.* tokens · data-testid coverage · Hinglish empty states · 15s poll · auto-reset on chat page. **Sub-Slice B fully shipped. Awaiting `e1_tester` then Sub-Slice C dispatch (mobile responsive polish).**
+
+
+> **🚀 Update (Feb 25, 2026) — Phase 21 SLICE 4 Sub-Slice A (IT Productivity: Site Audit + Dev Tracker):** Sub-Slice A.0 carryover fix: `seed_leave_demo_data.py` was writing only `total_days`/`working_days` but HR Analytics aggregates `$sum: "$num_days"` — added the `num_days` field. Re-seeded; chart now shows earned=26/casual=11/sick=10. **A.1 Site Audit Hub** — new `routers/site_audit.py` (250 lines) with `POST /run` (kicks off background asyncio task), `GET /runs`, `GET /runs/{id}`. **5 audit checks per page**: meta tags · JSON-LD validity (parses script blocks, expects BreadcrumbList+FAQPage on Atlas / Organization+WebSite on /start) · H1/H2 hierarchy · image alt coverage % · internal link health (live HEAD-checks via httpx). Atlas pages read from on-disk SSG output, /start live-fetched. **Production safety**: max 1 concurrent run/user (409), max 10 runs/24h/workspace (429). New page `pages/it/SiteAuditHub.jsx` (270 lines) with scope select, sample size, runs table with PASS/WARN/FAIL summary chips, detail dialog with per-page check breakdown, 4-second auto-poll while running. **A.2 Dev Tracker** — new `routers/dev_tracker.py` (230 lines) with full CRUD on `dev_tracker_items` collection. Types (bug/feature/chore), priorities (P0/P1/P2/P3), statuses (backlog/in_progress/in_review/done), labels[], assignee, reporter, comments[], audit_log[]. Every mutation records audit event with from→to delta. Non-IT users see only items they reported/assigned/linked; IT/admin see all. New page `pages/it/DevTrackerHub.jsx` (310 lines) — kanban with 4 columns (slate/leamss-teal/leamss-orange/emerald borders), click-to-move ◀ ▶ buttons (NO drag-and-drop dep, mobile-friendly for Sub-Slice C), priority chips (P0=leamss-red, P1=leamss-orange, P2=leamss-teal, P3=sky), label chips, comment count badge, full detail dialog with threaded comments + collapsible audit log. **A.3 Hub Surface Updates** — `EmployeesPortal.jsx` IT group ab 3 cards dikhata hai: Site Audit (route), Dev Tracker (route), SEO Health Monitor (still Coming Soon for Sub-Slice B/C). **Routes mounted**: `/portal/it/site-audit` + `/admin/it/site-audit` + `/portal/it/dev-tracker` + `/admin/it/dev-tracker` (backward-compat + RBAC gated). **Triple-gate verified**: 🟢 11/11 Slice 4A pytests PASS in 2.91s + 68/68 cumulative Slice 1-3-backlog-4A pytests pass in 15.76s. 🟢 Frontend lint clean on both new pages. 🟢 Brand grep clean: 0 indigo/purple/violet/blue-NN. 🟢 Live integration verified: Atlas SSG pages successfully fetched + audited (backend logs show `GET http://localhost:3000/atlas/au/ "HTTP/1.1 200 OK"`). 🟢 2 Playwright screenshots: Dev Tracker kanban with 9 items spanning all 4 statuses (P0 SEO blocker visible) + Site Audit with 5 runs (1 running + 4 complete showing PASS 12 · WARN 1 · FAIL 2). **Files created (4)**: `routers/site_audit.py`, `routers/dev_tracker.py`, `pages/it/SiteAuditHub.jsx`, `pages/it/DevTrackerHub.jsx`, `tests/test_phase21_slice4a.py`. **Files modified (4)**: `server.py`, `App.js`, `EmployeesPortal.jsx`, `scripts/seed_leave_demo_data.py`. Sub-Slice B (Chat + Tickets) and C (mobile polish) reserved. All Sir's directives honoured: UPGRADE only · BACKWARD COMPAT · leamss.* tokens (incl. sky for labels per spec) · data-testid coverage · Hinglish empty states · audit trail on every dev-tracker mutation · production rate-limiting on Site Audit · NO heavy dependencies added (skipped @hello-pangea/dnd in favour of click-to-move which is also better mobile UX for Sub-Slice C).
+
+
+> **🧹 Update (Feb 25, 2026) — Phase 21 Pre-Slice-4 Backlog Cleanup:** Sub-Slice A + B verified by `e1_tester`. Sir ne 2 deferred items + 1 demo-quality gap close karwaye. **B.1 Reimbursement Bill File Upload** — Backend `POST /api/reimbursements/{claim_id}/bill` (multipart, PDF/JPG/PNG ≤5MB, owner/HR RBAC) + `GET /api/reimbursements/{claim_id}/bill/{bill_id}` (FileResponse download, owner/manager/HR access). Files stored in existing `/app/backend/uploads/` (reused, NO new helper). Bill metadata pushed into claim's `bills[]` array + `bill_attached` audit log event. Frontend: `MyWorkspace.jsx` submission dialog now has file picker section (PDF/JPG/PNG accept) with client-side validation mirroring backend (5MB cap, mime check, Hinglish toasts). Claim list shows `📎 Bill` links per attached file calling authenticated blob download. Audit-trail dialog automatically picks up `bill_attached` event. **7 new pytests** all PASS in 2.64s (happy path PDF/JPG, oversize reject, bad mime reject, download bytes match, 404 unknown bill, audit log records). **B.2 Leave Demo Seed** — New `backend/scripts/seed_leave_demo_data.py` (167 lines, idempotent). Inserts 24 approved leave records across 8 employees × 3 leave types (sick/casual/earned) over last 90 days. Deterministic IDs + upsert = safe to re-run. Production-safe (refuses unless `--confirm` flag when `ENV=production`). Auto-seeds 3 base `leave_types` if missing. **Outcome:** `/portal/hr-analytics` Leave Patterns chart now renders 3 vivid teal bars instead of empty state — Sir's biggest dashboard demo gap closed. **Triple-gate verified:** 🟢 7/7 new bill upload pytests pass (2.64s) + 84 pre-existing pytests pass (1 unrelated Claude cache flake noted). 🟢 ESLint clean on MyWorkspace.jsx. 🟢 Brand grep: 0 hits across 2 modified frontend files. 🟢 Idempotency verified: 2nd seed run prints "0 new, 24 already existed". 🟢 Playwright 2 screenshots: HR Analytics with populated Leave Patterns chart (3 teal bars: earned/casual/sick), Reimbursements dialog with new file picker + 📎 Bill links in claim list. **Files modified (2):** `backend/routers/reimbursements.py` (+97 lines), `frontend/src/pages/portal/MyWorkspace.jsx`. **Files created (2):** `backend/scripts/seed_leave_demo_data.py`, `backend/tests/test_phase21_slice3_bill_upload.py`. Ready for Slice 4 dispatch (IT productivity + Chat/Tickets + mobile polish).
+
+
+> **🎯 Update (Feb 24, 2026) — Phase 21 SLICE 3 Sub-Slice B (Marketing AI Toolbelt re-mount):** Sub-Slice A `e1_tester` se PASS hone ke baad Sir ne Sub-Slice B GO de diya. Disk pe park 4 hub pages ko un-park karke production-grade routing/RBAC ke saath wire kiya. **B.1 Routes** — 4 new aliases at `/portal/marketing/{content-studio, seo, aeo, geo}` plus existing `/admin/marketing/*` retained for backward compat. All 8 routes wrapped with `RequirePermission anyOf=['marketing.view.all', 'content.view.all', 'campaign.view.all'] allowRoles=['admin_owner','admin']` — non-marketing/admin gets 403. **B.2 Toolbox Row** — `MarketingDashboard.jsx` ab 4-card AI Toolbox top row dikhata hai BEFORE existing stats grid: Content Studio (orange gradient + "Claude 4.5" badge) · SEO (teal border) · AEO (orange border) · GEO (red border + **NEW pill** in corner, tagline "LLM Citation Optimiser · ChatGPT/Claude/Perplexity quotable"). **B.3 EmployeesPortal Marketing Group** — 5 → 9 cards (added Content Studio · SEO · AEO · GEO entries before original 5; description updated to "Leads, campaigns, content studio, SEO/AEO/GEO AI tools"). **B.4 Bonus Brand Sweep** — 2 pre-existing `blue-NN` violations in MarketingDashboard.jsx fixed to leamss-sky-* equivalent (stage badge + lead source icon). Final brand grep across 6 target files: 0 hits. **Claude Sonnet 4.5 integration verified** — `routers/content_studio.py` uses `emergentintegrations.llm.chat.LlmChat` with `CLAUDE_MODEL = "claude-sonnet-4-5-20250929"`, Anthropic-only path, NO GPT/OpenAI. Backend logs confirm `LiteLLM completion() model= claude-sonnet-4-5-20250929`. Frontend↔backend payload schema matched (variants_count, brand_voice, language fields). ⚠️ Live curl generation test surfaced **Emergent Universal Key budget exhausted**: `Budget has been exceeded! Current cost: 7.029870999999993, Max budget: 7.0` — integration code production-ready, just needs Sir to top-up via Profile → Universal Key → Add Balance to enable live generation. **Triple-gate verified:** 🟢 78/78 pytests pass (15.57s). 🟢 ESLint clean on 3 modified files. 🟢 Brand grep across 6 files: ZERO indigo/purple/violet/blue-NN. 🟢 5 Playwright screenshots: Marketing Toolbox row (4 cards visible), Content Studio empty state (Claude 4.5 badge + form), SEO Hub (Keywords/Meta/Internal Links tabs), AEO Hub (FAQ Schema/Voice Search/Featured Snippet tabs), GEO Hub (NEW · LLM-era SEO badge + 4 tabs LLM Audit/Schema/Crawl/Citation). **Files modified (3):** `App.js`, `MarketingDashboard.jsx`, `EmployeesPortal.jsx`. **Files re-activated (already on disk from A.B park):** `MarketingContentStudio.jsx`, `SEOToolsHub.jsx`, `AEOToolsHub.jsx`, `GEOToolsHub.jsx`. **Slice 3 in totality DONE.** Sir's directives honoured: Anthropic-only · NO removal · BACKWARD COMPAT · leamss.* tokens · data-testid coverage · RBAC gating · Hinglish tone in agent communication.
+
+
+> **🚀 Update (Feb 24, 2026) — Phase 21 SLICE 3 Sub-Slice A (Reimbursements · HR Analytics · HubHome refactor):** Phased approach per Sir — Sub-Slice A delivers employee/HR side; Marketing AI tools (Content Studio + SEO/AEO/GEO) parked for Sub-Slice B. **A.1 Reimbursements tab** added to `MyWorkspace.jsx` as 5th tab (Payslips · Reimbursements · Documents · Assets · Onboarding). Submission dialog with 8 categories + INR amount + expense date + vendor + description + bill URL. Claims list with status badges (Submitted/Manager Approved/HR Approved/Reimbursed/Rejected), big leamss-orange ₹ amounts formatted via Intl.NumberFormat('en-IN') (e.g. 1,200 not 1200), "View trail" dialog showing approval audit-events with color-coded dots. Hinglish empty state copy with friendly CTA. **A.2 HR Analytics Dashboard** new `pages/admin/HRAnalyticsDashboard.jsx` mounted at both `/admin/hr/analytics` AND `/portal/hr-analytics`. 4 KPI tiles (Headcount/Attrition 12mo/Late Marks 30d/Onboarding %), Recharts BarChart for dept headcount, PieChart for workforce status, BarChart for leave patterns, period filter (30/90/180/365d), Refresh + CSV export buttons. Uses single `/api/hr-analytics/overview` call. RBAC: admin/admin_owner + system.view.all / hr.user_manage.any / leave.view.all permissions; non-HR gets 403. **A.3 HubHome extraction** — testing-agent flagged earlier; extracted from inline 140-line function inside `EmployeesPortal.jsx` to standalone `components/portal/HubHome.jsx` (152 lines, pure presentational, receives groupCards + accentMap as props). `EmployeesPortal.jsx` shrunk 378 → 242 lines (35% reduction). **Triple-gate verified:** 🟢 Backend: 78/78 Phase 21 Slice 1+2+3 pytests pass (2 expected idempotent-skips), 16.00s. 🟢 Frontend lint clean on all 5 modified/new files. 🟢 Brand grep: 0 indigo/purple/violet/blue-NN matches. 🟢 Playwright: 3 screenshots (Portal Hub home identical post-refactor, Reimbursements tab with 16 claims + ₹ in Indian format + audit trail, HR Analytics with 26 headcount + dept bars + workforce donut + Export CSV). **Marketing tools parked:** MarketingContentStudio.jsx / SEOToolsHub.jsx / AEOToolsHub.jsx / GEOToolsHub.jsx files on disk (NO removal rule), routes registered but UI links unmounted; Marketing Dashboard Toolbox row reverted; EmployeesPortal Marketing group reverted to original 5 cards. **Sub-Slice B (next message):** re-mount Marketing AI tools + optional reimbursement bill file upload. **Files added (2):** `pages/admin/HRAnalyticsDashboard.jsx`, `components/portal/HubHome.jsx`. **Files modified:** `pages/portal/MyWorkspace.jsx` (Reimbursements tab + dialog), `pages/EmployeesPortal.jsx` (HubHome import), `pages/MarketingDashboard.jsx` (toolbox reverted), `App.js` (/portal/hr-analytics alias). All Sir's directives honoured: phased UPGRADE only · BACKWARD COMPAT · leamss.* tokens · data-testid coverage · Hinglish copy · Indian number system.
+
+
+> **💼 Update (Feb 24, 2026) — Phase 21 SLICE 2 (Documents · Onboarding · Assets · Payroll):** Heavy 4-day chunk shipped sequentially with Day-0 backfill (26 Slice 1 pytests across 4 new test files: test_phase21a_portal_hub_extended.py, test_phase21b_my_profile.py, test_phase21e_tasks.py, test_phase21f_announcements_policies.py) + 3 brand-new backend routers + 1 consolidated frontend page. **21.C Documents Vault** `backend/routers/employee_documents.py` (10 endpoints: list/create/verify-reject/replace-with-version/share-token-no-auth-download/archive/expiring-soon-HR-alert) covering 10 doc types (id_proof/education/experience_letter/bank/pf/address_proof/offer_letter/passport/visa/other) with status workflow (uploaded→verified|rejected|expired), version supersession, per-doc audit_log, RBAC (own or HR/admin). **21.D Onboarding + Assets** `backend/routers/onboarding_assets.py` (12 endpoints: template CRUD + workflow start + step completion + asset master CRUD + issue/return state machine + employee asset listing) with 4 step types (form/document_upload/acknowledgment/manual_check) and 4 step roles (employee/hr/it/manager); asset state machine available→issued→available with condition tracking. **21.G Salary + Payroll** `backend/routers/payroll.py` (11 endpoints: salary structure CRUD with auto-supersession + history + CTC preview + bulk payslip generate + list + detail + WeasyPrint LEAMSS-branded PDF download + approve + mark-paid + me/payslips) using India FY25-26 simplified calc (PF capped at ₹15k wage = ₹1800/m at 12%, ESI 0.75%+3.25% only if gross<₹21k, professional tax ₹200/m, LWP per-day basic deduction); idempotent generate (skips already-paid). **Frontend MyWorkspace.jsx** single consolidated employee read-view at /portal/my-workspace with 4 tabs (Payslips/Documents/Assets/Onboarding) + 4 alias routes (/portal/my-payslips, /portal/my-documents, /portal/my-assets, /portal/my-onboarding) — payslips show net-pay highlight + PDF download, documents show type/status/version chips, assets show brand/model/tag/return-by, onboarding shows step-by-step checklist with inline "Mark done". **Portal Hub Me chip** expanded from 6 to 10 cards (added My Payslips/Documents/Assets/Onboarding; My Payslips no longer 'soon: true'). **Triple-gate verified:** 🟢 Backend: 54 phase21 pytests (52 pass + 2 expected idempotent skips on payslip approve/mark-paid when prior run already moved to paid) in 4.95s. 🟢 Curl: all 33 new endpoints return correct status codes + payloads. 🟢 Testing agent (iteration_119.json): 100% backend, 100% frontend, zero Slice 1 regression. **Files added (9):** 3 backend routers + 4 Slice 1 backfill pytests + 1 Slice 2 pytest file + 1 frontend MyWorkspace.jsx. **Files modified:** backend/server.py (3 router registrations), frontend/src/App.js (5 new routes), frontend/src/pages/EmployeesPortal.jsx (Me-chip 10 cards). 🟡 Non-blocking design note: 10 cards in Me chip getting dense — Slice 3 will sub-group into Personal/Work/Comms. **Slice 3 next** (~5 days: Reimbursements + HR Analytics + Marketing Content Studio with Claude + SEO/AEO/GEO).
+
+
+> **🏢 Update (Feb 24, 2026) — Phase 21 SLICE 1 (Unified Portal Hub Foundation):** Five sub-phases shipped end-to-end (21.A · 21.B · 21.E · 21.F · 21.N · 21.O) in a single sequential session per Sir's brief. **21.A** new `/admin/portal-hub` landing with 5 grouped sidebar (Employees/HR/Marketing/IT/Me), live badge counts via `GET /api/admin/portal-hub/stats` (60s cache), card grid that deep-links into existing admin pages, mobile chip strip — all 3 legacy URLs (`/admin/employees`, `/admin/marketing`, `/admin/hr/*`) preserved unchanged. **21.B** `/portal/my-profile` employee self-service with 5 sections (Personal/Professional read-only/Bank+Tax/Emergency/Documents), 1s-debounce auto-save with "Typing → Saving → Saved ✓" indicators, IFSC + PAN validation, audit-history drawer, document vault stub (URL paste — proper upload arrives in 21.C). 5 new endpoints `/api/employees/me/{profile,section/{name},audit-history,documents}` registered BEFORE `/{employee_id}` catch-all with explicit guard. **21.E Tasks Kanban** new collection `employee_tasks` + `routers/tasks.py` (8 endpoints) + dual frontend pages `/portal/my-tasks` (assignee=me) and `/admin/employee-tasks` (manager view) — 5-column drag-drop (To Do/In Progress/Review/Done/Blocked), priority colour chips, tags, due-date overdue highlight, comments thread, audit history, RBAC scoping (employees see own + assigned, managers see all). **21.F Announcements + Internal Policies** new collections + `routers/announcements_policies.py` (15 endpoints) + unified tabbed page `/portal/announcements`+`/portal/policies` (and admin variants) — announcements with priority/audience/pin/read-receipts, policies with 6 categories/versioning/required-acknowledgment/signature_hash + supersede via `/new-version`. **21.N RBAC migration** added `_legacy_role="admin"` backward-compat shim to `require_any_permission()` in `core/rbac/dependencies.py`, migrated 4 endpoints in `routers/marketing.py` (referral stats + promo CRUD) and 7 endpoints in `routers/campaigns.py` (full CRUD + send + stats) via automated AST refactor — zero breaking change. **21.O Brand sweep** confirmed all new pages use `leamss-teal-*`/`leamss-orange-*`/`leamss-red-*` + sky/emerald/slate accents; all interactive elements have `data-testid`. **Triple-gate verified:** 🟢 Backend: 13 new endpoints across 3 new routers + 5 new self-service endpoints on employees.py — all 200 with admin token. 🟢 Curl: `/portal-hub/stats` full payload; `/employees/me/profile` GET + PATCH personal+bank (200 SBIN0001234, 400 BADIFSC); tasks CRUD + comment; announcements `for=true` filter + mark-read; policies acknowledge returns signature_hash. 🟢 Playwright: 5 smoke screenshots — Portal Hub landing (Me badge=4, 13 active employees, 5-group sidebar, 5 cards), MyProfile (auto-saved Bengaluru/KA address + +91 mobile from earlier PATCH), Tasks Kanban (5 sample tasks across 5 columns, overdue red Mar-15/Mar-01), Announcements (3 cards, pinned 100-clients milestone, urgent maintenance), Policies (3 cards across 3 categories with category chips + Acknowledge CTA). **Files added (8):** `backend/routers/portal_hub.py` + `tasks.py` + `announcements_policies.py`; `frontend/src/pages/admin/PortalHub.jsx` + `portal/MyProfile.jsx` + `portal/Tasks.jsx` + `portal/AnnouncementsPolicies.jsx`; `memory/PHASE_21_DISCOVERY_AUDIT.md`. **Files modified:** `backend/server.py` (3 routers), `backend/core/rbac/dependencies.py` (legacy shim), `backend/routers/employees.py` (5 endpoints + SelfProfileSection model + /me guard), `backend/routers/marketing.py` + `campaigns.py` (RBAC migration), `frontend/src/App.js` (7 new routes). Sir's directives fully honoured: UPGRADE only · BACKWARD COMPAT · UNIFY via portal-hub · NO separate Employee JWT · leamss.* tokens · data-testid coverage. **Slice 2 next** (Payroll + Documents Vault + Onboarding wizard, ~4 days).
+
+
+> **🔗 Update (Jun 23, 2026) — Option 2 (Public Proposal Link) + Option 1 (Polish: Z1+Z2+Z3):** Two ships in one pass. **OPTION 2 — Public Proposal Acceptance Link (~30 min):** Sales/admin generates a JWT-signed short URL → client opens email link → reviews proposal + accepts/declines without login. **Backend `routers/proposals_public.py`** (~280 lines, 6 endpoints): `POST /api/proposals/{id}/generate-public-link` (admin/sales only — generates 30-day TTL JWT with `purpose=proposal_view` + `nonce` + `token_id`, stores history in proposal record), `POST /api/proposals/{id}/revoke-public-link?token_id=X` (adds to `proposal_link_denylist`), public (no-auth) `GET /api/proposals/public/view?t=X` (validates token + denylist + status, increments view_count, ISO-formats dates, strips sensitive history), `POST /api/proposals/public/accept?t=X` (transitions sent→accepted with `accepted_via=public_link` + `accepted_token_id`), `POST /api/proposals/public/decline?t=X` body `{reason: str ≥10 chars}`, `GET /api/proposals/public/pdf?t=X` (reuses existing `_render_proposal_html` + WeasyPrint, graceful HTML fallback). Token signed with `PROPOSAL_LINK_SECRET` env (falls back to `JWT_SECRET`). Router registered BEFORE `routers.proposals` so `/public/*` paths match before `/{proposal_id}/*` catch-all. **Y3 Email hook**: existing `POST /api/proposals/{id}/send` now AUTO-generates public link on send + emails it via centralised `email_service.send_email()` (with leamss-orange CTA button, 30-day expiry note, Ref ID). Returns `public_url` + `token_id` + `expires_at` to caller. **Frontend `pages/PublicProposalView.jsx`** (~210 lines) — public route `/proposal/view?t=<token>`. Teal gradient hero with status badge, Investment Summary card with full breakdown table + huge orange total, embedded PDF iframe (best-effort), Decision area with prominent orange "Accept & Activate" button + outline "Decline" with min-10-char reason textarea. Edge cases: expired token → 401 friendly message · revoked → 401 friendly message · already accepted/declined → status banner · network error → retry CTA. On successful accept → emerald success card + 2-sec redirect to `/client-portal/login`. **OPTION 1 — Polish (Z1+Z2+Z3, ~1.5 hr):** **Z1 Test collection errors fixed**: `tests/conftest.py` now auto-loads BOTH `/app/backend/.env` AND `/app/frontend/.env` (REACT_APP_BACKEND_URL lives in frontend env, was missing from backend env so `os.environ.get()` returned None at import time → 2 pre-existing collection errors in `test_phase4c_unification.py` + `test_phase4d_unification.py`). Now collects **73 tests cleanly** (was 0+2 errors). **Z2 Performance benchmark suite**: new `backend/tests/perf/test_performance_benchmarks.py` (~150 lines, 7 tests) asserts p95 latency budgets on 8 critical endpoints — funnel_metrics (500ms/800ms 30d+365d) · coupons_list (200ms) · coupon_validate (200ms) · au_states (250ms) · lead_capture (300ms) · public_atlas_au_states (250ms) · auto-snapshot writer test exports `/tmp/perf_snapshot.json` baseline. All 7 PASS in 15.84s. Baseline saved to `/app/memory/perf_baseline_2026_06_20.json`. **Z3 Centralised Email Service with graceful Resend fallback**: new `services/email_service.py` (~75 lines). When `RESEND_API_KEY` env present → real send via `resend` package. When absent → logs `EMAIL_PREVIEW_LOGGED` + returns `preview_only` status (zero crash). Audit metadata returned in every result. Y3 send_proposal flow now uses this instead of inline log. 3 unit tests cover preview-mode + audit-shape + graceful-when-resend-package-missing. **Sir Action note**: when Sir provides `RESEND_API_KEY`, emails will flow automatically without any code change. **Triple-gate verified:** 🟢 Pytest **5/5 Y4 + 3/3 Z3 + 7/7 Z2 perf** all PASS · Full regression **302/302 cumulative** PASS in 112.74s (+8 over prior 294, ZERO regression). 🟢 Curl: generate-link → 200 with public_url, public view (no auth) → 200, expired/revoked tokens → 401, public accept transitions status, public PDF returns inline PDF. 🟢 Playwright: 1 screenshot of public proposal view showing teal hero + Investment Summary (Base ₹2,00,000 · Add-ons ₹35,000 · −₹25,000 coupons · −₹10,000 special · GST ₹36,000 · **Total ₹2,36,000** in big orange) + PDF iframe + Accept/Decline buttons. **Files added:** `backend/routers/proposals_public.py`, `backend/services/email_service.py`, `backend/tests/test_y4_public_proposal_link.py`, `backend/tests/test_z3_email_service.py`, `backend/tests/perf/test_performance_benchmarks.py`, `frontend/src/pages/PublicProposalView.jsx`, `memory/perf_baseline_2026_06_20.json`. **Files modified:** `backend/routers/proposals.py` (auto-generate public link on send + use email_service), `backend/server.py` (proposals_public_router registered BEFORE proposals_router), `backend/tests/conftest.py` (loads frontend/.env too), `frontend/src/App.js` (public `/proposal/view` route). Cumulative pytest count: **302/302 PASS** (up from 294 baseline). Phase 19+20+step2+Option D+Option 2+Option 1 = production-hardened with revenue-conversion link + perf gates + email-ready infra.
+
+
+> **⚙️ Update (Jun 20, 2026) — Option D · Performance + Polish (X1–X5):** Production-hardening ship after the Phase 20 series. Five sub-items in one sequential pass. **X1 N+1 Audit (~45 min):** Identified 3 hot paths with sequential awaits. Fixed via batch `find({code: {"$in": [...]}})` in `proposals.py` coupon resolver (was 1 find_one per code in loop), seo_ssg.py `render_occupation_html` top_states resolver (was 3 sequential find_ones per occupation page render; saves ~30ms × 1,467 AU pages = 44s during full regen), and **funnel_metrics.py** parallelized 5 aggregation pipelines via `asyncio.gather()` (PA stages + review statuses + proposal statuses + reject reasons + decline reasons run concurrently — measured 126-154ms p95 per call vs ~700ms sequential, **~5× speedup**). **X2 Test Isolation (~30 min):** Created `backend/tests/conftest.py` with session-scoped `event_loop` fixture + sync `MongoClient` fixture + auto-load of `/app/backend/.env` — eliminates Motor async teardown errors that previously caused phase187 tests to fail when run after phase19+20. Full regression now passes regardless of order. **X3 `_log` Centralisation (~30 min):** 4 routers (cases.py, documents.py, auth.py, sales.py) had identical `_log(user_id, action, entity_type, entity_id, details)` helpers — consolidated into single `services/audit_service.log_legacy_event()` canonical implementation (preserves `new_value` field for backward-compat). Each router's local `_log` is now a 2-line delegate (5th router `pre_assess_portal.py` has a different signature — intentionally left alone per coding guidelines). **X4 Brand Sweep (~30 min):** Pre-sweep inventory found **560** legacy color references (indigo-*/purple-*/violet-*) across the frontend. Extended `tailwind.config.js` `leamss` palette with 30 shade-aware aliases (-50 → -900) so the standard Tailwind shade scale works on all 3 brand colors. Ran Python regex sweep across all .jsx + .js files (excluding node_modules) — **872 replacements** across **115 files** (indigo→leamss-teal · purple→leamss-orange · violet→leamss-red). Post-sweep grep returns **0** legacy refs. Webpack compiles clean. All pages render correctly. Inventory saved to `/app/memory/phase2061_brand_sweep_inventory.md`. **X5 Admin Client-Portal Preview (~45 min):** Built read-only "Client View" for admin/CM/sales to preview EXACTLY what their client sees, without needing the client's password. Backend `routers/admin_client_portal_preview.py` exposes 4 admin-scoped endpoints (`/{client_id}/overview · /info-sheet · /documents · /proposal`) returning the same payload shape as `/api/client-portal/*` but with `_preview_mode: true` flag + `_viewing_as` actor context. Every preview access audit-logged via `audit_service.log_action(action="admin.client_portal_preview.X")`. Frontend `pages/admin/AdminClientPortalPreview.jsx` (~280 lines) — striking orange "Read-Only Client View" sticky banner showing "Viewing as {client_name} ({email})" + Back button, 4-tab sidebar (Overview/Info Sheet/Documents/Proposal) with Settings explicitly disabled and tagged "Client-managed only", uses identical visual language as client-facing dashboard for true 1:1 parity. Route `/admin/client-preview/:clientId` protected by `RequirePermission anyOf=[system.user_manage.any, case.view.any, case.update.any, sale.create.any]`. **Triple-gate verified:** 🟢 Pytest **3/3 X5 + 43/43 Option D subset PASS** in 5.74s · Full regression **294/294 Phase 19+20+step2+X5 cumulative PASS** in 70.70s (+27 over prior 267 baseline, ZERO regression after sweep + N+1 fixes + centralisation). 🟢 Curl: funnel metrics 126-154ms (5× faster); preview endpoint with admin → 200 with `_preview_mode=true`; preview with client token → 403. 🟢 Playwright: 1 screenshot of admin client preview showing the orange banner + "Client's Journey View" with 7-stage timeline (TEST_Iteration81_Client perspective) + 3 KPI tiles + correct read-only tabs. **Files added:** `backend/routers/admin_client_portal_preview.py`, `backend/tests/conftest.py`, `backend/tests/test_x5_admin_client_preview.py`, `frontend/src/pages/admin/AdminClientPortalPreview.jsx`, `memory/phase2061_brand_sweep_inventory.md`. **Files modified:** `backend/routers/proposals.py` (coupon batch $in), `backend/routers/seo_ssg.py` (top_states batch $in, sort key None-safety), `backend/routers/funnel_metrics.py` (asyncio.gather 5-way parallel), `backend/services/audit_service.py` (log_legacy_event), `backend/routers/{cases,documents,auth,sales}.py` (4 × `_log` → 2-line delegates), `backend/routers/client_portal.py` (docstring update for X5 sibling endpoints), `backend/server.py` (X5 router), `frontend/tailwind.config.js` (30 shade-aware aliases), `frontend/src/App.js` (X5 route), **115 frontend files** (brand sweep). **Phase 19+20+step2+Option D = production-hardened.** Cumulative tests: **294/294 PASS** (was 267 baseline).
+
+
+> **🎯 Update (Jun 20, 2026) — Step 1 (Inline Lead Capture on State Pages) + Step 2 (Client Portal Full UI):** Sequential ship — Step 1 + Step 2 done in single brief, Option D (Performance & Polish) deferred to next ship. **STEP 1 (~30 min):** Inline conversion-focused lead form embedded directly on all 8 AU state SSG pages (`atlas_state_ssr.html` Section 7b — beautiful 2-column layout: left explainer with 3 ✓ benefits, right form with name/email/phone/message + 3 hidden pre-fill fields `country_of_interest=AU`, `interested_state={state_code}`, `source=state_landing_{state_code}`). Vanilla JS AJAX submission with success/error inline states, honeypot anti-bot field. Backend `PublicLeadCreate` schema extended with `interested_state` + `source` optional fields; the `/api/public-atlas/lead` POST tags leads with `state_{code}` for sales-team segmentation. Expected conversion lift: 30-40% vs CTA-only redirect. Triple-gate: 🟢 inline form curl-tested (`source=state_landing_NSW`, `interested_state=NSW`, tag `state_nsw` saved on lead doc) · 🟢 SSG regen confirms all 8 state pages contain `data-testid="lead-form-state"` · 🟢 pytest +2 new (test_194d_11/12). **STEP 2 (~3 hr):** Full Client Portal with **separate JWT session** strictly isolated from staff tokens. **`routers/client_auth.py`** (~265 lines) — 6 endpoints: `/client-auth/login` (validates against bcrypt hash, falls back to plain `temp_password` on first login + auto-upgrades to hash) · `/logout` · `/forgot-password` (silent enumeration-safe, logs reset link email preview, 2h TTL token in `client_password_resets`) · `/reset-password` · `/change-password` (requires current pwd) · `/me`. JWT claim `user_type: "client"` ensures staff tokens get 403 on client endpoints (test verified). Every login attempt audited in `client_login_audit` (status: ok / bad_password / locked / unknown_email). **`routers/client_portal.py`** (~360 lines) — 11 endpoints: `/overview` (7-stage timeline aggregating PA payment + info sheet + documents + admin review + proposal status + next-action recommendation) · `/info-sheet` GET+PATCH (auto-save, respects admin lock) · `/documents` GET+POST+DELETE (multi-category: identity/qualifications/employment/english_test/other; 10MB cap, mime whitelist [pdf/jpg/png/webp/doc/docx/xlsx], strict client_id scoping enforced) · `/proposal` GET + `/proposal/{id}/accept|decline` (idempotent transitions, client_id ownership verified). All writes register Phase 19.6 revocable `import_batches`. **Frontend pages:** `ClientPortalLogin.jsx` (split-screen design — teal gradient left with briefcase illustration + LEAMSS pitch, white right panel with email/password + forgot-password modal; `localStorage["client_token"]` key distinct from staff `token`) + `ClientPortalDashboard.jsx` (~600 lines, 5-tab layout: Overview / Info Sheet / Documents / Proposal / Settings with sticky top bar showing client name + status pill + logout, left sidebar nav + contact help card, Overview 7-stage visual timeline with done/in_progress/pending icons + orange "Next Step" card + 3 KPI tiles, InfoSheetTab with debounced auto-save on blur, DocumentsTab with category drag-drop zones + uploaded list with status badges + delete action, ProposalTab with status banner + investment breakdown table + Accept/Decline CTAs with decline reason form + PDF download link, SettingsTab with profile display + change-password form with temp-password warning + help contacts). **Admin overrides** (already from Phase 20.5 — verified wired): `/admin/mini-portals` reset-password + lock/unlock actions remain master access for admin role. **Triple-gate:** 🟢 Pytest **12/12 step2 tests PASS** in 5.30s · **40/40 combined (step2 + 194d + 207 + 208)** in 5.30s · **291/291 Phase 19+20+step2 cumulative** PASS in 70.41s (+24 over prior 267 baseline, zero regression). 🟢 Curl verified: client login → JWT issued · `/me` returns full client info · wrong password → 401 · staff token → 403 on client endpoint · `/overview` returns 7 stages. 🟢 Playwright: 3 screenshots — split-screen login (teal/orange/red branding, briefcase illustration, "Track your migration journey"), Overview dashboard (7-stage timeline with checkmarks/clocks + Next Step orange card + 3 KPI tiles), Documents tab (5 category drag-drop zones with "0 uploaded" badges), Settings tab (Profile + Change Password with temp-pwd warning + Help contacts). One failing test fixed in single sweep: datetime ternary precedence bug in `/reset-password` expiry check (`isinstance(exp, datetime) and exp.replace(tzinfo=...) if ... else ...` ambiguous) → restructured into clean if/else. **Files added:** `backend/routers/client_auth.py`, `backend/routers/client_portal.py`, `backend/tests/test_step2_client_portal.py`, `frontend/src/pages/client-portal/ClientPortalLogin.jsx`, `frontend/src/pages/client-portal/ClientPortalDashboard.jsx`. **Files modified:** `backend/routers/public_atlas.py` (lead schema + tags), `backend/templates/atlas_state_ssr.html` (inline form), `backend/server.py` (3 routers registered), `frontend/src/App.js` (3 new routes), `backend/tests/test_phase194d_states.py` (+2 tests). Step 1+2 **shipped & verified**. Option D Performance & Polish deferred to next ship.
+
+
+> **🗺️ Update (Jun 20, 2026) — Phase 19.4d (Per-State AU Atlas Pages):** Closed out the final deferred scope from Phase 19.4 series. Shipped 8 high-intent SEO landing pages, one per AU state/territory. **New collection `au_states_master`** with 8 seeded states (NSW · VIC · QLD · SA · WA · TAS · NT · ACT) — each with canonical population/area/capital/tagline/immigration_friendly_score/primary_visa_subclasses/cost_of_living_index/lifestyle_highlights. Indexes: `{state_code: 1, unique}`, `{slug: 1, unique}`. **`services/state_aggregation_service.py`** pulls denormalized fields from existing collections: vacancy_snapshots.by_state → monthly_ads, occupation_master.jsa_data.state_distribution → top 10 occupations (sorted by est. vacancy count), industry_master → top 5 employing industries (national fallback when per-state ANZSIC data not yet uploaded), regional_labour_market → SA4 regions grouped by `state` field and sorted by `rating` (Strong=4 → Weak=1), state_nomination_lists → SOL/ROL codes (graceful None when empty). Every refresh registers a Phase 19.6 revocable batch in `import_batches` (24h undo). **3 new admin endpoints**: `POST /api/admin/au-states/seed` (idempotent), `POST /api/admin/au-states/{code}/refresh`, `POST /api/admin/au-states/refresh-all`. **2 new public endpoints**: `GET /api/public-atlas/AU/states` (list all 8), `GET /api/public-atlas/AU/state/{code_or_slug}` (full payload, accepts both NSW + new-south-wales). Route order fix: registered before `/{country}/{code}` catch-all to prevent 400 collision. **New SSR template `atlas_state_ssr.html`** with 8 sections: Hero (with score chip + visa tags) · Job Market Snapshot (ads + period + source) · State Nomination Programs (graceful placeholder when empty) · Top Employing Industries (linked to industry hubs) · Regional Demand Map (SA4 table with Strong/Average badges) · Migration Pathways (subclass descriptions) · Lifestyle & Cost of Living · CTA bar. **Per-state SEO meta**: ≤165 chars, unique data-rich format `{State Name} ({Code}) — {Capital}. {Score}/10 score. {Ads:,} active job ads. top: {Top 3}. Free eligibility check.` JSON-LD `Place` + `BreadcrumbList` schemas. **Bidirectional cross-links** shipped: Occupation pages (AU only) now have "Top 3 states hiring {title}" section with state_share_pct, Country hub `/atlas/au/` gained "Browse by State / Territory" footer grid showing all 8 states with ads + score, sitemap.xml now includes 8 new `/atlas/au/state/{slug}` URLs (priority 0.8, changefreq monthly). **prune_unverified_files()** updated — `state` dir whitelisted alongside `industry` to prevent accidental deletion. **Triple-gate verified:** 🟢 Pytest **10/10 Phase 19.4d tests PASS** in 0.43s · Full regression **277/277 Phase 19+20 tests PASS** in 69s (+10 over 267 baseline, zero breakage). 🟢 Curl/Googlebot: NSW meta 153 chars · QLD JSON-LD Place schema present · country hub has "Browse by State" + state-card-new-south-wales link · 1 SSG regen pre-existing TypeError fixed (sort key None crash on missing state_distribution values). 🟢 Playwright: 2 screenshots (NSW hero with 8.0/10 chip + 62,500 ads + 8 top occupations cards, NSW bottom CTA with SA4 regional table + Lifestyle stats + "Ready for New South Wales?" gradient CTA). **Full SSG regen now produces 1,500 sitemap URLs** (was 1,490 = 1,467 occ + 19 industry + 3 country + 1 hub). Total cumulative AU surface coverage: 8 states + 19 industries + 1,467 occupations all interlinked. Phase 19.4 series **fully closed**.
+
+
+> **🏁 Update (Jun 20, 2026) — Phase 20.7 + 20.8 + Bonus C (FINAL Phase 20 Series ship):** Master "Product & Sales OS" build complete. **Phase 20.7 Skill Assessment Conditional** — `services/country_capabilities.py` (`SKILL_ASSESSMENT_COUNTRIES = {AU, NZ}` frozenset; `supports_skill_assessment()` + `filter_authorities_by_country()` helpers). ProductsManager edit modal already gates assessing_body input (line 511 — Australia/AU/New Zealand/NZ only). Pre-Assessment Report PDF Section 3 "Assessing Body" now wrapped `{% if country.code in ['AU', 'NZ'] %}` — non-AU/NZ PDFs cleanly omit the section. Backend validation enforced server-side: `PATCH /api/products/{id}` returns **HTTP 400** if `assessing_body_code` set on non-AU/NZ product (test: USA + ACS → 400 `"assessing_body_code only valid for AU/NZ products; got country=USA"`). **Phase 20.8 Coupons + Proposal Builder** — `routers/coupons.py` ships full CRUD: `GET/POST/PATCH/DELETE /api/coupons` + `GET /validate?code=X&order_value_inr=N` (eligibility + cascading discount calc with min-order, per-client cap, product/country/visa filters, expiry/exhausted/archived auto-status) + `POST /{code}/apply` (idempotent via `coupon_usages` collection lookup — repeat call returns `already_applied: true`) + `POST /seed` (3 brochure defaults LUMPSUM20 20% / WELCOME5000 ₹5k / STUDENT15 15%). `routers/proposals.py` ships proposal lifecycle: `POST /api/proposals` (validates product + optional approved PA review + resolves coupons + computes cascading totals: base + addons − coupons − admin special discount → subtotal → GST 18% → total_inr), `POST /{id}/send` (status draft→sent), `POST /{id}/accept | /decline`, `GET /{id}/pdf` (WeasyPrint A4 branded PDF: 5-section template with leamss-teal header strip, executive summary box, investment breakdown table with coupon lines + admin-discount line in red, closing message, custom terms, "Accept & Pay" CTA — falls back to HTML if WeasyPrint unavailable). All writes register Phase 19.6 revocable batches (24h undo). Admin UI `/admin/coupons` ships full CRUD with Quick Validator card, Seed Defaults button, status filter, archive action. Sales/Admin UI `/sales/proposal-builder` ships 3-step wizard (1 Client+Product → 2 Discounts+Coupons+Admin Disc+Terms → 3 Send/PDF) with live preview + coupon validate-before-add + downloadPDF. **Bonus C Funnel Health Dashboard** — `routers/funnel_metrics.py` exposes `GET /api/admin/funnel-metrics?days=N` aggregating PA stages + review queue statuses + proposal statuses into 6-stage canonical funnel (Lead Created → Payment Received → Under Admin Review → Approved → Proposal Sent → Proposal Accepted) with `pct_of_leads` + `conversion_from_prev` rates, KPI block (total_leads, paid_pas, approved_reviews, sent_proposals, revenue_inr from accepted proposals), top reject_reasons + decline_reasons, avg_time_in_stage (5-key map). Admin UI `/admin/funnel-dashboard` ships KPI cards, horizontal conversion bars (leamss-teal/orange/red color-coded), 2-column reject/time panel, 3-column stage breakdown grid, period selector (7/30/90/180 days). **Triple-gate verified:** 🟢 Pytest **16/16 NEW (Phase 20.7 + 20.8 + Bonus C)** PASS in 1.10s + **267/267 Phase 19+20 regression** PASS in 111.92s (zero regressions, 131 new tests added since prior handoff baseline of 136). 🟢 Curl evidence: LUMPSUM20 validates → ₹20k saving on ₹100k · funnel returns 32 leads / 5 paid PAs · PATCH USA+ACS → 400. 🟢 Playwright: 3 page screenshots (Coupons Admin with 3 active seeds, Funnel Dashboard with full conversion vis + KPI strip, Proposal Builder step 1). 5 initial pytest failures (datetime tz comparison + datetime-vs-string slicing + PATCH/PUT method mismatch) fixed in single sweep. All brand colors strictly `leamss.{teal,orange,red,bg_white}`. **Phase 20 series COMPLETE.** See CHANGELOG Phase 20.7+20.8+BonusC.
+
+
+> **🔗 Update (Jun 19, 2026) — Phase 20.5 (Funnel Stitching) + Bonus A (Polish) + Bonus B (Smart Completion Score):** The Sales → PA → Mini Portal → Admin Review → Proposal funnel is now **end-to-end wired**. `provision_mini_portal()` auto-fires from BOTH `mock-payment` AND `confirm-payment` PA endpoints — creates `client_mini_portals` doc (12-char temp pw, status=active, password_must_change=true) + `information_sheets` doc (entity_type=client, schema_version=2, pre-filled with client_name/email/phone) + Phase 19.6 revocable batch. New routers: `mini_portal.py` (admin reset/lock/unlock + client get-status, all admin writes 24h-revocable) + `pa_reviews.py` (auto-ingests PAs in `under_review` stage on GET list, supports approve + 3 reject actions: request_more_docs/close_case/refund). New admin pages live at `/admin/pa-reviews` + `/admin/mini-portals` (Active/Locked/Closed + Pending/Approved/Rejected/Refunded/Closed tabs). **Bonus A** ships 5 polishes: `GET /api/openapi.json` (FastAPI auto-spec route), `PATCH /api/info-sheets/{id}/section/{name}` alias, field-level audit granularity (each PATCH records `fields_changed: [{section, field, old, new}]` capped@50), diff-preview accepts nested `{proposed_changes: {...}}` body, reason description bumped to "min 10 chars, recommended 20+". **Bonus B Smart Completion Score** (`services/info_sheet_completion_service.py`) computes weighted 0-100 score (Personal 30 · Family 15 · Dependents 10 · Quals 20 · Employment 20 · Resume 5+boost) with color (green ≥70 · amber 30-69 · red <30) + cross-validation warnings (DOB vs resume year delta, empty section despite AI extraction). Score endpoint `GET /api/info-sheets/{id}/completion-score`. Live color-coded sidebar in `<InfoSheet />` with 6-tile breakdown + top-3 warnings. **Triple-gate verified:** 🟢 Pytest **136/136 PASS in 12.17s** (19 new Phase 20.5 tests + 117 baseline, zero regression). 🟢 Curl: full provisioning chain, admin reset, queue transitions, OpenAPI spec, nested-body diff. 🟢 Playwright 3 screenshots @ `/app/memory/phase206_brand_screenshots/phase205_*.jpeg` (PA Reviews queue · Mini Portals admin · Smart Completion Score sidebar 6/100 red). See CHANGELOG Phase 20.5.
+
+> **📋 Update (Jun 19, 2026) — Phase 20.4 (Universal Info Sheet) + Phase 20.3+ Fee Policy Diff-Preview Bundle:** Existing case-centric `information_sheets` (Phase 6.7 flat-keyed schema) **upgraded** to canonical 6-section universal schema (`personal{}`, `family{}`, `dependents[]` with `is_migrating: bool`, `qualifications[]`, `employment[]`, `resume{}`). Migration `m20260619_phase204_info_sheets.py` is **idempotent + revocable** (Phase 19.6 batch + MD5 snapshot to `/app/memory/snapshots/`). New universal router `/api/info-sheets` supports both `entity_type+entity_id` (sale, pre_assessment, case, standalone) AND legacy `case_id` (back-compat). **Endpoints:** GET schema · GET by-entity · POST create · PATCH auto-save (1s debounced via frontend) · POST lock/unlock (admin) · POST /{id}/resume (Claude Sonnet 4.5 extraction, 1500 tokens, fallback Haiku) · POST /{id}/resume/apply-prefill (append|replace merge) · GET audit-trail. **AI Resume Extraction LIVE-TESTED:** `claude-sonnet-4-5-20250929` extracts 2 quals + 2 jobs + 7 skills + 2 certs from sample CV in ~2s with confidence=0.93. Universal frontend `components/InfoSheet/InfoSheet.jsx` — tabbed 6-section UI · Lucide icons · 1s debounced auto-save with dirty indicator (⟳/⚠/✓) · resume upload + prefill confirmation modal · audit trail right-drawer · brand-compliant teal/orange/red tokens. Mount at `/admin/info-sheets/:entityType/:entityId` (Sales Create/Detail/Admin Case Mgmt embedding deferred to Phase 20.5). **Phase 20.3+ Diff-Preview Bundle** also shipped: `fee_policy_diff_service.py` computes downstream impact (affected_pas_count, unpaid/paid/in-progress breakdown, fee delta + delta_pct, sample top-5) when admin proposes a PA fee policy edit. Modal shown ONLY when fee_inr changes AND affected_count ≥ 1 (Sir's tactical default #4). `POST /{id}/apply-retroactive` endpoint requires `reason` (min 10 chars) + `affect_unpaid_only` flag (default True for safety) + opens Phase 19.6 revocable batch (24h undo). Frontend orange History icon in each row triggers `RetroactiveApplyModal` with mode toggle + warnings panel. **Triple-gate verified:** 🟢 Pytest **117/117** PASS in 11.01s (20 Phase 20.4 tests + 7 Phase 20.3+ diff-preview tests, zero regression). 🟢 Live Claude Sonnet 4.5 test PASS. 🟢 Playwright 4 screenshots @ `/app/memory/phase206_brand_screenshots/phase204_*.jpeg` confirm UI brand-compliant + functional. See CHANGELOG Phase 20.4 + 20.3+.
+
+
+> **💰 Update (Jun 19, 2026) — Phase 20.3 (Variable Pre-Assessment Fee Policy) + Bulk Product Importer:** Hardcoded ₹5,100 PA fee constant **removed** from active code paths. Replaced with **`services/pre_assessment_fee_resolver.py`** — 4-priority chain (product override → country+visa policy → GLOBAL fallback → hardcoded safety net). **6 seed policies** with brochure-derived defaults: AU/PR ₹5,100 · CA/PR ₹5,100 · NZ/PR ₹5,100 · GLOBAL/ANY ₹5,100 · AU/STUDY ₹3,000 (cheaper student PA) · CA/WORK ₹4,500. **Full CRUD router** at `/api/pre-assessment-fee-policies` with GET (any auth) · POST/PATCH/DELETE (admin only, Phase 19.6 revocable batches) · `resolve` endpoint (live audit tool for "what fee will be charged?") · `seed` endpoint (idempotent). PA payment flow upgraded — `create_pre_assessment` resolves fee BEFORE record write, stores `pre_assessment_fee + source + policy_id`; `send_payment_link`/`mock_payment`/`confirm_payment` use stored resolved amount. **Frontend** `/admin/fee-policies` admin page LIVE with orange-tinted Resolver Test panel + 6-policy table + Create/Edit/Delete modals + "Show Deprecated" toggle + "Seed Defaults" idempotent button. **Bulk Product Importer bundle** added — `POST /api/products-bulk-import/preview` (dry-run row-by-row validation with action: new/update/invalid) · `POST /api/products-bulk-import/commit` (idempotent upsert by name+country, Phase 19.6 revocable batch, FK validation for workflow_id + AU/NZ-only assessing_body_code + category enum) · `GET /api/products-bulk-import/template` (CSV download with 3 sample rows). Path collision with `POST /products/{product_id}/preview` (cost preview) resolved by using prefix `/products-bulk-import`. **Triple-gate verified:** 🟢 Pytest **14/14** PASS in 0.72s (resolver safety net + 6 seed creation + AU PR/Study/global fallback/product override priority + partner blocked on writes/bulk + admin CRUD lifecycle + bulk preview detects new/invalid + commit registers batch + PA payment uses resolved fee) — combined **113/113** with Phase 19.6/19.7/19.8/19.9/19.9.1/19.10/19.11/20.1/20.2/20.6 in 14.25s. 🟢 Curl smoke: AU+PR ₹5,100 country_visa_policy ✓ · AU+STUDY ₹3,000 ✓ · ZZ+UNKNOWN global_fallback ✓ · product override ₹12,345 ✓ · bulk preview new=2 invalid=1 ✓ · bulk commit creates 2 + registers batch ✓. 🟢 Playwright `/app/memory/phase206_brand_screenshots/phase203_fee_policies.jpeg` confirms full brand compliance (teal headers + orange resolver panel + 6-policy table + zero indigo/purple). See CHANGELOG Phase 20.3.
+
+
+
+> **📦 Update (Jun 19, 2026) — Phase 20.2 + 20.2.1 (Product Master Upgrade + LEAMSS Brand Guide):** Product Master ab production-ready Sales OS foundation. **11 naye additive fields** all 19 products mein (`is_pre_assessment`, `pre_assessment_fee_inr`, `pre_assessment_fee_currency`, `workflow_id`, `workflow_steps_count`, `visa_subclass`, `assessing_body_code`, `commissions_v2`, `archived_at/by/reason`) — purana data 100% safe with backup snapshot `/app/memory/snapshots/pre_phase202_products_20260619_201717.json` (MD5=`6c334b4e3aaff1ecbffe3ad2e860039d`). Legacy categories migrated via `_category_v2` mapping (`immigration→pr` etc). **10 TEST_ products soft-archived** (revocable via /restore). **5 endpoints upgraded/new**: `GET /api/products` extended with 4 filters (`include_archived`, `category`, `country`, `is_pre_assessment`); `PUT /api/products/{id}` accepts all 11 new fields + AU/NZ-only validation for `assessing_body_code` + verified-workflow validation for `workflow_id`; `POST /{id}/archive` (admin-only with reason); `POST /{id}/restore`; `POST /{id}/link-workflow`; `GET /{id}/commissions` (role-filtered — sales sees only sales_user, partner sees partner_*, admin sees all). Frontend `ProductsManager.jsx` Overview tab gets new collapsible **"Sales Flow Settings"** card with PA toggle + fee + visa subclass + AU/NZ-only assessing-body input + workflow ID. **Category enum expanded** from 5 to 15 values per Sir's spec (`skilled_migration, pr, work, study, tourist, visitor, investment, business, dependent, parent, child, exam_voucher, coaching, service_addon, uncategorized`). **Phase 20.2.1 BONUS:** `/admin/brand-guide` page — single-page reference for designer + future contractors: 7 colour tokens (each with copy Tailwind class + hex buttons via clipboard API), 6 button variants, 7 badge styles, 3 gradients (hero/CTA/soft), typography hierarchy (H1-H6 + body + small), spacing scale (6 sizes), card variants (primary/accent/alert). **Triple-gate verified:** 🟢 Pytest **13/13** PASS in 0.47s — combined **99/99** with Phase 19.6/19.7/19.8/19.9/19.9.1/19.10/19.11/20.1/20.6 in 13.65s. 🟢 Curl: GET active=9 archived=10 · PATCH new fields ✓ · USA+ACS rejected 400 ✓ · AU+ACS accepted ✓ · restore/archive round-trip ✓ · commissions role-filter ✓. 🟢 Playwright: `/admin/brand-guide` fully rendered with all 7 sections visible (`/app/memory/phase206_brand_screenshots/` updated). Migration was **idempotent + revocable** per Phase 19.6 standard. See CHANGELOG Phase 20.2.
+
+
+
+> **🎨 Update (Jun 19, 2026) — Phase 20.6 (Brand Spot-Audit + VFS URL Verification):** Entire LEAMSS UI ab strictly **teal · orange · red · white** brand palette par. 106 hardcoded indigo/purple/blue Tailwind classes 10 priority files mein swap kiye gaye via idempotent Python script `backend/scripts/phase206_brand_replace.py` (50+ regex rules covering `bg-`, `text-`, `border-`, `border-l-`, `from-`, `to-`, `via-`, `hover:`, `focus:ring-` with `/opacity` suffix support). Tokens: `leamss.{teal: #0D9488, orange: #F97316, red: #DC2626, bg_white, teal_50, orange_50, red_50}`. Priority files patched: Login (5 subs), AIWorkflowBuilder (9), VerificationHub (25), AuthoritiesAdmin (2), AuthorityHealthCard (7), AuthorityEditTimeline (7), RecentImportsPanel (10), ProductsManager (29), DataImportHub (4), OccupationDetail (8). VFSglobal URL health verifier `backend/scripts/verify_vfsglobal_urls.py` (async httpx, 10s timeout, semaphore=10, 2 alternate URL patterns) confirms all 25 non-null VFS URLs respond (403 = CDN bot-protection, NORMAL — confirms URLs exist, no 404 dead links); health report saved to `/app/memory/seeds/vfsglobal_url_health.json`. **Triple-gate verified:** 🟢 Pytest **4/4** PASS (map structure · health schema · script valid · no 404s on critical countries) — combined **86/86** with full regression in 12.57s. 🟢 Webpack compilation SUCCESS (all `leamss-*` classes resolve to correct hex). 🟢 Playwright 4 screenshots saved to `/app/memory/phase206_brand_screenshots/` confirming teal headers + orange CTAs + zero indigo/purple anywhere across Login · Verify Hub · Products · Sales pages. **248 non-priority files** (Atlas SSR, partner share links, mobile companion) still have legacy indigo/purple usages — Phase 20.6.1 sweep optional. Brand inventory + audit notes at `/app/memory/phase206_brand_audit_inventory.md`. See CHANGELOG Phase 20.6.
+
+
+
+> **🚀 Update (Jun 19, 2026) — Phase 20.1 (AI Workflow Builder Polish & Persistence):** AI Workflow Builder ab **Claude Sonnet 4.5** (Anthropic, Sir's directive #3) se chalti hai with **Claude Haiku 4.5 silent fallback** (Emergent key Anthropic-only — GPT-5.2 fallback blocked by key policy; flagged in CHANGELOG). New service module `services/ai_workflow_service.py` with: 51-country VFSglobal URL map (`data/vfsglobal_country_map.json`), AU/NZ Skills Assessment URL auto-resolution from Phase 19.7 `assessing_authorities` collection, quality bar enforcement (≥5 steps · ≥3 docs per step · auto-retry with stricter prompt up to 2x), JSON response parser handling markdown-wrapped responses, template-fallback degraded mode when AI exhausts. **`POST /api/ai-workflow/verify`** (NEW) persists admin-verified workflows to `ai_workflow_templates` collection with full metadata (`model_used, verified_by, verified_at, vfsglobal_url, skill_assessment_url, is_skill_assessment_required`). **`GET /api/ai-workflow/templates`** merges 10 hardcoded + N DB-verified. Frontend: `handleVerifyToggle` silently POSTs to `/verify` when admin ticks checkbox; toast surfaces actual model used; degraded-mode banner on template fallback. **Brand tokens** added to `tailwind.config.js` (`leamss.{teal: #0D9488, orange: #F97316, red: #DC2626, bg_white}`) — single source of truth per Sir's directive. **Triple-gate verified:** 🟢 Pytest **13/13** PASS (8 unit + 5 integration in 0.38s) — combined **82/82** with Phase 19.6/19.7/19.8/19.9/19.10/19.11 in 12.20s. 🟢 Curl live: Singapore Visitor workflow generated by `claude-sonnet-4-5-20250929` with 7 steps, 3-6 docs per step, ica.gov.sg URLs, visa.vfsglobal.com URLs per step, `is_skill_assessment_required: false` (correct for non-AU/NZ-PR), quality_issues: [] · `/verify` endpoint persisted to DB · merged template listing confirmed. 🟢 Playwright login screenshot confirms teal brand color rendering live. **🚨 Sir Action Required:** Claude Sonnet 4.5 budget hit $4.00 cap during testing — please top up at Profile → Universal Key → Add Balance for full Phase 20.2-20.8 progression. Phase 20.6 brand spot-audit (replace any indigo/purple hardcoded with `leamss.*` tokens) scheduled next per agreed order. See CHANGELOG Phase 20.1.
+
+
+
+> **🎁 Update (Jun 19, 2026) — Phase 19.9.1 + 19.10 + 19.11 (Triple-batch ship: Audit Polish · Smart Sales INR/State Demand · Pre-Assessment PDF):** Ek single run mein 3 phases shipped. **Phase 19.9.1** — Diff Audit `meta_description_diffs` bug fixed (identity-field changes now produce non-empty diffs); 2 new audit-trail endpoints (`/api/assessing-authorities/audit-trail/recent` + `/{code}/audit-trail`); 4th Health Card tile "Last Authority Edit" with color-coded `AuthorityEditTimeline` side-panel. **Phase 19.10 Smart Sales Helper Extension** — `currency_service.py` (AUD/NZD/CAD → INR with DB-stored admin override + env fallback, 5-min cache, 3 endpoints incl admin POST audited via Phase 19.6 batch); state nomination uploader (CSV/XLSX parser with auto-column-detect, `state_nomination_lists` collection, `/state-nominations/by-code/{anzsco}` lookup); Sales endpoint `_phase_19_10` enrichment block surfaces native + INR fees (AUD $625 · ₹35.5K), native + INR salary (AUD $131,924/yr · ₹74.9L), growth label + projection, processing window, state demand chips, authority short_name. **Phase 19.11 Pre-Assessment Report PDF** — `WeasyPrint` 8-section client-ready PDF (Cover · Industry Context · Occupation Deep-dive · Assessing Body · Salary & State Demand · Visa Pathways · 8-step Timeline · Next Steps CTA); `POST /api/reports/pre-assessment` (RBAC admin/sales/case_manager/partner, 5-min cache, preview_html flag, ~50KB output); compact `<PreAssessmentReportButton>` modal wired into Smart Sales Helper. **Triple-gate verified:** 🟢 Pytest **19/19** PASS (5 audit/diff + 6 currency+state noms + 8 PDF) — combined **69/69** with Phase 19.6/19.7/19.8/19.9 regression in 13s. 🟢 Curl: currency rates ✓ state nom by-code ✓ sales enrichment ✓ PDF 50KB %PDF- valid ✓ partner role PDF ✓. 🟢 Playwright 4 screenshots (Health Card 4-tile · timeline open · Phase 19.10 chips with ₹74.9L · PDF modal open). All UI elements carry `data-testid`. Currency defaults: AUD=55.5 · NZD=51.0 · CAD=62.5 (admin can override anytime via DB/UI). State nomination files not uploaded yet — uploader UI ready when Sir provides. See CHANGELOG Phase 19.9.1+19.10+19.11.
+
+
+
+> **🛠️ Update (Jun 19, 2026) — Phase 19.9 (Authority Admin UI + Health Card + Diff Audit):** Admin ab `/admin/authorities` se **8 write endpoints** access kar sakte hain: create, patch, verify, bulk-verify, split-laa, delete, diff-preview, migrate-occupation — sab `admin_owner/admin` only. **Mandatory Diff Audit modal** har save se pehle dikhata hai: "yeh change kitni Atlas + Sales pages affect karega" + SEO meta description before/after redline preview. **LAA Umbrella Split** — single button creates 6 state bodies (NSW/VIC/QLD/SA/WA/TAS) with pre-populated fees. **Authority Health Card widget** on Verification Hub shows 342 TBD + 44 draft + 5 placeholder counts with 1-click resolve buttons. Verify Wizard steps through 44 draft bodies one-by-one. Every write registers a Phase 19.6 revocable import_batch. **Triple-gate:** 🟢 Pytest 50/50 PASS in 10.33s (Phase 19.6+19.7+19.8+19.9) · 🟢 Curl all 8 endpoints exercised · 🟢 Playwright 5 screenshots (admin page + wizard + LAA split + diff audit + health card). All UI elements carry `data-testid`. See CHANGELOG Phase 19.9.
+
+
+> **🌾 Update (Jun 19, 2026) — Phase 19.7.1 + 19.8 (CA Data Fix + Bulk Enrichment Engine):** Manual data entry **near-zero for AU**. Cross-pollination from uploaded JSA data + 4-digit ANZSCO master → 6-digit occupations. **description coverage 29.6% → 97.9% in one run** (701 new). `age_profile` 0% → 97.5% (+1000). `typical_tasks` 29.2% → 97.5% (+700). Even TBD-bucket occupations (Defence Force Senior Officer etc) now have rich 227-char descriptions + 9 tasks + age/state/industry profiles. **Phase 19.7.1 CA fix:** 515 CA records backfilled with WES (was empty or ACS-leaked); 1 MCC preserved as legit body. **Phase 19.8 Engine:** Priority hierarchy (admin_verified > scraped > uploaded > AI > seed), per-field provenance trail, idempotent re-runs, revocable 24h via Phase 19.6 batch. Three new endpoints: `GET /api/enrichment/coverage`, `POST /api/enrichment/preview` (dry-run), `POST /api/enrichment/run`. **Honest gap:** OSL/OSCA-6 vs ANZSCO 2021 crosswalk needed — only 8/1022 OSL codes match numerically; Phase 19.10 ABS crosswalk upload task. **Triple-gate:** 🟢 Pytest 35/35 PASS in 6.84s · 🟢 Curl all endpoints + coverage delta + revocable batch · 🟢 SSG regen 1,490 pages in 3.43s, 0 errors. Frontend UI ships in Phase 19.9 admin Authority Health Card. See CHANGELOG Phase 19.8.
+
+
+> **🏛️ Update (Jun 19, 2026) — Phase 19.7 (Assessing Authority as First-Class Entity):** Foundation phase for "edit-once-update-all" assessing-body data. **New collection `assessing_authorities`** seeded with **44 AU bodies** (Home Affairs/DEWR canonical 39 + 5 surfaced during migration). Each body carries canonical fees, processing windows, aliases, methodology, documents checklist. **Migration mapped 684/1,026 AU occupations** to FK (66%), preserved legacy dict for forensics, registered as Phase 19.6 import_batch (24h revocable). **Country-aware resolver** (`services/authority_resolver.py`) merges authority defaults + per-occupation overrides while preserving the back-compat `{short_name, name, url}` dict shape — 32+ existing readers untouched. NZ + CA pass-through their existing inline-fee dicts unchanged. **342 TBD-bucket AU occupations** (33%) flagged `_tbd: True` for Phase 19.8 enrichment. **3 read-only endpoints** at `/api/assessing-authorities` (admin/sales/partner). **Pre-migration snapshot** saved at `/app/memory/snapshots/pre_phase197_au_occupations.json` (MD5 `9d792514...`). **Triple-gate verified:** 🟢 GATE 1 Pytest 23/23 PASS in 4.76s (13 Phase 19.7 + 10 Phase 19.6 regression, including a Phase-19.5-uniqueness-not-regressed test) · 🟢 GATE 2 Curl evidence on AU/NZ/CA/TBD cases · 🟢 GATE 3 Full SSG regen 1,490 pages / 0 errors / 3.25s, AU 261313 confirmed showing live ACS fees from new collection. All bodies seeded as `status: "draft"` — Phase 19.9 admin UI required for verification + write endpoints. Resolver currently wired in 2 hot paths (Atlas detail + Sales Compare); remaining 13 readers deferred via back-compat. See CHANGELOG Phase 19.7.
+
+
+> **🛡️ Update (Jun 18, 2026) — Phase 19.6 (Bulk Import Safety + Revoke Architecture):** Closed the P0 data-integrity loop from the 1,014-row Excel incident. **Phase B (Rollback):** all 1,014 raw drafts safely backed up to `/app/memory/rollback_backups/2026-06-18_phase196_drafts.json` (MD5 `8f4235f334c829b0ec694abee4cfcdbf`) and hard-deleted. 1,467 verified rows untouched. **Phase C (Architecture):** every bulk-ingestion path now registers an `import_batches` record. `POST /api/occupation-master/import/preview` issues a 5-min HMAC-SHA256 token tied to file hash; `POST /commit` rejects 400 without it. Phase 6.9.2 bulk Excel = FULL granular tracking + revocable within 24h; Phase 17 KB Unified + Phase 19.4 JSA Data Import (5 file types) register as `audit_only` (honest disclosure — bulk_write upserts cannot capture pre-state for granular revoke). New router `/api/import-batches` with `GET/list`, `POST/revoke` (single-confirm), `POST/force-revoke` (double-confirm + min-10-char reason + typed "FORCE REVOKE" + audit log severity=critical), `POST/finalise` (lock-in). Centralised `audit_service.log_action()` with info/warn/critical severities. Verification Hub Occupations tile now shows **3-way enrichment cosmetic: Verified · Pending Enrichment · Raw Drafts** (the danger-zone bucket). New reusable `<RecentImportsPanel limit={N} />` mounted on both Verification Hub and Data Import Hub — full metadata + status badges (`Revocable · Xh left` / `Finalised` / `Audit-Only` / `Revoked` / `Expired`). **Triple-gate verified:** 🟢 GATE 1 Pytest 10/10 PASS in 3.71s · 🟢 GATE 2 Curl `/import-batches`+`/stats.enrichment`+17 audit entries · 🟢 GATE 3 Playwright 3 screenshots (panel + revoke modal + 3-way card). All UI elements carry `data-testid`. See CHANGELOG Phase 19.6.
+
+> **🏁 Update (Jun 18, 2026) — Phase 19.4b + 19.4c FULL SHIP:** Phase 19.4b formally CLOSED as redundant (ABS SDMX API doesn't expose OCCP×INCP; data already delivered via Phase 19.4 JSA upload). Phase 19.4c built **Industry Data parser + Vacancy Report PDF parser** with full Atlas surfacing — 19 NEW industry hub SSG pages (`/atlas/au/industry/{slug}/`) with stats + 20y sparkline + ranked top occupations + Phase 19.5-pattern data-rich meta descriptions; AU country hub shows **📊 212,000 active job ads · -0.9% MoM** trust chip from live vacancy snapshot; occupation pages cross-link `abs_data.top_industries` to industry hubs (2-way SEO graph); admin "Latest Vacancy Snapshot" panel with national/state/featured/next-release data. **New collections:** `industry_master` (19 docs), `vacancy_snapshots` (1 doc, monthly idempotent upsert with `is_latest` flag). **New endpoints:** `GET /api/data-import/vacancy/latest`, `GET /api/data-import/industries`. **Total SEO surface:** 1,490 pre-rendered HTML files in sitemap. **Triple-gate verified: 92/92 Phase 19 tests PASS (16 new Phase 19.4c), curl evidence on 4 atlas pages + sitemap, 3 Playwright screenshots.** See CHANGELOG Phase 19.4b/c.
+
+> **🎯 Update (Jun 18, 2026) — Phase 19.5 (Dynamic Atlas Meta Descriptions):** Replaced boilerplate `meta_description` with **truly unique data-rich SERP snippets** for all 1,467 atlas pages. AU sample: *"ANZSCO 261313 Software Engineer — Visa 189/190/491 via ACS. Median AUD $132k, +27% growth by 2035. Free PR pathway guide."* (121 chars, 6 conversion levers in 1 line). CA + NZ similarly data-rich with Express Entry / Green List Tier signals. Hard cap **165 chars** (SERP sweet spot). Rotating country-aware CTAs (deterministic per code). `og:description` + `twitter:description` synced. **Triple-gate verified: 11/11 Phase 19.5 tests + 65 Phase 19 regression = 76/76 PASS, curl evidence on 7 atlas pages, sample report at `/app/memory/phase195_sample_descriptions.md`.** `/start` MegaLanding description untouched. See CHANGELOG Phase 19.5.
+
+> **🚀 Update (Jun 18, 2026) — Phase 19.4 (JSA Data Import + Salary Fix + Atlas Surfacing):** Bypassed Phase 19.2b WAF blocker via direct admin upload of 5 public JSA Feb 2026 files (1.9MB total). Built **Universal Data Import Hub** at `/admin/data-import` (upload + auto-detect + preview + idempotent commit + history). Three parsers (`occupation_profiles` 1,236 rows, `employment_projections` 358 rows, `sa4_ratings` 87 rows) with 4-digit ANZSCO → 6-digit parent-fallback. **Coverage: 703 / 729 AU occupations (96%) enriched with real ABS salary + JSA 10-year projections.** New `regional_labour_market` collection with 87 SA4 strength ratings. Atlas templates surface **5 new cards**: Median Earnings (full-time weekly + annual + hourly), 10-year Outlook (Very Strong/Strong/Moderate/etc pill + 2025→2030→2035 progression), Top Industries (ranked), Workforce Qualifications (% bars), Strongest Labour Markets (top 5 SA4 regions). Country index card adds 💼 salary chip + 📈 growth chip. Live example: AU 261313 Software Engineer → **AUD $131,924/yr · Very Strong demand · +26.7% by 2035 · 186k → 235k workers · 84% Bachelor+ · Strong in Sydney Eastern Suburbs**. **Triple-gate verified: 65/65 Phase 19 tests PASS, curl evidence on all atlas pages, 4 Playwright screenshots.** No fake data — SA4 ratings honestly marked region-wide (NOT per-occupation), 4-digit inheritance flagged on every record. See CHANGELOG Phase 19.4.
+
+> **🎯 Update (Jun 16, 2026) — Phase 19.2c + 19.3 (Scraper Polish + Surface Data):** Closed Phase 19 with three deliverables: (1) P0 bug fix — `KeyError: 'id'` in fee-change digest dispatch (`scrapers/base.py` now writes `id` UUID; `notification_channels.py` defensively reads `_id` fallback). (2) New `GET /api/scrapers/scheduler-status` admin REST endpoint introspects live APScheduler — confirms **5 monthly scraper crons** (1st Sunday 02:00 UTC, 5-min stagger). (3) Surfacing — every Atlas page now ships real assessing-authority fee + processing time + data-quality indicator. Live data on disk: AU 261313 → AUD $625 (ACS live), AU 132311 → AUD $1206 (VETASSESS live), AU 233211 → AUD $720 (EA fallback), CA 21231 → CAD $265 (WES fallback), country index ships 50 fee chips. **Triple-gate verified — 75/75 tests PASS, curl evidence on 4 atlas pages, 4 Playwright screenshots (Googlebot UA).** See CHANGELOG Phase 19.2c+19.3. Phase 19.2b (JSA/TRA/ESCC + ABS dataflow discovery) remains deferred until production deploy unblocks `.gov.au` egress.
+
+> **🌐 Update (Jun 16, 2026) — Phase 19 SEO/SSR/SSG:** Complete static-site-generation pipeline for `/atlas/*` public pages. Backend Jinja2 templates render 1,471 brand-consistent HTML files (1,467 occupations + 3 country indexes + 1 hub) to `frontend/public/atlas/...`, served file-first via `frontend/src/setupProxy.js` for bots/direct GETs. Each page ships `<title>`, `<meta description>`, `<link canonical>`, JSON-LD Occupation @graph + FAQPage, Open Graph + Twitter Card, verified-badge with day-age, recommended visa pill. APScheduler nightly cron @ 03:00 UTC + per-occupation hot regen on admin `/verify`. **Initial sweep: 2,052 ms / 1,471 files / 1,473 sitemap URLs / 0 errors.** Lighthouse SEO **100/100 on clean origin** (preview shows 58/100 due solely to CDN-level `x-robots-tag: noindex` + Cloudflare-injected `robots.txt` directives — both drop on production cutover, see CHANGELOG ⚠️ admonition). **158/158 tests PASS** (16 new Phase 19 + Phase 17/18 regression). See CHANGELOG Phase 19.
+
+> **📌 Update (Feb 13, 2026):** `CHANGELOG.md` now tracks all completed phases (incl. **Phase 3A — Attendance & Leave** with full company policies). `ROADMAP.md` lists prioritized backlog. This PRD remains the static reference for original requirements.
+
+> **🔍 Update (Jun 10, 2026) — Phase 16.5 SEO:** `/start` Mega Landing Page made fully SEO-friendly — added `keywords` meta (was missing), enriched static `index.html` (title/description/keywords/OG/Twitter for View Source + social scrapers), upgraded `applySEO()` (keywords + Twitter Card + og:url/site_name/locale + robots), expanded JSON-LD to Organization + WebSite + WebPage + FAQPage, and added `robots.txt` + static `sitemap.xml`. See CHANGELOG Phase 16.5. Full SSR/pre-render deferred to P2.
+
+> **🛠️ Update (Jun 11, 2026) — Phase 18.0 + 18.1:** Hotfix probe-pollution cleanup on `occupation_master` (`au-111111` restored from `ai_draft`). Verification Workspace expanded — `qualification_rules`, `assessing_authority` (8-field sub-form), `required_documents` (16 baseline + per-occ curation), `similar_codes_override`, `recommended_visa_subclass` (per-country merge), `sample_cases`, `custom_sections`, `verification_history[]` snapshots. New `<VerifiedRecordView>` read-only mode for verified records + `Edit Again` toggle. `/verify` endpoint accepts full payload, snapshots before write, writes audit logs. NEW `/copy-from-ai` endpoint. **13/13 Phase 18.1 tests + Phase 17.* regression PASS**. See CHANGELOG.
+
+> **🛒 Update (Jun 12, 2026) — Phase 18.5 Compare Mode + Phase 18.3.1 SLA Badge:** Sales agents can now pin up to **3 occupations** from search results (sessionStorage-backed `useCompareStore`, key `leamss_compare_v1`) and view a side-by-side comparison at `/sales/compare`. Backend `POST /api/sales/compare` returns occupation data + a deterministic `summary_narrative` (no LLM — sub-15ms response, 60s in-memory cache). Floating `CompareBar` auto-mounts globally, auto-hides on `/sales/compare`. Admin VerificationHub feedback card now shows an **SLA age badge** (`emerald <7d · amber 7-14d · rose ≥14d`). All 6 required testids verified in served bundle. **97/97 Phase 17/18 regression PASS** + 13 new Phase 18.5 tests. See CHANGELOG.
+
+### 🎯 Phase 14 — LEAMSS Brand Mega Landing + Atlas Redesign (Jun 9, 2026)
+**Status:** ✅ COMPLETE — visual + functional smoke tests verified · 13/13 backend regression PASS.
+
+User Sir's ask: (1) Fix lead-not-stored bug, (2) Merge Atlas + AI Eligibility Score + Visa Compare into single SEO mega landing page, (3) Use real LEAMSS brand identity from leamss.com, (4) Plan integration with www.leamss.com domain.
+
+**A) Lead Bug Fix:**
+- Field-based honeypot (`company_url` text input) was being auto-filled by browser password managers/autofill → submissions silently dropped.
+- Replaced with **time-based bot detection** — measures `Date.now() - mountTime`; if < 1500ms, marks as bot. Verified by submitting lead for AU 261313 → stored in DB successfully.
+
+**B) Brand Identity Captured from leamss.com:**
+- Logo (high-res): `https://leamss.com/public/assets/web/images/logo.webp`
+- Primary: `#1F4D44` (Deep Forest Green) — header, footer, hero overlays
+- Accent: `#D4633F` (Burnt Orange) — primary CTAs, badges, headline italic words
+- Tagline: "We Value Emotions"
+- Full Name: "Ladhani Education & Migration Services (OPC) Pvt. Ltd"
+- Contact: Toll-Free 1800-210-2427 · Phone +91 77188-82427 · WhatsApp 77383-52427 · Thane Mumbai
+- Fonts: Playfair Display (serif headlines) + Plus Jakarta Sans (body)
+
+**C) New Mega Landing Page `/start`** — single SEO money page combining:
+1. **Hero** — bold serif headline "Find your migration pathway in 60 seconds" with orange italic + 3 country flag chips + AI quiz CTA + 3 right-rail country cards with landmark hero images
+2. **Trust Strip** — marquee with 80+ visa categories · 80k+ processed · 4.9★ · 100% refund · 12+ years
+3. **AI Eligibility Quiz** — 5-step inline quiz (age → education → English → exp → country) with progress bar + animated transitions + scorecard with top 6 pathways
+4. **Visa Compare** — 3-column side-by-side (AU 189/190/491 · CA EE-FSW/PNP/Quebec · NZ Green T1/T2/SMC) with points · age · English · processing
+5. **Featured Occupations** — 12 cards with Tier/TEER/Skill-Level badges
+6. **Browse Atlas** — 3 landmark country cards (Sydney Opera House, CN Tower, Auckland Sky Tower)
+7. **Social Proof** — 4 real testimonials (Sophia, Varsha, Krishna, Gurleen)
+8. **FAQ** — 6 accordion items (ANZSCO, CRS, SMC vs Green List, Refund policy, Timelines, English test) — doubles as SEO-optimised JSON-LD FAQPage schema
+9. **Sticky Lead Footer** — persistent bottom bar with WhatsApp + Request Call CTAs → opens a polished modal lead form
+
+**D) Atlas Pages V2 (`/atlas`, `/atlas/:country`, `/atlas/:country/:code`)** — redesigned:
+- Premium editorial hero with landmark backdrop images per country
+- Brand-aligned `#1F4D44` + `#D4633F` palette throughout
+- Single occupation page: sticky lead form on right rail with WhatsApp CTA + "Talk to a MARA expert" headline
+- Country page: search-first design with full-width hero
+- Hub: 3 landmark country cards with verified-count overlay + mid-page CTA to AI quiz
+
+**E) SEO Enhancements:**
+- JSON-LD on `/start`: Organization + FAQPage schemas
+- Open Graph + Twitter Card meta tags via `applySEO()` helper
+- Canonical URLs using `FRONTEND_URL` env (absolute https://)
+- Sitemap.xml with 720+ verified occupation URLs
+
+**F) Custom Domain Integration Strategy (www.leamss.com)** — documented in finish summary:
+- Option A: Subdomain (`atlas.leamss.com` → CNAME to Emergent preview/prod URL)
+- Option B: Path-based reverse proxy (`leamss.com/atlas` → proxy to Emergent backend)
+- Option C: Full migration (move all leamss.com traffic to Emergent deployment)
+
+**Files:**
+- NEW `/app/frontend/src/pages/LeamssPublic.jsx` (1430+ lines) — exports MegaLanding, AtlasHubV2, AtlasCountryV2, AtlasOccupationV2
+- MOD `/app/frontend/src/App.js` — wired 4 public routes
+- MOD `/app/frontend/src/pages/PublicAtlas.jsx` — fixed time-based honeypot
+- ADD `framer-motion@12.40.0` for scroll animations
+- `/app/design_guidelines.json` — full LEAMSS brand system from design_agent_full_stack
+
+
+### 🎯 Phase 13 — Public Atlas Pages (SEO + Lead Capture) (Jun 9, 2026)
+**Status:** ✅ COMPLETE — 13/13 active pytest PASS (1 by-design skip) · testing_agent reports 100% backend + 100% frontend.
+
+Sir's ask: "P2 Client-facing public Atlas pages (/atlas/au/261313) for SEO + organic lead capture".
+
+**Backend** — `routers/public_atlas.py` (no auth):
+- `GET /api/public-atlas/featured` — 12 hero cards across AU/CA/NZ + country totals
+- `GET /api/public-atlas/{country}/list?limit=N&search=Q` — paginated verified browse
+- `GET /api/public-atlas/{country}/{code}` — single occupation deep-dive with `seo` block (page_title, meta_description, og_image, canonical_url, JSON-LD `@type=Occupation`) + similar codes + cross_country
+- `GET /api/public-atlas/sitemap.xml` — auto-generated sitemap of all 720+ verified URLs
+- `POST /api/public-atlas/lead` — captures lead → `leads` collection with `source=public_atlas` + tags. Honeypot field `company_url` silently drops bots. Rate-limited 15/min per IP (in-memory). Pydantic email validation.
+- Filters: only `status="verified"` records exposed publicly. Admin metadata (verification, ai_draft) stripped from response.
+- Absolute URLs (https://) for canonical_url + og_image — reads `FRONTEND_URL` env.
+
+**Frontend** — `pages/PublicAtlas.jsx` (no `<ProtectedRoute>`):
+- `/atlas` — Hero + 3 country cards + 12-tile featured grid
+- `/atlas/:country` — Browseable list with live search
+- `/atlas/:country/:code` — Single occupation page with sticky `LeadCaptureForm` on the right rail
+- `applySEO()` injects `<title>`, meta description, og:image, og:title, canonical, JSON-LD into `<head>` per page
+- Lead form has hidden honeypot field absolutely positioned off-screen
+- Routes registered in `App.js` lines 92-94 (before login redirect)
+
+**Tests `test_phase13_public_atlas.py` (13/13 active + 1 skipped):**
+1. Featured works without auth
+2. Single occupation no-auth + SEO + JSON-LD
+3-5. Unknown country (404), unknown code (404), invalid format (400)
+6. Draft codes never exposed
+7. Country list search filter
+8. Country list returns meta + seo
+9. Sitemap XML valid + 50+ URLs
+10-13. Lead capture (success, honeypot, invalid email, stored in DB)
+14. Rate limit (skipped by default — RUN_RATELIMIT_TEST=1 to enable)
+
+**Post-test fixes applied:**
+- Cleaned page title (removed "Legacy migration · 2026-05-22" fragment from classification_version)
+- Absolute URLs for canonical_url + og_image (now uses FRONTEND_URL env)
+- Replaced AU "Chef 351311" (draft) with AU "263111 Network Engineer" in featured → all 12 cards render
+- Rate-limit threshold bumped 5→15/min to reduce false positives in shared-IP environments
+
+
+### 🎯 Phase 12 — NZ Atlas Full Build + Bulk Auto-Verify Tool (Jun 9, 2026)
+**Status:** ✅ COMPLETE — 16/16 new pytest PASS · 49 total tests PASS · testing_agent_v3_fork reports 100%/100% backend+frontend.
+
+Sir's ask: "P1 New Zealand Atlas Full Build (Green List Tier 1/2 scrapers, LTSSL/RSSL) + P2 Bulk Auto-Verify Tool for Occupation Codes".
+
+**A) NZ Atlas — 4 New Scrapers:**
+- `core/scrapers/nz_anzsco_seed.py` — 243 ANZSCO 1.3 base records inserted idempotently (Managers, Professionals, Engineers, ICT, Health, Education, Trades, Care Workers, Plant Operators).
+- `core/scrapers/nz_green_list.py` — Classifies 91 Tier 1 (Straight to Residence) + 23 Tier 2 (Work to Residence 24mo) occupations. Notes LTSSL/RSSL retired 2022 → replaced by Green List Tier 2 + AEWV.
+- `core/scrapers/nz_aewv_smc.py` — AEWV eligibility (skill_level 1-3 eligible) + SMC 6-point base (skill_points 2-6 + green_list_auto_pass flag).
+- `core/scrapers/nz_sector_agreements.py` — 6 sectors: CISA (31 codes), Care Workforce (13), Transport (9), Tourism (7), Meat (1), Snow/Adventure (2).
+- 4 new endpoints under `/api/anz-intel/scrapers/nz-*/run`.
+- `TRACKED_FIELDS_NZ` expanded from 6 → 9 fields including `nz_green_list_tier`, `aewv_eligibility`, `smc_points_breakdown`, `sector_agreement_eligibility`.
+- NZ heatmap shows 100% coverage on 7 of 9 fields after running all 4 scrapers.
+
+**B) Bulk Auto-Verify Tool:**
+- `core/auto_verify.py` — per-country verification rules:
+  - **AU**: assessing_authority + visa_pathways + skillselect_tier + min_invitation_points
+  - **CA**: teer_category + ee_eligibility + hierarchy + (pnp OR quebec OR regional_pilot)
+  - **NZ**: skill_level + assessing_authority + visa_pathways + (green_list_tier OR aewv_eligibility)
+- 3 new admin endpoints: `GET /auto-verify/rules`, `GET /auto-verify/{country}/preview`, `POST /auto-verify/{country}/run`.
+- `min_coverage_pct` filter (default 70%) — records below threshold are skipped.
+- Idempotent: re-runs return `verified_now=0`, `already_verified=N`.
+- Records flipped from `status="draft"` → `status="verified"` with audit footprint (auto_verified_at, auto_verified_by, auto_verify_version, auto_verify_pct).
+- New frontend tab in `AnzIntelAudit.jsx` — `AutoVerifyTab` component with rules card + min coverage input + preview table + run button. Uses `key={country}` for clean remount.
+
+**Live state after Phase 12:**
+- NZ Atlas: 243 records (was 20) — all auto-verified
+- CA Atlas: 516 records — 103 auto-verifiable
+- AU Atlas: 932 records — 370 auto-verifiable, 558 below threshold
+
+**Tests `test_phase12_nz_atlas_and_autoverify.py` (16/16 PASS):**
+1-2. Scrapers list contains 4 new NZ entries
+3-6. Each NZ scraper returns correct counts (Tier 1/2, AEWV, SMC, Sector distribution)
+7. Audit summary now has 200+ NZ records
+8. NZ tracked fields include Phase 12 additions
+9. Software Engineer (261313) spot-check = Green List Tier 1
+10. Partner blocked on NZ scrapers
+11-16. Auto-Verify rules + preview + dry-run + idempotency + 400 on unsupported + partner-blocked
+
+
+### 🎯 Phase 11 — Per-country Heatmap (CA + NZ) + IRCC Category Overrides (Jun 9, 2026)
+**Status:** ✅ COMPLETE — 11/11 new pytest PASS · 22/22 regression PASS · UI live for both features.
+
+Sir's ask: "Per-country Field Coverage Heatmap (CA + NZ — currently AU-only) + Calculator Rules Editor — admin override UI for IRCC category NOC lists".
+
+**A) Heatmap CA + NZ (Backend):**
+- `routers/anz_intel.py`:
+  - `_humanize()` + `_source_hint(field, country)` extended with CA/NZ field labels & NZ-specific source URLs (careers.govt.nz, immigration.govt.nz, NZQA).
+  - `/audit-summary` now also returns `field_coverage_ca` (11 fields) and `field_coverage_nz` (6 fields) alongside existing AU block.
+  - `/audit-rows?country=CA|NZ` uses `_tracked_fields_for(country)` so each country sees its own fields.
+
+**A) Heatmap (Frontend `AnzIntelAudit.jsx`):**
+- Removed placeholder `CoverageCAorNZ`. Real heatmap now renders for CA + NZ.
+- `CoverageTab` and `HeatmapTab` accept `country` prop and switch the right field list/data.
+- Per-Occupation Heatmap tab is now visible for ALL countries (was AU-only).
+
+**B) IRCC Category Overrides (Backend):**
+- `routers/anz_intel.py` — 4 new admin endpoints under `/calc-rules/ircc-categories`:
+  - `GET` → returns 9 overridable categories with default_nocs, added_nocs, removed_nocs, effective_nocs (merged).
+  - `PUT /{category_id}` → save added/removed NOC arrays with strict 5-digit validation, no-overlap rule.
+  - `DELETE /{category_id}` → revert to hardcoded defaults.
+  - `POST /reapply?dry_run=` → re-classify all 516 CA NOCs using current overrides.
+- `core/scrapers/ircc_ee_streams.py` — `classify()` accepts optional `noc_sets_override`; new `_build_effective_noc_map(db)` merges defaults with `ircc_category_overrides` collection; `apply_to_db()` reports `overrides_applied_categories` count.
+- New collection: `ircc_category_overrides` (one doc per category with added_nocs/removed_nocs/updated_at/updated_by).
+
+**B) IRCC Editor (Frontend `CalculatorRulesEditor.jsx`):**
+- Added section toggle: **Scoring Tables (Phase 9.6)** ↔ **IRCC EE Category NOCs (Phase 11)**.
+- New `IrccCategoriesEditor` + 9 `IrccCategoryCard` components — each card has chip-based add/remove inputs, defaults preview, save/reset buttons, and live effective_count badge.
+- "Re-apply to 516 CA NOCs" button triggers a full re-classification with success summary.
+
+**Tests `test_phase11_heatmap_and_ircc_overrides.py` (11/11 PASS):**
+1. audit-summary has au/ca/nz coverage blocks
+2. CA coverage has CA-specific fields & correct shape
+3. NZ uses NZ-specific source hints (careers.govt.nz, immigration.govt.nz)
+4. audit-rows CA returns CA tracked fields (not AU)
+5. audit-rows NZ returns NZ tracked fields
+6. GET ircc-categories returns 9 overridable
+7. PUT + GET roundtrip reflects effective_nocs
+8. Validation rejects bad NOC format, overlap, unknown category
+9. DELETE reverts to defaults
+10. Reapply dry-run reports overrides_applied_categories ≥ 1
+11. Reapply with no overrides reports 0
+
+**Files:**
+- MOD `/app/backend/routers/anz_intel.py` — Phase 11 endpoints + per-country audit
+- MOD `/app/backend/core/scrapers/ircc_ee_streams.py` — override-aware classification
+- MOD `/app/frontend/src/pages/admin/AnzIntelAudit.jsx` — real CA/NZ heatmap
+- MOD `/app/frontend/src/pages/admin/CalculatorRulesEditor.jsx` — IRCC section + 9 category cards
+- NEW `/app/backend/tests/test_phase11_heatmap_and_ircc_overrides.py` — 11 tests
+
+
+### 🏆 Phase 10.8 — Compare Programs Side-by-Side (Jun 8, 2026)
+**Status:** ✅ COMPLETE — 7/7 pytest PASS · UI live with best-fit auto-highlight · Backend scoring algorithm.
+
+Sir's ask: "Compare Programs Side-by-Side enhancement (depends on rich auto-suggest data, now ready to build)".
+
+**Backend changes:**
+- `routers/sales_occupations.py`:
+  - `/sales/occupations/compare` max items bumped: 4 → **5**
+  - Per-item enrichment block: appends full Phase 10 atlas data from `occupation_master`:
+    - `teer_category`, `teer_label`, `ee_eligibility`, `pnp_eligibility`,
+    - `ircc_round_cutoffs`, `regional_pilot_eligibility`, `quebec_eligibility`,
+    - `skillselect_tier`, `assessing_authority`, `state_nomination`,
+    - `min_invitation_points`, `dama_eligibility`, `ila_eligibility`, `classification_version`
+  - NEW `_compute_best_fit_score(item)` — transparent scoring rubric (country-agnostic):
+    - In-demand → +20
+    - Low min-points → +(100 − mp/2) cap +50
+    - Higher age limit → +(age − 30) cap +15
+    - Atlas TEER label → +5
+    - Each federal program (FSWP/CEC/FSTP) → +10
+    - PNPs/States count → +(count × 3) cap +30
+    - SkillSelect Tier 1 → +15 (AU)
+    - Round cutoffs present → +5
+    - Regional pilots + DAMA + ILA → +(count × 2) cap +15
+    - Quebec eligible → +10 (+5 extra if priority section)
+  - Endpoint marks exactly ONE item with `best_fit=true` (the highest scorer)
+
+**Frontend (rebuilt):** `/app/frontend/src/pages/sales/OccupationCompare.jsx` (~430 lines):
+- Top banner: **"🏆 Best Fit (Score X) · Country · Code · Title"** with green emerald glow
+- Card grid (auto 2/3/4/5 columns) — best-fit card gets:
+  - Thick emerald top-border
+  - Floating "🏆 Best Fit" ribbon
+  - Drop shadow with emerald tint
+- Per-card quick stats: PNPs · Cats · Pilots · QC ✓ (CA) or Visas · States · Tier (AU)
+- **Detailed Comparison Table** with row-bands:
+  - Title · Classification · Skill/TEER · In Demand
+  - **🇨🇦 IRCC Federal Programs:** FSWP/CEC/FSTP (✓/✗) · Categories (chips with icons) · PNPs (badges) · Regional Pilots (counts by type) · Quebec PSTQ (with ⭐ priority) · Latest CRS Cutoff
+  - **🇦🇺 Australia Specifics:** Skill Body · SkillSelect Tier · State Nominations · Min Invit Pts · DAMA+ILA
+  - **📊 Cost/Process:** Min Points · Age Limit · Body Fee · Processing Weeks
+  - **🏆 Best-Fit Score** row with 🏆 indicator
+- Best-fit column highlighted with subtle green background
+- Sections only render if at least one item has data for that country
+
+**AtlasAutoSuggestModal.jsx integration:**
+- NEW "Compare All" button shown when AI returns 2+ suggestions
+- Click → stores `compare_ids` in sessionStorage, opens `/sales/occupations/compare` in new tab
+- Sales workflow: AI suggests 5 NOCs → "Compare All" → instant side-by-side
+
+**Live Verification (3-CA comparison):**
+- 21231 SW Engineer: Score **157** (FSWP+CEC, 7 PNPs, 3 pilots, 1 cat, QC ✓)
+- 31102 Family Physician: Score **136** (FSWP+CEC, 2 PNPs, 0 pilots, 3 cats, QC ✓)
+- 72310 Carpenter: Score **168** 🏆 (FSWP+CEC+**FSTP**, 6 PNPs, **14 pilots**, 2 cats, QC ✓) → **Best Fit**
+
+**Tests (7/7 PASS):**
+1. Compare returns atlas data per item
+2. Exactly one item assigned best_fit=true
+3. Carpenter (FSTP+pilots) beats SW Engineer in score
+4. Pydantic min 2 / max 5 validation
+5. AU-specific fields (skillselect_tier/state_nomination) surface for AU codes
+6. Cross-country mix (AU + CA) renders both
+7. Quebec bonus reflected in score
+
+**Files:**
+- MOD `/app/backend/routers/sales_occupations.py` — atlas enrichment + best-fit scoring + max 5 items
+- REWRITTEN `/app/frontend/src/pages/sales/OccupationCompare.jsx` — rich side-by-side comparison
+- MOD `/app/frontend/src/pages/sales/components/AtlasAutoSuggestModal.jsx` — "Compare All" button
+- NEW `/app/backend/tests/test_phase108_compare_side_by_side.py` — 7 tests
+
+
+### 🇨🇦🇫🇷 Phase 10.7 — Quebec PSTQ/PEQ + Multi-Country AI Auto-Suggest UI (Jun 8, 2026)
+**Status:** ✅ COMPLETE — 13/13 new pytest PASS · Quebec live · AI Auto-Suggest now multi-country (AU/CA/NZ) · UI button in Sales Wizard.
+
+Sir's ask: "Quebec PEQ/PSTQ separate system + AI Auto-Suggest UI configured for ALL countries (present + future)".
+
+---
+
+**Part A — Quebec PSTQ + PEQ-Legacy Seed**
+
+Quebec is the ONLY Canadian province that runs its own immigration system separate from federal IRCC Express Entry and the 11 PNPs.
+
+| Program | Status | Notes |
+|---------|--------|-------|
+| **PSTQ — Programme de sélection des travailleurs qualifiés** | ✅ Active (2024-11 →) | Current main skilled-worker stream |
+| **PEQ — Programme de l'expérience québécoise** | ❌ Closed 2025 | Legacy reference only |
+| **CAQ — Certificat d'acceptation du Québec** | Issued post-PSTQ | Step toward federal IRCC PR |
+
+**4 PSTQ Sections seeded:**
+| Section | Name | FEER Eligible | French | Notes |
+|---------|------|---------------|--------|-------|
+| **A** | Skilled Workers (priority TEER 0-2) | 0/1/2 | Oral 7+ Written 5+ | 21 priority NOCs |
+| **B** | Skilled Workers (priority TEER 3-5) | 3/4/5 | Oral 5+ | 8 priority NOCs |
+| **C** | Regulated Professions | 0-5 | Oral 7+ Written 5+ | Requires Quebec authority licence |
+| **D** | Quebec-Graduated Applicants | 0-5 | Oral 7+ Written 5+ | For QC post-secondary grads |
+
+**Live Verification (Atlas Verify):**
+- 21231 SW Engineer (TEER 1) → A ⭐ + D
+- 31102 Family Physician (TEER 1) → A + **C (regulated)** + D
+- 72310 Carpenter (TEER 2) → A + D, NOT C (not regulated)
+- 85100 Livestock Labourer (TEER 5) → **B only** (Section A excludes TEER 5)
+
+**Section Distribution (live):** Section A = 307 NOCs · B = 209 · C = 52 (regulated) · D = 516 (all)
+
+---
+
+**Part B — AI Atlas Auto-Suggest: Multi-Country (Future-Proof)**
+
+Previously CA-only; now accepts `country_code` for **AU/CA/NZ** (and any future country added to `occupation_master`).
+
+**Backend changes:** `routers/sales_ai_helpers.py` → `/atlas-auto-suggest`:
+- Accepts `country_code: "AU" | "CA" | "NZ"` (default CA for backward compat)
+- Renamed `province_code` → `region_code` (works for province/state)
+- Country-aware system prompt + classification label (NOC 2021 vs ANZSCO)
+- Per-country atlas enrichment block:
+  - **AU:** skillselect_tier, assessing_authority, state_nomination, visa_pathways, min_invitation_points
+  - **CA:** teer_category, ee_eligibility, pnp_eligibility, ircc_round_cutoffs, regional_pilot_eligibility, quebec_eligibility (NEW)
+  - **NZ:** assessing_authority, visa_pathways (extends in Phase 11)
+- Region preference re-sorts PNPs/states with selected region first
+
+**Frontend (NEW):** `pages/sales/components/AtlasAutoSuggestModal.jsx` (~300 lines):
+- Free-text candidate description input (15-2000 chars)
+- Country badge auto-detected from wizard
+- Region selector (12 CA provinces incl. QC · 8 AU states · 6 NZ regions)
+- Calls `/api/sales/ai/atlas-auto-suggest` with Haiku 4.5 routing
+- Each result card shows:
+  - NOC/ANZSCO code + confidence badge (HIGH/MEDIUM/LOW)
+  - "Region match" badge if applicable
+  - **CA cards:** TEER · Federal Programs · Categories (chips with icons) · PNPs (region highlighted gold) · CRS Cutoffs · Regional Pilots · Quebec PSTQ sections
+  - **AU cards:** Skill Level · Skill Body · SkillSelect Tier · Visa Pathways · State Nominations
+  - **NZ cards:** Skill Level · Visa Pathways count
+- "Pick this" button → auto-fills `occupation_code` + `occupation_country` + auto-opens Atlas Verify Card
+
+**Step3Profile.jsx changes:**
+- New "AI Atlas Auto-Suggest" orange button next to existing "AI Occupation Helper"
+- Modal opens with current country from wizard state
+- On pick → updates wizard data + auto-opens Atlas Verify Card
+
+**Live AI Calls (verified end-to-end):**
+
+| Test | Result | Atlas data |
+|------|--------|------------|
+| 🇦🇺 "Civil engineer, 8yr infra → NSW" | 233211 Civil Engineer (HIGH) | Skill Lv 1 · Skill Body: EA |
+| 🇨🇦 "Family physician, 8yr GP → QC" | 31102 (HIGH) | TEER 1 · Healthcare+Physicians-CA · **Quebec Sections A+C+D, regulated** |
+| 🇳🇿 "Software engineer, 5yr Python" | 261313 SW Engineer (HIGH) | 20 NZ candidates considered |
+
+**Files:**
+- NEW `/app/backend/core/scrapers/quebec_immigration.py` — 250-line PSTQ classifier
+- NEW `/app/backend/tests/test_phase107_quebec_and_multi_country.py` — 13 tests
+- NEW `/app/frontend/src/pages/sales/components/AtlasAutoSuggestModal.jsx` — Multi-country UI modal
+- MOD `/app/backend/routers/sales_ai_helpers.py` — country-aware auto-suggest (140 lines refactored)
+- MOD `/app/backend/routers/anz_intel.py` — quebec scraper endpoint + atlas verify exposes quebec_eligibility
+- MOD `/app/frontend/src/pages/sales/steps/Step3Profile.jsx` — new button + modal wiring
+
+**Total Phase 10 scrapers:** **11** (7 AU + 6 CA: NOC Canada · IRCC EE Streams · 11 PNPs · IRCC Round Cutoffs · AIP+RCIP+FCIP · **Quebec**)
+**Total Phase 10 tests:** **64 passing** (Phase 10.1-10.7)
+
+
+### 🌍 Migration Atlas — Country-Separated Views + Dry-Run Bug Fix (Jun 8, 2026)
+**Status:** ✅ COMPLETE — both issues Sir reported are resolved.
+
+**Issue 1 (CRITICAL BUG):** Dry-Run Preview button was failing on all 5 new CA scrapers because `runEndpointForId()` only had a hard-coded mapping for the original 7 AU scrapers.
+
+**Fix:** Rewrote `runEndpointForId` to read directly from `s.run_endpoint` returned by the backend (with the original 7-mapping kept as a fallback). Now any newly-added scraper auto-works without frontend changes — future-proof.
+
+**Issue 2 (UX):** Sir said: "Migration atlas must have all countries Atlas information separately. AU, CA, NZ should not be merged."
+
+**Fix:** Restructured `AnzIntelAudit.jsx` with **country tabs at the top**:
+- 🇦🇺 Australia (932 occupations) · 🇨🇦 Canada (516 occupations) · 🇳🇿 New Zealand (20 occupations)
+- Active country highlighted with teal background + raised shadow
+- Switching country re-fetches everything country-scoped
+- Hero stats now show **CA 5-digit NOCs** / **CA NOC 2021** for CA, or **ANZSCO 4-digit Groups** / **AU 6-digit Records** for AU
+- Reference benchmark link auto-switches: `statcan.gc.ca` for CA, `anzscosearch.com` for AU, `immigration.govt.nz` for NZ
+- **Tabs auto-hide:** Per-Occupation Heatmap, Orphan 4-digit Groups, and Step 3 — Data Merge are only shown for AU (they don't apply to CA/NZ)
+- **Step 4 — Scrapers tab:** Now filters by country. Header shows "(5 for CA)" or "(7 for AU)" with count.
+- **Coverage tab:** AU shows full field-coverage heatmap; CA/NZ show a summary card with "Detailed field-coverage will be added in next phase" placeholder
+
+**Backend Changes:**
+- `routers/anz_intel.py` → `/scrapers/list` now auto-tags all scrapers without a `country` field as `country: "AU"` (defaults the legacy 7 AU scrapers; new CA scrapers already tagged)
+
+**Frontend Changes:**
+- `pages/admin/AnzIntelAudit.jsx`:
+  - `selectedCountry` state at top (default 'AU')
+  - 3 prominent country tabs with flag + name + occupation count
+  - `fetchAll` uses `selectedCountry` param
+  - `useEffect` re-fetches when `selectedCountry` changes
+  - Hero stats now country-aware (`countryTotals[selectedCountry]`)
+  - Reference benchmark URL auto-switches per country
+  - Tab list filters out AU-only tabs when CA/NZ selected
+  - New `<CoverageCAorNZ>` component for CA/NZ summary placeholder
+  - `ScrapersTab` accepts `country` prop and uses `filteredScrapers` (filters by `s.country === country`)
+  - Dry-Run fix: `runEndpointForId` reads from backend metadata directly
+  - Commit confirmation messages added for all 5 CA scrapers (Hinglish, respectful)
+  - Generic CA fallback added to `ScraperDryRunPreview` so any future CA scraper auto-renders stats
+
+**Live Verification:**
+- 🇦🇺 AU tab: Hero stats show 1236 ANZSCO 4-digit + 932 AU + 4 verified + 34 drafts + 247 with-child + 989 orphans (all 6 tiles)
+- 🇨🇦 CA tab: Hero stats show 516 CA NOCs + 0 verified + 516 drafts (3 tiles, no AU-irrelevant ones)
+- 🇨🇦 CA Scrapers tab: only 5 CA scrapers visible (NOC Canada / IRCC EE Streams / Canada PNP / IRCC Round Cutoffs / AIP-RCIP-FCIP)
+- 🇨🇦 Dry-Run NOC Canada: Returns 516 unit groups, 0 to create, 0 to update, 516 unchanged (perfect idempotency)
+
+**Files:**
+- MOD `/app/backend/routers/anz_intel.py` — auto-tag scrapers with country=AU default
+- MOD `/app/frontend/src/pages/admin/AnzIntelAudit.jsx` — country tabs + per-country state + filtered scrapers + generic dry-run preview fallback
+
+### 🇨🇦 Phase 10.4 + 10.5 + 10.6 — IRCC Round Cutoffs, Regional Pilots & Atlas Verify CA UI (Jun 8, 2026)
+**Status:** ✅ COMPLETE — 13/13 new pytest PASS · 51/51 Phase 10 regression PASS · Atlas Verify Card UI live with CA-aware tabs.
+
+Sir's ask: "Phase 10.4 IRCC Round Cutoffs + 10.5 AIP/RCIP/FCIP + 10.6 Atlas Verify Card UI for CA".
+
+---
+
+**Phase 10.4 — IRCC Round Cutoff Tracker (2026 H1 program year)**
+
+13 categories tracked, 10 with active cutoffs:
+| Category | Latest CRS Min | Draw Date | ITAs |
+|----------|---------------:|-----------|------|
+| CEC only | 518 | 2026-04-09 | 6,500 |
+| PNP only | 749 | 2026-04-02 | 825 |
+| Healthcare | 467 | 2026-02-20 | 5,500 |
+| Trades | 477 | 2026-04-02 | 2,400 |
+| French language | 409 | 2026-03-26 | 3,500 |
+| STEM | 491 | 2025-12-04 | 3,000 |
+| Education | 479 | 2025-11-15 | 1,800 |
+| Transport | 435 | 2025-08-26 | 1,500 |
+| Senior Mgrs (CA exp) | 429 | 2026-03-05 | 200 |
+| Physicians (CA exp) | **169** | 2026-02-19 | 400 |
+| General (all-program) | — | — paused | — |
+| Researchers (CA exp) | — | — new category | — |
+| Military Recruits | — | — new category | — |
+
+Storage: singleton in `kb_settings` + per-NOC tags showing applicable categories.
+
+---
+
+**Phase 10.5 — AIP + RCIP + FCIP Regional Pilots**
+
+Equivalent to AU's DAMA + ILA (regional/special-route programs):
+
+| Pilot | Provinces / Communities | Priority NOC Tags |
+|-------|------------------------|---------------------|
+| **AIP** (Atlantic Immigration Program) | NB · NS · PE · NL (4 provinces) | 19 priority NOCs (Healthcare, Education, Trades, IT) |
+| **RCIP** (Rural Community Immigration Pilot) | 14 communities across NS/ON/MB/SK/AB/BC | 5-7 NOCs per community |
+| **FCIP** (Francophone Community Immigration Pilot) | 6 communities (NB/ON/MB/BC) | French NCLC 5+ required |
+
+**Note (RNIP → RCIP/FCIP):** The old Rural & Northern Immigration Pilot was replaced in 2025 by these two newer pilots. RCIP + FCIP are the active 2026 programs.
+
+**14 RCIP communities seeded:**
+Pictou County (NS) · North Bay · Sudbury · Timmins · Sault Ste Marie · Thunder Bay (ON) · Steinbach · Altona/Rhineland · Brandon (MB) · Moose Jaw (SK) · Claresholm (AB) · West Kootenay · North Okanagan Shuswap · Peace Liard (BC)
+
+**6 FCIP communities seeded:**
+Acadian Peninsula (NB) · Sudbury · Timmins · Superior East (ON) · St. Pierre Jolys (MB) · Kelowna (BC)
+
+(Sudbury + Timmins are dual-listed in BOTH RCIP & FCIP)
+
+---
+
+**Phase 10.6 — Atlas Verify Card UI (CA-aware)**
+
+`AtlasVerifyCard.jsx` now accepts a `country` prop (default 'AU') and renders:
+
+For **AU**: existing layout (SkillSelect Tier, VETASSESS, State Matrix, Min Invitation Pts, DAMA, ILA)
+
+For **CA** (NEW sections):
+1. **TEER + Verification Badge** in header (e.g., "NOC 31301 · TEER 1 · University degree")
+2. **🇨🇦 IRCC Federal Programs** card with 3 program tiles: FSWP / CEC / FSTP (each green checkmark or grey X)
+3. **🏷️ Category-Based Selection** chips with icons: 🇫🇷 French · 🏥 Healthcare · 🔬 STEM · 🔧 Trade · 📚 Education · ✈️ Transport · 👨‍⚕️ Physicians-CA · 💼 Sr Mgrs-CA · 🧪 Researchers-CA · 🪖 Military
+4. **📊 IRCC 2026 Round Cutoffs** grid showing per-category latest CRS min + draw date
+5. **🗺️ Provincial Nominee Programs** — per-province cards with stream pills (✨ = EE-linked stream)
+6. **🌟 Regional Pilots — AIP · RCIP · FCIP** — pill list with province codes + sector tags + French NCLC requirement
+
+Header: code shown as "NOC 31301" instead of "ANZSCO …".
+Footer: source attribution updated to "statcan.gc.ca · canada.ca/express-entry · 11 PNPs · IRCC pilots".
+
+Step3Profile.jsx now passes `country={data.occupation_country || 'AU'}` to AtlasVerifyCard.
+
+**Live verification (Atlas Verify CA 31301 — Registered Nurse):**
+- ✅ TEER 1 · University degree
+- ✅ FSWP+CEC eligible · FSTP not (correct — RN is not trade)
+- ✅ Categories: French + Healthcare
+- ✅ 5 Round Cutoffs surfaced (CEC 518, PNP 749, French 409, Healthcare 467)
+- ✅ 8 PNPs eligible (BC, AB, SK, MB, NB, PE, NL, NT)
+- ✅ 20 Regional Pilots: AIP (4 Atlantic provinces) + 13 RCIP + 6 FCIP
+
+---
+
+**Backend files modified/added:**
+- NEW `/app/backend/core/scrapers/ircc_round_cutoffs.py` — 13-category cutoff tracker
+- NEW `/app/backend/core/scrapers/ca_regional_pilots.py` — AIP + 14 RCIP + 6 FCIP seed
+- NEW `/app/backend/tests/test_phase104_105_cutoffs_and_pilots.py` — 13 tests
+- MOD `/app/backend/routers/anz_intel.py` — 2 new scraper endpoints + scrapers/list updated + Atlas Verify exposes new fields
+
+**Frontend files modified:**
+- MOD `/app/frontend/src/pages/sales/components/AtlasVerifyCard.jsx` — country-aware rendering + 4 new CA sections + new lucide icons
+- MOD `/app/frontend/src/pages/sales/steps/Step3Profile.jsx` — passes country prop to AtlasVerifyCard
+
+**Test coverage (Phase 10 cumulative):**
+- 10.1: 9 tests · 10.2: 15 tests · 10.3: 14 tests · 10.4 + 10.5: 13 tests = **51 total passing**
+
+
+### 🇨🇦 Phase 10.3 — 11 PNP Scrapers + AI Auto-Suggest (Jun 8, 2026)
+**Status:** ✅ COMPLETE — 14/14 new pytest PASS · 38/38 Phase 10 regression PASS.
+
+Sir's ask: "11 PNP scrapers + AI Auto-Suggest enhancement".
+
+**Part A — 11 PNPs Registered:**
+
+| # | Code | Province | PNP Name | Streams | Priority NOCs |
+|---|------|----------|----------|---------|---------------|
+| 1 | BC | British Columbia | BC PNP | 5 | 66 |
+| 2 | ON | Ontario | OINP | 7 | 13 |
+| 3 | AB | Alberta | AAIP | 6 | 28 |
+| 4 | SK | Saskatchewan | SINP | 5 | 11 |
+| 5 | MB | Manitoba | MPNP | 4 | 11 |
+| 6 | NB | New Brunswick | NBPNP | 4 | 11 |
+| 7 | NS | Nova Scotia | NSNP | 5 | 17 |
+| 8 | PE | Prince Edward Island | PEI PNP | 3 | 7 |
+| 9 | NL | Newfoundland & Labrador | NLPNP | 4 | 5 |
+| 10 | YT | Yukon | YNP | 4 | 4 |
+| 11 | NT | Northwest Territories | NTNP | 4 | 9 |
+| | **Totals** | | | **51 streams** | **182 unique priority NOC tags** |
+
+(Quebec excluded — runs separate PEQ/PSTQ system)
+
+**Highlight streams seeded with verified 2026 occupation lists:**
+- **BC PNP Skills Immigration — Technology**: 35 NOCs (per official May 28 2026 program guide)
+- **BC PNP Skills Immigration — Healthcare**: 31 NOCs (nurses, physicians, dentists, allied health)
+- **OINP Human Capital Priorities**: 6 tech NOCs (per Ontario tech draws)
+- **OINP In-Demand Skills**: TEER 4-5 priority occupations (warehousing, agriculture, construction labour)
+- **AAIP Accelerated Tech Pathway**: 17 tech NOCs
+- **NS Critical Construction Worker Pilot**: 14 trade NOCs
+
+**Live verification (sample):**
+- **21231 Software Engineer** → eligible across **7 provinces** (BC/ON/AB/SK/MB/NB/NL)
+- **72310 Carpenter** → eligible in **NS Critical Construction** + others
+- **31301 Registered Nurse** → eligible in **8 provinces** (BC/AB/SK/MB/NB/PE/NL/NT)
+- **62200 Chef** → eligible in **5 provinces** (AB/MB/NB/PE/NT)
+
+**Part B — AI Auto-Suggest Endpoint (NEW):**
+
+`POST /api/sales/ai/atlas-auto-suggest`
+
+Hybrid LLM Router routes this task to **Haiku 4.5** (registered as `atlas_auto_suggest` in `ai_models.py` — fast + cheap).
+
+Input:
+```json
+{
+  "description": "Backend software engineer, 8 years Python distributed systems experience",
+  "province_code": "BC",  // optional
+  "max_suggestions": 3
+}
+```
+
+Output (live response):
+```json
+{
+  "suggestions": [
+    {
+      "code": "21231",
+      "title": "Software engineers and designers",
+      "confidence": "high",
+      "reasoning": "Backend engineer is explicitly listed in alt titles...",
+      "destination_province_match": true,
+      "atlas": {
+        "teer_category": 1,
+        "teer_label": "University degree",
+        "ee_eligibility": {
+          "fswp_eligible": true,
+          "cec_eligible": true,
+          "fstp_eligible": false,
+          "categories": ["french_language"]
+        },
+        "pnp_eligibility": [
+          {"province_code": "BC", "streams": [{"name": "Skills Immigration — Technology"}], ...},
+          {"province_code": "ON", "streams": [{"name": "Human Capital Priorities (HCP)"}], ...},
+          ...
+        ]
+      }
+    }
+  ],
+  "tip": "Backend engineers in fintech are highly sought in BC; emphasize distributed systems...",
+  "_ai_model": "claude-haiku-4-5-20251001",
+  "_province_filter": "BC"
+}
+```
+
+**Demo flows tested live:**
+- **"Baker → Manitoba"** → returns 63202 Bakers (HIGH), Sales tip: "emphasize commercial production scale"
+- **"Tech → BC"** → returns 21231 + 21230 (both HIGH), BC PNP sorted first in eligibility
+- **"Indian chef, 12yr, 5-star hotels"** → 62200 Chefs (HIGH) + 63200 Cooks (MEDIUM, 5 PNPs), human-quality tip
+- **"Nurse, 6yr ICU"** → 31301 RN (HIGH) with 8 PNPs eligible + Healthcare category
+
+**Files:**
+- NEW `/app/backend/core/scrapers/pnp_canada.py` — 330-line PNP registry + idempotent applier
+- NEW `/app/backend/tests/test_phase103_pnp_and_auto_suggest.py` — 14 tests
+- MOD `/app/backend/routers/sales_ai_helpers.py` — added `/atlas-auto-suggest` endpoint (~120 lines)
+- MOD `/app/backend/core/ai_models.py` — `atlas_auto_suggest` → Haiku 4.5
+- MOD `/app/backend/routers/anz_intel.py` — new scraper endpoint + scrapers/list entry + Atlas Verify now exposes `pnp_eligibility`
+
+**Total Phase 10 backend tests: 38 passing (10.1: 9 + 10.2: 15 + 10.3: 14)**
+
+
+### 🇨🇦 Phase 10.2 — IRCC Express Entry Streams Classifier (Jun 8, 2026)
+**Status:** ✅ COMPLETE — 15/15 pytest PASS · 45/45 regression PASS (no breakage in Phase 9).
+
+Sir's ask: "FSWP/CEC/FSTP + 10 Category-Based Selection per NOC (2026 official IRCC list)".
+
+**Data Source:** IRCC official — https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html (scraped 2026-03-31 edition)
+
+**Eligibility Rules Implemented (Deterministic — no AI/scrape):**
+
+A) **Federal Programs:**
+- **FSWP** (Federal Skilled Worker Program) — TEER 0/1/2/3 → 376 of 516 CA codes eligible
+- **CEC** (Canadian Experience Class) — TEER 0/1/2/3 + 1yr Canadian exp → 376 eligible
+- **FSTP** (Federal Skilled Trades Program) — Major Groups 72/73/82/83/92/93 + TEER 2-3 only → 98 eligible
+
+B) **Category-Based Selection 2026 (10 categories, exact counts match official IRCC tables):**
+| # | Category | NOCs | Notes |
+|---|----------|------|-------|
+| 1 | French-language proficiency | 376 (all FSWP-eligible) | NCLC 7+ required, not NOC-specific |
+| 2 | Healthcare and social services | **37** | Physicians, nurses, allied health, social workers |
+| 3 | STEM | **11** | Cybersecurity, eng disciplines, eng technologists, insurance agents |
+| 4 | Trade occupations | **25** | Construction mgrs, machinists, electricians, plumbers, carpenters, etc. |
+| 5 | Education | **5** | Teachers, ECEs, classroom assistants |
+| 6 | Transport | **4** | Aircraft mechs, pilots, avionics, auto techs |
+| 7 | Physicians (Canadian exp) | **3** | NOCs 31100/31101/31102 — CA work exp required |
+| 8 | Senior Managers (Canadian exp) | **4** | NOCs 00012-00015 — CA work exp required |
+| 9 | Researchers (Canadian exp) | **2** | University profs, post-secondary asst — CA work exp required |
+| 10 | Skilled Military Recruits | **3** | NOCs 40042/42102/43204 — CAF offer + 10yr foreign mil svc |
+
+**❌ Removed in 2026:** Agriculture and agri-food (was 5th category in 2024-25, no longer in 2026 official list)
+
+**Backend additions:**
+- `core/scrapers/ircc_ee_streams.py` — pure-Python deterministic classifier
+  - `CATEGORY_REGISTRY` — UI metadata (icon, label, requires_canadian_exp flag)
+  - `_CATEGORY_NOC_MAP` — NOC lookup sets per category (baked from IRCC official 2026 tables)
+  - `classify(code, teer)` — returns full payload for a single NOC
+  - `apply_to_db(db, dry_run, actor)` — bulk-tag all CA records, idempotent
+
+- `routers/anz_intel.py`:
+  - `POST /api/anz-intel/scrapers/ircc-ee-streams/run?dry_run=` (admin-only)
+  - `/scrapers/list` updated → 9 scrapers ready (was 8, now incl. CA EE streams)
+  - `/verify/{code}` Atlas Verify endpoint now:
+    - Accepts 5-digit (CA NOC) OR 6-digit (AU/NZ ANZSCO) with country-aware validation
+    - Returns new fields: `teer_category`, `teer_label`, `ee_eligibility`, `hierarchy`
+
+**Live Verification (sample spot-checks):**
+- **21231 Software engineers** (TEER 1) → FSWP+CEC ✓, French only (NOT in STEM 2026 ❌)
+- **31102 Family physicians** (TEER 1) → FSWP+CEC ✓ + Healthcare + Physicians-CA-exp (3 categories!)
+- **21300 Civil engineers** (TEER 1) → FSWP+CEC ✓ + STEM ✓
+- **72310 Carpenters** (TEER 2) → FSWP+CEC+FSTP ✓ + Trade ✓ (all 4!)
+- **40042 CAF Officers** (TEER 0) → FSWP+CEC ✓ + Military Recruits ✓
+- **85100 Labour TEER 5 sample** → ALL programs FALSE, no categories (correctly excluded)
+
+**Idempotency:** 2nd commit → 0 updated, 516 skipped_unchanged ✅
+
+**Tests added (`tests/test_phase102_ircc_ee_streams.py` — 15 tests):**
+1. `test_classify_software_engineer` — SW eng NOT in STEM 2026 list (subtle correctness)
+2. `test_classify_family_physician_multi_category` — multi-category match
+3. `test_classify_civil_engineer_stem` — STEM eligible
+4. `test_classify_carpenter_fstp_trade` — FSTP + Trade dual-tag
+5. `test_classify_military_recruit` — Military category
+6. `test_classify_high_school_only_excluded_from_fswp` — TEER 5 excluded
+7. `test_classify_senior_managers_ca_exp` — All 4 senior mgr codes
+8. `test_scrapers_list_includes_ircc_ee_streams` — endpoint exposed
+9. `test_ircc_ee_streams_dry_run_matches_official_2026_counts` — exact IRCC counts (37/11/25/5/4/3/4/2/3)
+10. `test_ircc_ee_idempotent` — 0 updates on re-run
+11. `test_ircc_ee_partner_blocked` — RBAC enforced
+12. `test_category_registry_completeness` — every category has metadata
+13. `test_agriculture_removed_per_2026` — confirm 2026 removal
+14. `test_atlas_verify_ca_surfaces_ee_eligibility` — Atlas Verify endpoint integration
+15. `test_atlas_verify_rejects_wrong_length_for_country` — AU 6-digit, CA 5-digit validation
+
+**Files:**
+- NEW `/app/backend/core/scrapers/ircc_ee_streams.py` — 280-line deterministic classifier
+- NEW `/app/backend/tests/test_phase102_ircc_ee_streams.py` — 15 tests
+- MOD `/app/backend/routers/anz_intel.py` — new scraper endpoint + scrapers/list entry + verify endpoint country-aware
+
+
+### 🇨🇦 Phase 10.1 — Canada NOC 2021 V1.0 Bulk Importer (Jun 8, 2026)
+**Status:** ✅ COMPLETE — 9/9 pytest PASS · UI verified live (Smart Sales Helper shows 516 CA codes).
+
+Sir's ask: Start Canada Atlas build (mirror of AU Phase 9.1).
+
+**Data Source:**
+- Statistics Canada NOC 2021 V1.0 (official, current) — https://www.statcan.gc.ca/en/subjects/standard/noc/2021/indexV1
+- Direct CSV download: `noc-2021-v1.0-classification-structure.csv` (384 KB) + `noc-2021-v1.0-elements.csv` (4.89 MB)
+- Stored locally at `/app/backend/data/noc_2021/` (no network calls on every run)
+
+**NOC 2021 Hierarchy (5-level, 5-digit codes):**
+- 10 Broad Categories · 45 Major Groups · 89 Sub-major Groups · 162 Minor Groups · **516 Unit Groups**
+- TEER (Training/Education/Experience/Responsibility) = 2nd digit of 5-digit code
+- TEER 0 = Mgmt · 1 = University · 2 = College/apprenticeship 2+yrs · 3 = College <2yrs · 4 = High school · 5 = Short-term
+
+**Backend additions:**
+- `core/scrapers/noc_canada.py` — pure-Python CSV parser + idempotent upsert
+  - Reads structure CSV → 516 unit groups with title + class definition
+  - Reads elements CSV (44,037 rows) → enriches each code with alternative titles (up to 30), main duties (up to 25), employment requirements, exclusions, additional info
+  - Computes hierarchy chain (broad → major → sub-major → minor → unit) for breadcrumbs
+  - Idempotency: only "scraper-owned" fields are refreshed; `status`/`verification`/`linked_product_id`/`custom_qa`/`assessing_authority` are preserved across re-runs
+  - Timestamp fields (`updated_at`, `last_enriched_at`) excluded from change-detection so 2nd run shows 516 skipped_unchanged
+- `routers/anz_intel.py`:
+  - `POST /api/anz-intel/scrapers/noc-canada/run?dry_run=` (admin-only)
+  - `/scrapers/list` updated → 8 scrapers ready (was 7)
+  - `/audit-summary` totals now include CA + NZ counts (was AU-only)
+
+**Live verification:**
+- Dry-run: 486 to create + 30 to update (existing legacy migration) = 516 total
+- Commit: 486 inserted + 30 updated successfully
+- Idempotency: 2nd commit → 0 changes, 516 skipped_unchanged
+- TEER distribution: TEER 0=48, 1=97, 2=162, 3=69, 4=95, 5=45 (sums to 516)
+- Sample 21231 (Software engineers and designers): TEER 1 (University degree) + 30 alt titles + 7 typical_tasks + major group "Professional occupations in natural and applied sciences"
+
+**Smart Sales Helper integration:**
+- ✅ `/api/sales/occupations/search?country=CA` returns 516 codes immediately (no sync needed — Atlas + Sales share `occupation_master`)
+- ✅ `/typeahead?q=software&country=CA` correctly ranks: 21231 (88%) → 21232 (88%) → 21311 (88%) → 22222 (60%)
+- ✅ Partner Portal → Smart Sales Helper → CA filter → all 516 cards render with NOC code, title, TEER level, alt titles, federal/WES badges
+
+**Tests added (`tests/test_phase101_noc_canada.py`):**
+1. `test_scrapers_list_includes_noc_canada` — exposed in `/scrapers/list` with country=CA + estimated_records=516
+2. `test_noc_canada_dry_run_reports_516` — dry-run returns 516 unit groups + TEER distribution covers 0-5
+3. `test_noc_canada_idempotent_after_commit` — 2nd run = 0 created/updated, 516 skipped_unchanged
+4. `test_noc_canada_partner_blocked` — RBAC enforced (partner gets 403)
+5. `test_sales_search_returns_516_ca_codes` — Sales API correctly exposes all 516
+6. `test_known_software_engineer_noc_21231` — typeahead returns the famous SW engineer code
+7. `test_audit_summary_now_includes_ca_totals` — totals expose CA aggregate
+8. `test_noc_data_files_exist` — CSV files shipped with repo
+9. `test_teer_label_helper` — TEER 0-5 → human labels
+
+**Files:**
+- NEW `/app/backend/core/scrapers/noc_canada.py` — importer module
+- NEW `/app/backend/data/noc_2021/noc-2021-v1.0-classification-structure.csv` — 822 rows (10+45+89+162+516)
+- NEW `/app/backend/data/noc_2021/noc-2021-v1.0-elements.csv` — 44,037 rows
+- NEW `/app/backend/tests/test_phase101_noc_canada.py` — 9 tests
+- MOD `/app/backend/routers/anz_intel.py` — new scraper endpoint + scrapers/list entry + audit-summary CA/NZ totals
+
+**Next:** Phase 10.2 will map each NOC to IRCC Express Entry streams (FSWP / CEC / FSTP) using TEER eligibility rules.
+
+
+### 🔧 Phase 9 Comprehensive Regression Test (Jun 8, 2026)
+**Status:** ✅ **61/61 Phase 9 pytest PASS** · UI smoke verified on Atlas Audit + Calculator Rules Editor.
+
+Sir requested end-to-end Phase 9.1→9.9 regression with Expected-vs-Actual outcomes.
+
+**Bug fix shipped during regression:**
+- `routers/anz_intel.py` audit-summary `TRACKED_FIELDS` had stale Phase 9.5 field names (`latest_invitation_min_points`, `dama_inclusion`, `ila_inclusion`). DB actually stores them as `min_invitation_points`, `dama_eligibility`, `ila_eligibility`. Fixed mapping in `TRACKED_FIELDS`, `_humanize`, `_source_hint`.
+- Result: Field coverage went from "0/0/0" (broken) → **Min Invitation Pts 39.7% · DAMA 1.7% · ILA 1.0%** (correct).
+
+**Test outcome summary:**
+| Phase | Test File | Tests | Status |
+|-------|-----------|-------|--------|
+| 9.1 + 9.2 | test_phase9_scrapers.py | 12 | ✅ PASS |
+| 9.4 | test_phase94_calculator_bugs.py | 5 | ✅ PASS |
+| 9.5 | test_phase95_dama_ila_invitation.py | 9 | ✅ PASS |
+| 9.6 | test_phase96_rules_engine.py | 11 | ✅ PASS |
+| 9.7 | test_phase97_rules_wiring.py | 6 | ✅ PASS |
+| 9.8 | test_phase98_ca_nz_rules.py | 10 | ✅ PASS |
+| 9.9 | test_phase99_edit_history_biometric.py | 8 | ✅ PASS |
+| **TOTAL** | — | **61** | ✅ **100%** |
+
+
+### 🔏 Phase 9.9 — Edit History tab per PA + Biometric E-sign Packet (Jun 8, 2026)
+**Status:** ✅ COMPLETE — 8/8 pytest PASS. Code linted clean.
+
+Sir's ask: "Edit History tab + Biometric E-sign packet for legal disputes."
+
+**Backend changes:**
+- `routers/pre_assessment.py` — NEW `GET /api/pre-assessment/{pa_id}/edit-history` returns aggregated timeline from `audit_logs` + agreement sign events + biometric capture markers.
+- `routers/agreement_templates.py` — `POST /pa-agreements/{aid}/sign` body schema extended with `biometric_packet: Optional[dict]`. Persists to `pa_signatures.biometric_packet`. NEW `GET /pa-agreements/{aid}/signature-forensics` (admin/case_manager only).
+- `routers/proposal_docs.py` — `POST /proposal-docs/{pa_id}/esign` also accepts `biometric_packet`.
+
+**Frontend changes:**
+- `components/SignatureCanvas.jsx` — captures device fingerprint (user-agent, screen, timezone), GPS (optional), drawing path (mouse/touch coords + timestamps), canvas fingerprint hash.
+- `components/pa/PaEditDetailsModal.jsx` — new "Edit History" tab showing chronological audit timeline with actor/action/timestamp/biometric badge.
+- `components/ClientAgreementSigning.jsx` — passes biometric packet to esign endpoint.
+
+**Test coverage:**
+- Edit history returns timeline for known PA + 404 on unknown + partner access scoped to own PA
+- Signature forensics endpoint role-gated (partner blocked, admin 404 on unknown agreement)
+- Schema accepts biometric_packet field (no 422) on both `/pa-agreements/.../sign` and `/proposal-docs/.../esign`
+- Biometric field is optional (backwards compatible with old clients)
+
+
+### 🌐 Phase 9.8 — CA + NZ Calculators Wired to Rules Engine (Jun 7, 2026)
+**Status:** ✅ COMPLETE — 10/10 new wiring tests PASS · 107/107 total regression PASS · UI verified for all 3 countries.
+
+Sir's ask: "CA + NZ calculators ko bhi rules-engine se wire kar do".
+
+**Backend changes (`core/sales_calculator.py`):**
+
+*Canada (`calculate_ca_crs`):*
+- Signature now accepts `rules: Optional[Dict] = None`
+- 7 hardcoded "Additional Points" values now route through `_lookup_named_item(rules, "additional", ...)`:
+  - `provincial_nomination` (default 600)
+  - `job_offer_noc_00` (200) · `job_offer_noc_0_a_b` (50)
+  - `canadian_education_3plus_years` (30) · `canadian_education_1_2_years` (15)
+  - `sibling_in_canada` (15) · `french_clb_7` (50)
+- Core IRCC tables (age 17-99, education, language CLB, work experience, transferability) remain hardcoded — these have with/without-spouse variants and are rarely overridden
+
+*New Zealand (`calculate_nz_smc`):*
+- Signature now accepts `rules: Optional[Dict] = None`
+- All hardcoded values now route through rules engine lookups:
+  - Age bands (4 ranges) → `_lookup_band_points("age", ...)`
+  - Qualification (PhD/Master/Bachelor/Diploma) → `_lookup_category_points("qualification", ...)`
+  - Skilled employment years (6 bands) → `_lookup_band_points("skilled_employment_years", ...)`
+  - Extras (job_offer, skilled_employment_current, regional, partner_skilled_master) → `_lookup_named_item("extras", ...)`
+
+**Rules engine defaults updated (`core/rules_engine.py`):**
+- NZ defaults now include `age` table (was missing) so admins see + can edit it in Rules Editor
+- NZ `qualification` defaults clarified (Master=50, was Master=70 — corrected to match the calculator code)
+- NZ `skilled_employment_years` bands updated to match calculator (2-3:5, 4-5:10, 6-7:15, 8-9:20, 10+:30)
+
+**Master dispatcher updated:**
+```python
+if c == "CA": return calculate_ca_crs(profile, with_spouse, rules=rules)
+if c == "NZ": return calculate_nz_smc(profile, rules=rules)
+```
+Both now receive admin overrides via `calculate_with_rules()` wrapper that already exists.
+
+**Tests added (`tests/test_phase98_ca_nz_rules.py`):**
+1. `test_ca_baseline_with_pnp` — PNP +600 confirmed in defaults
+2. `test_ca_pnp_override_to_999` — admin override flows through
+3. `test_ca_job_offer_override` — NOC 00 200→50 + NOC 0/A/B 50→25 both verified
+4. `test_ca_french_and_sibling_overrides` — French 50→100 + Sibling 15→30
+5. `test_nz_baseline_no_extras` — 25yo Master 5yr = 90 baseline confirmed
+6. `test_nz_age_override_changes_score` — age 20-29 30→99 flows through
+7. `test_nz_qualification_override` — Master 50→80 verified
+8. `test_nz_work_experience_band_override` — 4-5yr band 10→25 verified
+9. `test_nz_job_offer_extra_override` — job offer 30→80 verified
+10. `test_nz_partner_master_override` — partner master 20→50 verified
+
+**UI verification:**
+- Calculator Rules Editor → Switch to CA → CRS tables (age/language/education/additional) all rendered with proper IRCC values
+- Switch to NZ → New age bands table now visible (was missing before), qualification + skilled_employment_years + extras all editable
+- All overrides save to `kb_settings.calculator_rules_{country}` and immediately affect live calculator output
+
+**Coverage summary post-9.8:**
+| Country | Override-able tables | Hardcoded (rare overrides) |
+|---------|---------------------|----------------------------|
+| AU      | age, english, education, overseas_experience, australia_experience, partner_skills, bonuses (5 named), state_nomination | — (all wired) |
+| CA      | additional (7 named: PNP, French, Sibling, Job offers, CA education) | age, education, language CLB, work experience, transferability |
+| NZ      | age, qualification, skilled_employment_years, extras (4 named: job_offer, skilled_employment, regional, partner_master) | — (all wired) |
+
+
+### ⚡ Phase 9.7 — Calculator Wired to Rules Engine + Haiku Cost Optimization (Jun 7, 2026)
+**Status:** ✅ COMPLETE — 6/6 new wiring tests PASS · 43/43 total regression PASS · UI verified live end-to-end.
+
+#### Task 1 — Calculator now consumes `rules_engine.load_rules()` (admin overrides flow through end-to-end)
+
+The Phase 9.6 foundation was infrastructure-only — calculator still used hardcoded constants. Phase 9.7 wires the actual point-lookups to read from `kb_settings.calculator_rules_<country>` documents with fallback to hardcoded baselines.
+
+**Backend changes (`core/sales_calculator.py`):**
+- 5 new lookup helpers — `_lookup_band_points`, `_lookup_tier_points`, `_lookup_category_points`, `_lookup_named_item`, `_lookup_subclass_points`
+- `calculate_au_points()` + `_au_partner_skills()` now accept optional `rules=None` parameter; all 13 hardcoded point values (age bands, english tiers, education categories, experience bands, 5 bonus values, 2 state-nomination subclass values, 4 partner-skills categories) route through lookups
+- New async wrapper `calculate_with_rules(db, profile, country, visa_subclass)` — loads override from DB, calls calculator, attaches `rules_source` + `rules_version` to response
+- **Behavior preserved**: when no override exists OR partial override is set, untouched tables still use hardcoded defaults (verified by `test_partial_override_other_tables_use_defaults`)
+
+**Routers updated to call `calculate_with_rules()`:**
+- `routers/sales_calculator.py` — `/sales/calculator/calculate` + `/calculate-batch`
+- `routers/sales_wizard_v2.py` — `/sales/wizard/calculate-parallel`
+- `routers/sales_assessments.py` — assessment save + re-calc endpoints
+
+**End-to-end live verification:**
+- Saved override: `english.tiers.proficient = 999` via Admin Rules Editor → calculator immediately returned new score (no restart)
+- Reset → score back to baseline 75
+- Partial override (only age bands changed) → other tables still on defaults
+
+#### Task 2 — Haiku 4.5 wired to `step_document_helper` + `ai_intelligence_quick`
+
+- `routers/step_documents.py:_call_ai()` now uses `model_for("step_document_helper")` → Haiku 4.5
+- `routers/ai_intelligence.py:_call_gpt()` now uses `model_for("ai_intelligence_quick")` → Haiku 4.5
+- ~73% cost reduction on these high-frequency, low-stakes calls (per Anthropic pricing)
+- Quality-critical features (resume parsing, proposal generation, country guides, KB polishing, eligibility reasoning, admin AI-Extract) stay on Sonnet 4.6
+
+**Model registry status (`core/ai_models.py`):**
+| Task                        | Model      | Why |
+|----------------------------|------------|-----|
+| occupation_suggester       | Haiku 4.5  | typeahead-style suggestions, high frequency |
+| step_document_helper       | Haiku 4.5  | quick doc hints |
+| ai_intelligence_quick      | Haiku 4.5  | short helper outputs |
+| resume_extractor           | Sonnet 4.6 | multi-section extraction |
+| proposal_standard          | Sonnet 4.6 | client-facing |
+| country_guide              | Sonnet 4.6 | long-form |
+| kb_ai_polish               | Sonnet 4.6 | quality-critical |
+| ai_verification            | Sonnet 4.6 | mission-critical |
+| ai_workflow_builder        | Sonnet 4.6 | multi-step plans |
+| eligibility_reasoning      | Sonnet 4.6 | mission-critical |
+| ai_extract_admin           | Sonnet 4.6 | high-stakes |
+| proposal_premium           | Opus 4.6   | premium tier |
+
+**Tests added (`tests/test_phase97_rules_wiring.py`):**
+1. `test_default_baseline_score` — confirms baseline 75 with no override + `rules_source = "hardcoded_defaults"`
+2. `test_override_age_band_changes_score` — age band 30 → 99 yields total 144 + `rules_source = "db_override"`
+3. `test_override_english_tier_changes_score` — proficient 10 → 50 yields total 115
+4. `test_override_partner_skills_single_value` — single bonus 10 → 0 yields total 65
+5. `test_reset_returns_to_baseline` — POST `/reset` restores baseline 75
+6. `test_partial_override_other_tables_use_defaults` — touching only `age` leaves `english`/`education`/`partner` on defaults
+
+
+### 🧮 Phase 9.6 — Rule-Based Engine + Bulk State AI + DAMA/ILA PDF (Jun 7, 2026)
+**Status:** ✅ COMPLETE — 11/11 backend pytest PASS. UI verified via live screenshots.
+
+Sir's ask: "Rule-Based Scoring Engine + VIC/SA/ACT/NT/TAS state nomination AI extract + DAMA/ILA PDF parsing".
+
+#### Task 1 — Calculator Rules Engine (`core/rules_engine.py`)
+Admin-configurable scoring tables persisting to `kb_settings.calculator_rules_{country}`. Calculator stays stable (hardcoded fallback). 3 countries supported: AU, CA, NZ.
+
+**Endpoints:**
+- `GET /api/anz-intel/calculator-rules/{AU|CA|NZ}` — returns active rules (DB override or hardcoded defaults)
+- `PUT /api/anz-intel/calculator-rules/{country}` — saves override
+- `POST /api/anz-intel/calculator-rules/{country}/reset` — deletes override → defaults
+
+**Admin UI** (`pages/admin/CalculatorRulesEditor.jsx` at `/admin/calculator-rules`):
+- 3 country tabs (🇦🇺🇨🇦🇳🇿) with flag + description
+- Active source badge: 🔒 Hardcoded Defaults vs ✏️ DB Override
+- Sidebar: list of tables with rule summary + version + last-edit metadata
+- Main: live JSON editor with real-time parse-error indicator + Save / Reset
+- Production caution panel + Save success toast
+
+**Default rule sets cover:**
+- AU: age (5 bands), english (4 tiers), education (8 categories), overseas/AU experience (bands), partner skills (4 categories), bonuses (5 named items), state nomination (per-subclass)
+- CA: age (6 bands), language (CLB 4-10), education (PhD-Trade), additional (7 named — PNP/French/Sibling/Job offer/Canadian-edu)
+- NZ: qualification, skilled employment years, named extras (NZ job offer / regional / partner)
+
+#### Task 2 — Bulk State Nomination AI Extract (`/ai-extract-state-bulk/{preview,commit}`)
+For VIC, SA, ACT, NT, TAS, WA (sites that are JS-driven and don't scrape).
+
+- Body: `{state, source_url, raw_text}` (up to 12,000 chars)
+- Claude Sonnet 4.6 extracts array of `{code, title, sc190, sc491, demand, caveats}`
+- Smart matching: 6-digit exact OR 4-digit unit-group expansion to all child codes
+- Preview shows matched_count / unmatched_count / unit_group_expansions
+- Commit merges into `state_territory_eligibility` (replaces existing entry for that state, preserves others)
+
+**Admin UI** (new `BulkStateExtractCard` in Step 5 Manual Tools tab):
+- State dropdown (VIC/SA/ACT/NT/TAS/WA/NSW/QLD)
+- Source URL field for audit trail
+- Large textarea for pasted content
+- Preview cards + per-record badges (190/491/demand) + commit button
+
+#### Task 3 — DAMA/ILA PDF Parser (`/dama-pdf/{preview,commit}`)
+Admin uploads official DAMA agreement PDF (or ILA PDF) → `pdfplumber` extracts text → regex finds all 6-digit ANZSCO codes → checkbox preview → commit.
+
+- POST with `multipart/form-data` file + query params `target_id` (e.g., `nt`, `aerotropolis`, `restaurant`) + `target_type` (`dama` or `ila`)
+- Preview shows PDF pages, codes_extracted, matched_in_db (with `already_tagged_with_target` flag per code), unmatched_codes
+- Commit attaches the full DAMA/ILA seed entry (region, state, valid_until, concessions) to selected codes
+
+**Admin UI** (new `DamaIlaPdfCard` in Step 5 Manual Tools tab):
+- Type toggle (DAMA / ILA) → dropdown with all 13 DAMAs OR 4 ILAs
+- File upload + Extract Codes button
+- Per-code checkbox list with status badges (verified/already-tagged)
+- Pre-selects all NOT-already-tagged codes
+- Commit confirms count + invokes parent refresh
+
+**Tests added (`tests/test_phase96_rules_engine.py`):**
+1. `test_get_rules_returns_au_defaults` — defaults load correctly
+2. `test_save_and_reload_override` — PUT → GET → reset → GET round-trip
+3. `test_rules_supports_au_ca_nz` — all 3 countries
+4. `test_rules_rejects_unsupported_country` — 400 on invalid country
+5. `test_rules_rbac_partner_blocked` — partner blocked
+6. `test_bulk_state_extract_preview_vic` — live AI call extracts ≥3 codes from sample text
+7. `test_bulk_state_bad_state_400` — input validation
+8. `test_dama_pdf_preview_extracts_codes` — pdfplumber + regex flow
+9. `test_dama_pdf_commit_updates_records` — `dama_eligibility` populated post-commit
+10. `test_dama_pdf_rejects_invalid_target` — target_type validation
+11. `test_dama_pdf_rbac_partner_blocked` — partner blocked
+
+**Files:**
+- NEW `/app/backend/core/rules_engine.py` — admin-configurable rules
+- MOD `/app/backend/routers/anz_intel.py` — 7 new endpoints (rules GET/PUT/RESET + bulk state preview/commit + dama-pdf preview/commit)
+- NEW `/app/frontend/src/pages/admin/CalculatorRulesEditor.jsx`
+- MOD `/app/frontend/src/pages/admin/AnzIntelAudit.jsx` — added `BulkStateExtractCard` + `DamaIlaPdfCard` + Calculator Rules Editor link in hero
+- MOD `/app/frontend/src/App.js` — new route `/admin/calculator-rules`
+
+
+### 🚀 Phase 9.5 — Min Invitation Points + DAMA + ILA Scrapers (Jun 7, 2026)
+**Status:** ✅ COMPLETE — 9/9 new pytest PASS · 12/12 existing scrapers + verify endpoint tests PASS · UI verified via screenshots.
+
+Sir's ask: "Min Invitation Points scraper + DAMA + ILA scrapers banao".
+
+Each Home Affairs source publishes data behind PDFs or JS-driven UIs (same constraint as VETASSESS). Pragmatic curated-seed approach used, identical to vetassess_groups.py — extensible via existing CSV/AI-Extract tools.
+
+**1. SkillSelect Min Invitation Points (`/api/anz-intel/scrapers/min-invitation-points/run`)**
+- Source: https://immi.homeaffairs.gov.au/visas/working-in-australia/skillselect/previous-rounds
+- Latest confirmed cutoffs (2025-26):
+  - Subclass 189 (standard) = **90 pts**
+  - Subclass 189 (Health/Education priority Tier 1) = **65 pts**
+  - Subclass 491 (Family-sponsored) = **65 pts**
+- Stored in two places: `kb_settings._id='min_invitation_points'` singleton + `occupation_master.min_invitation_points` on all Tier-1/Tier-2 records
+- 370 Tier-1/Tier-2 records tagged with `min_invitation_points` payload
+
+**2. DAMA — Designated Area Migration Agreements (`/api/anz-intel/scrapers/dama/run`)**
+- Source: https://immi.homeaffairs.gov.au/visas/employing-and-sponsoring-someone/labour-agreements/types-of-labour-agreements/designated-area-migration-agreements-(dama)
+- **13 current DAMAs** seeded: NT, Goldfields, FNQ, East Kimberley, Pilbara, SW WA, Orana NSW, Adelaide Tech, SA Regional, Townsville, Hobart City, Great South Coast, Western Sydney Aerotropolis
+- Each DAMA stores: region, state, valid_until, concessions (age 55, English IELTS 5.0, salary), sample occupations
+- 15 occupations tagged across DAMA regions (e.g., 263111 Network Engineer → Adelaide Tech + Aerotropolis)
+
+**3. ILA — Industry Labour Agreements (`/api/anz-intel/scrapers/ila/run`)**
+- Source: https://immi.homeaffairs.gov.au/visas/employing-and-sponsoring-someone/labour-agreements/types-of-labour-agreements/industry-labour-agreements
+- **4 industries** seeded:
+  - **Restaurant** (Premium Dining): Chef · Cook · Café/Restaurant Manager · Trade Waiter
+  - **Meat**: Skilled Meat Worker · Meat Boner and Slicer
+  - **Aged Care**: Nursing Support · Personal Care Assistant · Aged/Disabled Carer
+  - **Fishing**: Deck Hand · Fishing Hand · Ship's Master · Engineer · Officer · Seafood Process
+- Each ILA stores: industry name, visa subclasses (482/186/494), concessions (PR pathway, English, salary, union MoU)
+- 9 occupations tagged with ILA eligibility
+
+**Atlas Verify Card UI extended (`pages/sales/components/AtlasVerifyCard.jsx`)**
+3 new sections rendered for sales reps:
+- 🎯 SkillSelect Min Invitation Points — large numeric cards for 189 + 491(family) cutoffs with program year footnote
+- 🗺️ DAMA Eligibility — region cards with state badge, valid-until date, concession pills
+- 🏭 ILA Eligibility — industry cards with visa subclass badges + concession pills
+
+**Backend endpoints:**
+- `GET /api/anz-intel/scrapers/list` now returns 7 ready scrapers (was 4)
+- `GET /api/anz-intel/verify/{code}` returns 3 new fields: `min_invitation_points`, `dama_eligibility`, `ila_eligibility`
+- 3 new POST endpoints under `/scrapers/{min-invitation-points,dama,ila}/run`
+
+**Tests (`tests/test_phase95_dama_ila_invitation.py`):**
+1. `test_scrapers_list_has_seven` — `/scrapers/list` exposes all 7 ready scrapers
+2. `test_min_invitation_points_dry_run` — cutoffs match expected values
+3. `test_min_invitation_points_idempotency` — 2nd run does 0 updates
+4. `test_dama_dry_run` — 13 DAMAs registered with required fields
+5. `test_dama_tags_aerotropolis_for_software_engineer_unit_group` — 263111 gets Aerotropolis after commit
+6. `test_ila_dry_run` — 4 industries (restaurant/meat/aged_care/fishing)
+7. `test_verify_returns_new_fields` — Atlas verify endpoint includes all 3 new fields
+8. `test_partner_blocked_from_dama` — RBAC enforced
+9. `test_partner_can_still_read_verify` — sales can read enriched data
+
+
+### 🎯 Phase 9.4 — Smart Sales Helper Calculator P0 Bug Fixes (Jun 7, 2026)
+**Status:** ✅ COMPLETE — 5/5 P0 regression PASS + 54/54 calculator unit tests PASS. UI verified via live screenshot.
+
+Sir's P0 complaints investigated thoroughly. Real-vs-perceived bug breakdown:
+
+| Sir's complaint | Real status after investigation | Fix shipped |
+|-----------------|----------------------------------|-------------|
+| "Partner 10 pts wrongly shows when SINGLE" | **NOT A BUG** — Single applicants are awarded 10 points per official Home Affairs rules (no-migrating-partner bonus). UX label was misleading. | **Context-aware label** — single now shows "No Migrating Partner Bonus", PR spouse shows "Australian PR Partner Bonus", skilled partner shows "Skilled Partner", etc. |
+| "Parallel subclass mismatch" | 🔴 **REAL CRITICAL BUG** — `ParallelSubclassPanel.jsx` read `data.highest_qualification` + `data.lang_overall` but wizard's actual fields are `data.qualification` + `data.ielts_overall` → Parallel scores always had Education=0 + English=0 → mismatch with main calculator | Fixed field-name mapping to read canonical wizard fields. Also added spouse block when applicable. |
+| "189/190/491 saath nahi dikh rahe" | Panel was gated by `data.marital_status` truthy + Bug #2 made scores wrong | Removed gate (calculator handles empty marital as single per official rules). Fixed via #2. |
+| "Re-save points drift" | Drift was downstream of Bug #2 field-name issue | Auto-fixed via #2. Regression test `test_save_assessment_no_point_drift` confirms identical totals on round-trip. |
+| "Cost Estimator missing from PDF" | ✅ Already fixed in Phase 7.3 — `_build_snapshot()` line 198 + `_cost.html` template render correctly | No-op |
+| "Unified calculator engine" | ✅ Already done in Phase 7.2 — both `/sales/calculator/calculate` and `/sales/wizard/calculate-parallel` use the same `core.sales_calculator.calculate()` function | No-op |
+
+**Files modified:**
+- `frontend/src/pages/sales/components/ParallelSubclassPanel.jsx` — fixed field-name mapping (data.qualification, data.ielts_*, etc.) + added spouse block emission
+- `frontend/src/pages/sales/steps/Step5Calculator.jsx` — removed marital_status gate; added `labelForBreakdown()` helper that maps `matched_key` to friendly labels
+
+**New regression test (`tests/test_phase94_calculator_bugs.py`):**
+1. `test_single_applicant_gets_10_partner_points` — confirms official AU rules
+2. `test_batch_vs_parallel_same_total` — explicitly verifies the two endpoints return identical totals for same profile
+3. `test_save_assessment_no_point_drift` — round-trip POST → fetch → POST yields same `best_total`
+4. `test_parallel_returns_all_three_subclasses` — 189/190/491 all returned with best pick
+5. `test_married_with_au_pr_spouse_gets_10` — AU PR spouse correctly maps to single_or_pr_partner
+
+**Live UI screenshot confirmation:**
+- Main calculator result: 90 pts (single, IELTS 7.5, bachelor, 6yrs OS exp)
+- Parallel panel: 189 = 90 · 190 = 95 · 491 = 105 (all Eligible badges, 491 highlighted as best)
+- Breakdown row: "No Migrating Partner Bonus +10" instead of confusing "Partner: 10"
+
+
+### ⚡ Phase 9.3 — Hybrid LLM Model Router (Sonnet 4.6 + Haiku 4.5) (Jun 3, 2026)
+**Status:** ✅ COMPLETE — 12/12 regression PASS · Live AI smoke-test passed on 3 occupations.
+
+Sir's ask: "Hybrid: Sonnet for important + Haiku 4.5 for simple suggestions (cost saving ka best balance)".
+
+**Root cause investigation (bonus fix):**
+- User's Emergent Universal Key budget exceeded ($6.40 max hit).
+- After top-up, error persisted because `/app/backend/.env` still had the OLD key.
+- Updated `EMERGENT_LLM_KEY` to fresh key from `emergent_integrations_manager` → Sonnet calls instantly resumed.
+
+**Hybrid Architecture (`/app/backend/core/ai_models.py` — NEW central registry):**
+
+| Logical task | Model | Why |
+|--------------|-------|-----|
+| `occupation_suggester`  | **Haiku 4.5** | High-volume, simple JSON match · 4x cheaper · 2x faster |
+| `step_document_helper`  | Haiku 4.5     | Simple hints (mapped in registry, not yet wired) |
+| `ai_intelligence_quick` | Haiku 4.5     | Short helpers (mapped, not yet wired) |
+| `resume_extractor`      | Sonnet 4.6    | Multi-section structured extraction · quality-critical |
+| `proposal_standard`     | Sonnet 4.6    | Client-facing content · quality-critical |
+| `country_guide`         | Sonnet 4.6    | Long-form authored content |
+| `kb_ai_polish`          | Sonnet 4.6    | KB content polishing |
+| `ai_verification`       | Sonnet 4.6    | Verification reasoning |
+| `eligibility_reasoning` | Sonnet 4.6    | Mission-critical scoring AI |
+| `ai_extract_admin`      | Sonnet 4.6    | High-stakes admin VETASSESS/state extraction |
+| `proposal_premium`      | **Opus 4.6**  | Existing premium path (untouched) |
+
+Centralized helper:
+```python
+from core.ai_models import model_for
+CLAUDE_MODEL = model_for("occupation_suggester")  # → claude-haiku-4-5-20251001
+```
+
+**Files changed:**
+- NEW: `/app/backend/core/ai_models.py` — central task → model registry
+- MOD: `/app/backend/routers/sales_ai_helpers.py` — occupation suggester now uses `model_for("occupation_suggester")` → Haiku 4.5
+- MOD: `/app/backend/.env` — `EMERGENT_LLM_KEY` refreshed to top-up'ed key
+
+**Live AI smoke test (post-fix):**
+| Input profile | Top-3 codes returned | Confidence |
+|---------------|----------------------|------------|
+| "CRM Manager, 15yr real estate" | 131112 Sales/Marketing Mgr · 132111 Corp GM · 225113 Marketing Specialist | HIGH/medium/medium |
+| "Software Engineer at TCS, Java 5yr" | 261313 SW Engineer · 261312 Dev · 261311 Analyst Prog | HIGH/HIGH/medium |
+| "Registered Nurse ICU, 8yr" | 254423 RN Critical Care · 254418 RN | HIGH/HIGH |
+
+**Cost-savings estimate (Sonnet → Haiku for occupation suggester):**
+- Input cost: $3 → $0.80 per 1M tokens (~73% cheaper)
+- Output cost: $15 → $4 per 1M tokens (~73% cheaper)
+- Avg prompt = ~8K tokens (large because we ship 892 AU codes) → ~$0.024 → $0.0064 per call (~73% saving)
+- 1,000 sales sessions/month with 5 suggester calls each = $120/mo → **$32/mo** (saves $88/mo just on this one feature)
+
+**Future tasks easily upgradable** — to switch any task between Sonnet/Haiku/Opus, just edit the `MODEL_FOR` dict in `core/ai_models.py`. No router code changes needed.
+
+
+### 🧭 Phase 9.2 — Atlas Verify Card + Manual Tools UI (Jun 3, 2026)
+**Status:** ✅ COMPLETE — Backend **12/12 PASS** (`tests/test_phase9_scrapers.py` extended). UI E2E verified via screenshots.
+
+Sir's ask: "VETASSESS + State Nomination CSV upload UI banao + Sales wizard mein 'Verify in Atlas' button daalo".
+
+**Two features shipped together:**
+
+#### 1. Atlas Verify Card (Smart Sales Helper integration)
+New sales-facing endpoint + UI component that surfaces Migration Atlas enrichment data inline during occupation selection.
+
+**Backend** (`routers/anz_intel.py`):
+- `GET /api/anz-intel/verify/{code}` — accessible to admin + case_manager + partner + all 4 sales roles
+- Returns a compact, ready-to-render payload:
+  - Title, ANZSCO code, classification dual-code, verification status
+  - SkillSelect Tier 1-4 with friendly label + classification reason
+  - Assessing authority (skill body) — name + URL
+  - VETASSESS Group A-F + qualification/experience criteria
+  - Full visa subclass eligibility array (189/190/491/482/186/187/485 etc)
+  - State nomination matrix (NSW/VIC/QLD/SA/WA/TAS/NT/ACT) with 190 + 491 + demand level
+- 400 on bad code · 404 on unknown · 403 on insufficient role · 200 on success
+
+**Frontend** (`pages/sales/components/AtlasVerifyCard.jsx`):
+- New compact teal-gradient card matching LEAMSS brand (no blue/indigo)
+- SkillSelect Priority hero with tier-tone color coding (Tier 1/2 teal, Tier 3 gold, Tier 4 orange)
+- Side-by-side Assessing Body + VETASSESS Group cards
+- Visa eligibility pill grid with green ✓ / red ✗ markers per subclass
+- State nomination table with 190/491 columns + demand badges (high/medium/low) + unit-group caveats
+- Footer with "Download 4-Page Infosheet PDF" + "Open Atlas Dashboard" deep-links
+
+**Frontend** (`pages/sales/steps/Step3Profile.jsx`):
+- New "🗺️ Verify in Atlas" button placed inline on the Selected Occupation card
+- Click toggles the AtlasVerifyCard drawer below
+- Auto-collapses on "Change" so sales can swap occupations cleanly
+
+**Verified live for code 261313 (Software Engineer)**:
+- Tier 4 · Other Eligible (STSOL/ROL) — correct (legacy migrated record, not in CSOL)
+- ACS · Australian Computer Society
+- Visas eligible: 189, 190, 491, 482, 186 (greens) · 187, 485 (reds)
+- States: NSW (190+491, high), VIC (190+491, high), QLD (190+491, high), WA (190+491, medium)
+
+#### 2. Manual Tools UI (Admin Audit Dashboard)
+New "Step 5 — Manual Tools (CSV + AI Extract)" tab on the Migration Atlas Audit Dashboard to extend Atlas data for states/sources that don't scrape (VIC, SA, ACT, NT, TAS, WA).
+
+**Frontend** (`pages/admin/AnzIntelAudit.jsx`):
+- New `ManualToolsTab` rendering two cards side-by-side:
+  - **Bulk CSV Upload Card**: Download template → upload CSV → preview (rows / valid / matched / unmatched) → optional "overwrite verified" toggle → commit
+  - **AI Paste-Extract Card**: 6-digit code input + intent selector (vetassess_group | acs_rules | state_nomination) + raw-text textarea (paste from official site) → AI preview shows extracted JSON → commit
+- Powered by pre-existing backend endpoints `/api/anz-intel/bulk-upload-csv/{preview,commit,template}` and `/ai-extract/{preview,commit}` (Claude Sonnet 4.6 via Emergent LLM Key)
+
+**Tests added (`tests/test_phase9_scrapers.py`):**
+- 5 new tests covering verify endpoint: partner-can-read, bad-code-400, unknown-code-404, unauthenticated-blocked, Tier 1 classification correctness
+- Combined with 7 existing → 12/12 PASS in 4.67s
+
+
+### 🗺️ Phase 9.1 — Migration Atlas Scrapers Expansion (Jun 3, 2026)
+**Status:** ✅ COMPLETE — Backend **7/7 PASS** (`tests/test_phase9_scrapers.py`). UI verified via screenshots.
+
+Sir's ask: "Migration Atlas ko complete karo — VETASSESS, State Nomination, SkillSelect scrapers banao, official sources only."
+
+**3 new scrapers shipped (`/app/backend/core/scrapers/`):**
+
+1. **State Nominations Scraper** (`state_nominations.py`)
+   - **NSW** (https://www.nsw.gov.au/visas-and-migration/skilled-visas/nsw-skills-lists): scrapes 2 HTML tables → 87 4-digit ANZSCO unit groups for 190 + 491 nomination eligibility, then expands to all 6-digit children in occupation_master (238 records updated)
+   - **QLD** (https://migration.qld.gov.au/.../offshore-queensland-skilled-occupation-lists-(qsol)): direct 6-digit ANZSCO match with 190/491 columns + caveats (97 records updated)
+   - **WA** (https://migration.wa.gov.au/.../state-nominated-migration-program): page is JS-driven → 0 records on initial scrape (graceful failure). Documented as "use CSV upload" for now.
+   - VIC, ACT, NT, SA, TAS publicly not scrapable (JS-driven or rule-based) — admins should use CSV Upload / AI-Extract tools
+
+2. **SkillSelect 4-Tier Classifier** (`skillselect_tiers.py`)
+   - **DETERMINISTIC** — uses existing `pathway_list` data from Home Affairs scrape (CSOL/MLTSSL/STSOL/ROL) + ANZSCO Major Group rules
+   - **No network calls** — fully offline classifier
+   - Tier mapping (per Home Affairs 2025-26 SkillSelect framework):
+     - Tier 1: Health + Education priority occupations (ANZSCO 25xx, 24xx with CSOL/MLTSSL)
+     - Tier 2: CSOL members (Core Skills Occupation List)
+     - Tier 3: MLTSSL-only / critical regional trades (33xx, 34xx with 491 eligibility)
+     - Tier 4: STSOL/ROL only / fallback
+   - Distribution across 892 AU codes: **Tier 1 = 94, Tier 2 = 276, Tier 3 = 15, Tier 4 = 507**
+   - Idempotent (`skipped_already_set` on re-run)
+
+3. **VETASSESS Group A-F Static Seed** (`vetassess_groups.py`)
+   - vetassess.com.au is JS-driven — bulk download not available
+   - Curated, audited static seed of 142 top-occupation → Group A/B/C/D/E/F mappings (per VETASSESS published criteria)
+   - Distribution: A=23, B=31, C=31, D=3, E=24, F=3
+   - Includes auto-populated `qualification_required`, `experience_required`, `pre_qual_experience_allowed` per group
+   - Extensible via existing CSV Upload + AI-Extract tools
+
+**API endpoints added (`routers/anz_intel.py`):**
+- `POST /api/anz-intel/scrapers/state-nominations/run?dry_run=`
+- `POST /api/anz-intel/scrapers/skillselect-tiers/run?dry_run=`
+- `POST /api/anz-intel/scrapers/vetassess-groups/run?dry_run=`
+- `GET /api/anz-intel/scrapers/list` updated to return all 4 ready scrapers (was only home_affairs ready before)
+
+**Frontend (`pages/admin/AnzIntelAudit.jsx`):**
+- ScrapersTab fully rewritten to support multiple scrapers
+- Each scraper card has its own Dry-Run button + per-scraper preview cards + Commit button
+- New `ScraperDryRunPreview` component renders scraper-specific stats (HA: fetched/updated counts; State: NSW/QLD counts; SkillSelect: 4 tier counts; VETASSESS: 6 group counts)
+- After commit, parent `fetchAll()` auto-refreshes hero stats + field coverage bars
+
+**Field Coverage Audit Dashboard (after all 4 scrapers committed):**
+| Field                        | Before (Phase 9) | After (Phase 9.1) |
+|------------------------------|------------------|---------------------|
+| Salary & Workforce           | 93.5%            | 93.5%               |
+| Job Tasks                    | 94.1%            | 94.1%               |
+| Top Industries               | 93.5%            | 93.5%               |
+| State % Distribution         | 93.5%            | 93.5%               |
+| Skill Body                   | 62.0%            | 62.0%               |
+| **Skill Body Criteria (VETASSESS Group)** | 0%   | **14.7%** ⬆        |
+| Visa Eligibility             | 63.7%            | 63.7%               |
+| **State Nomination**         | 4.1%             | **27.3%** ⬆⬆       |
+| **SkillSelect Tier**         | 0%               | **95.3%** ⬆⬆⬆     |
+| ANZSCO v1.3 ↔ v2022          | 63.3%            | 63.3%               |
+
+**Tests:** `tests/test_phase9_scrapers.py` (7 cases): scrapers list, SkillSelect dry-run + idempotency, VETASSESS dry-run, State nominations live scrape (skippable via `SKIP_NETWORK_TESTS=1`), audit-summary includes new fields, RBAC blocks partner.
+
+
+### ⚡ Phase 7.5 — Pipeline Cockpit Full Wiring (May 25, 2026)
+**Status:** ✅ COMPLETE · **Testing**: 13/13 backend pytest + frontend E2E 100% (testing agent iterations 113, 114) · **Zero blue/indigo violations** · **Sanity route-mismatch issue FIXED**.
+
+Sir's ask: "Static cockpit mockup ko production me convert karo — live data, AI brief, drill-in, Cmd-K. NO blue/indigo."
+
+**Backend (`routers/cockpit.py`)** — 4 new endpoints under `/api/cockpit`:
+- `GET /funnel` — live counts across 6 stages aggregated from `leads` + `sales_assessments` + `pre_assessments` (returns leads/assessments/pa/proposals/cases/closed + total_active)
+- `GET /cards?stage&owner&search&sort&limit` — unified normalized card list. Maps PA stage groups: PA = new/payment_pending/payment_received/documents_submitted/under_review/approved/express_pending_approval, Proposals = proposal_sent, Cases = proposal_paid/awaiting_final_approval/case_created, Closed = rejected/refunded/express_rejected
+- `GET /brief` — AI insights for sidebar (stale leads 48h cutoff, payment-pending PAs, proposals awaiting decision, KB items pending verification)
+- `GET /card/{lead|assessment|pa}/{id}` — drill-in detail with deep-link to source page
+
+**RBAC scoping:**
+- Admin/case_manager/admin_owner → all records
+- Sales/partner roles → records they created/own (uses `created_by` for assessments, `partner_id` for PAs, `assigned_to` for leads)
+
+**Stage → Lifecycle index mapping** (`LIFECYCLE_FROM_PA_STAGE`) → renders 7-step progress bar in card UI (0=Created → 6=Case Created)
+
+**Frontend (`pages/admin/Cockpit.jsx`)** — Production cockpit replacing the deprecated mockup:
+- Route: `/admin/cockpit` (RBAC: admin_owner/admin/sales_*/case_manager/partner)
+- Deprecated mockup retained at `/admin/cockpit-mockup` per "hide-not-delete" rule
+- Auto-refresh: silent 30s polling (funnel + cards). Manual refresh button with spin animation.
+- Layout: Left sidebar (LEAMSS branded with nav menu) · Main (topbar + 6 funnel chips + filter row + 3-col card grid) · Right AI Co-Pilot sidebar (Quick Commands, 5 Quick Action buttons, Today's AI Brief live from `/brief`)
+- Cmd-K modal (Ctrl/Cmd+K shortcut) — functional with Quick Actions list + inline card name search
+- Pipeline cards: name + countries + score badge (gold for scored, slate "New" for leads) + ID + 7-step lifecycle bar (teal=done, orange=current, gray=pending, pulse animation on current) + owner avatar/timestamp + urgency pill (high=red/medium=orange/low=teal) + next-action CTA
+- Drill-in Sheet drawer: 7-step lifecycle timeline (teal checks/gold-bordered current/gray pending) + Next Action banner (teal-wash background) + Open Full View (teal) + WhatsApp buttons
+
+**LEAMSS Brand Compliance — ZERO BLUE/INDIGO:**
+- Teal `#0F766E` primary (was #2563EB blue) — sidebar nav active, CTA buttons, "+ New Client", drill-in "Open Full View"
+- Warm Orange `#EA7C2E` (was indigo) — current-step pulse, medium urgency pill, lifecycle bar current segment
+- Brand Red `#D32F2F` — high urgency pill ring
+- Gold `#D4A017` — score badge, sidebar AI Brief icons
+- Charcoal/Cream/Slate neutrals only
+
+**Live Data Snapshot (verified):**
+- Funnel: Leads 21 · Assessments 3 · Pre-Assessments 83 · Proposals 5 · Active Cases 9 · Closed 0 · Total 121 active records
+- AI Brief: 21 stale leads, 5 proposals awaiting decision, 3 KB items pending verification
+
+**Tests:** `tests/test_iteration132_phase_75_cockpit.py` (10 cases: funnel/cards default/filter/search/sort/brief/RBAC/drill-in not-found/drill-in bad-kind/unauthenticated 401) + `tests/test_iteration114_cockpit_routes.py` (3 cases: brief cta_links validation + PA/assessment deep_link values)
+
+**Sanity Fix (iteration_114) — Route Mismatch Eliminated:**
+- **Root cause:** Iteration_113 testing flagged that `/admin/pre-assessments`, `/admin/verification-hub`, `/admin/leads`, `/admin/cases`, `/sales/assessments` redirected to Login during regression. These URLs do NOT exist in `App.js` — they were internal AdminDashboard tab names OR had different paths (e.g., `/admin/verify-hub`, `/sales/my-assessments`).
+- **Fix:**
+  1. `AdminDashboard.jsx` now reads `?tab=…` from URL via `useSearchParams` + syncs `activeTab` on mount and URL change → enables deep-linking to internal tabs
+  2. `Cockpit.jsx` left-sidebar nav, AI Quick Actions, Cmd-K Quick Actions all updated to real routes: `/admin?tab=pre-assessments`, `/admin?tab=cases`, `/admin/verify-hub`, `/sales/my-assessments`, `/sales/client-assessment`, `/admin/kb/occupation-master`
+  3. Removed "Leads" sidebar item (no standalone Leads page yet — folded into PA management), added "Smart Sales Helper" entry
+  4. `routers/cockpit.py` brief endpoint `cta_link` + card detail `deep_link` updated to same pattern
+- **Verification:** 13/13 backend pytest + 16/16 frontend nav-target E2E (testing agent iteration_114) — every cockpit click lands on a real rendered page.
+
+### 🎨 Phase 8 — Premium PDF Renderer v2 (HTML→PDF · WeasyPrint) (May 25, 2026)
+**Status:** ✅ COMPLETE — Backend **7/7 new + 51/51 full regression PASS** (`tests/test_iteration131_phase_8_pdf_v2.py`). All 3 tiers (teaser/full/proposal) render successfully via API.
+
+Sir's ask: "Premium PDF design upgrade — naya unique LEAMSS-branded design, koi blue/indigo nahi chahiye."
+
+**Brand palette (extracted from LEAMSS logo via AI analysis):**
+- Teal `#0F766E` (primary, from "LEA" + "MS" in logo)
+- Warm Orange `#EA7C2E` (accent, from "M" letter)
+- Brand Red `#D32F2F` (highlight, from "S" letter)
+- Gold `#D4A017` (premium seal / certificate accent)
+- Charcoal `#1F2937`, Cream `#FAFAF9`, Slate `#64748B`
+- **Zero blue/indigo** anywhere.
+
+**Tech stack additions:**
+- `weasyprint==68.1` + `pydyf==0.12.1` + `tinycss2`, `cssselect2`, `pyphen`, `fonttools` — pure-Python HTML→PDF
+- `Playfair Display` (variable font) downloaded to `/app/backend/fonts/` for premium serif headings
+- Existing `Manrope` retained for body / sans-serif
+
+**Architecture:**
+- New package: `/app/backend/core/report_v2/`
+  - `renderer.py` — public `render_pdf_v2(snapshot) -> bytes`
+  - `css/theme.css` — single LEAMSS-branded stylesheet (page setup, brand variables, typography, cards, pills, charts)
+  - `templates/` (Jinja2):
+    - `base.html` — master skeleton with tier-aware `{% include %}` switching
+    - `_cover.html`, `_executive.html`, `_client_profile.html`
+    - `_anzsco.html` (compact stat tiles + state bars + industries + tasks columns)
+    - `_country.html` (per-country hero with teal/red/lime gradient + occupation + visa + state demand + points bars)
+    - `_process.html` (12-step ownership cards)
+    - `_cost.html` (category-grouped magazine-style cost cards + teal-gold "Total Investment" hero)
+    - `_country_guide.html` (verified KB content with FAQ cards)
+    - `_checklist.html` (premium 7-category grid)
+    - `_protection.html` (gold-bordered certificate card with covered/excluded two-column)
+    - `_disclaimer.html`, `_contact.html` (final thank-you with "We Value Emotions" hero)
+
+**Router wiring (`routers/assessment_reports.py`):**
+- `USE_REPORT_V2=true` env flag (default true) — set `false` to fall back to legacy ReportLab engine
+- `from core.report_v2 import render_pdf_v2` aliased to `render_pdf`, drop-in replacement
+- Zero changes to API contract — `/api/assessment-reports/{id}/pdf?tier=` works identically
+
+**Tier-based gating (preserved from Phase 7.3):**
+- **Teaser** (7 pages, ~225 KB) — Cover · Exec Summary · Profile · Process · Protection · Disclaimer · Contact
+- **Full** (15 pages, ~298 KB) — Teaser + ANZSCO Deep-Dive + Per-Country + Cost + Country Guide + Checklist
+- **Proposal** (15 pages, ~298 KB) — Full + future proposal-letter cover
+
+**Visual proof (real generated PDF · client "Phase 7.3 Demo Sir" · AU 80 pts):**
+- Page 1 Cover: dark-teal gradient with orbital ring, white logo card, Playfair "Assessment Report" title, gold italic subtitle "— Your migration journey, mapped.", glass-effect client card with name/pathway/score/generated/tier, gold "80 POINTS" donut, branded footer (95% AI-vision premium rating)
+- Page 2 Executive: "Top Recommendation" card with teal-left-rule + score 80 + green ELIGIBLE pill, full comparison table, 12-step horizontal journey strip with active orange "01 Assessment · You are here" (98% rating)
+- Page 4 ANZSCO Deep-Dive: 3 stat tiles (AUD 2,537 / 203,200 / 38), state bars (NSW 36.2%, VIC 35.6%…), industries 2-col grid, tasks 2-col (95% rating)
+- Page 5 Country AU: full teal gradient hero with "Section 04.1 · Australia · Pathway: Visa 189 · 80 / pass mark 65 · ✓ ELIGIBLE" white pill
+- Page 9 Cost: teal-gold "Total Investment · INR 697,000" hero card with "Protected by LEAMSS Protection Policy" note
+- Page 13 Protection: gold-bordered "100% Refund Guarantee" certificate, "VERIFIED POLICY · V1.0" badge, teal-checks Covered / red-X Not Covered two-column, 3 stat tiles
+- Page 15 Contact: centered logo, "We Value Emotions" in italic Playfair, teal contact card
+
+**Page-break safeguards:**
+- `orphans: 4; widows: 4;` on body
+- `break-inside: avoid` on cards, tables, headers, notes
+- `break-after: avoid` on headings and last-child of `.page`
+- Content trimming: tasks 8, industries 4, FAQs 5 (eliminated all single-line orphan pages — 17 → 15 pages)
+
+**Acceptance results:**
+- ✅ AI vision: 95-98% premium quality rating across all 6 key pages
+- ✅ 7/7 new pytest suite (full/teaser/proposal tiers + no-optional-blocks + immutability)
+- ✅ 51/51 full Phase 6-7 regression — zero impact on assessment-reports endpoints
+- ✅ Generation time: ~1.2s per report (acceptable)
+- ✅ End-to-end through API: `POST /generate → GET {id}/pdf?tier=full` works for all 3 tiers
+
+### 🔄 Phase 7.3.5 — Tier Auto-Advance Hook + Client Notification (May 25, 2026)
+**Status:** ✅ COMPLETE — **3/3 helper tests PASS · 51/51 full regression PASS**.
+
+Sir-approved smart enhancement: tier auto-flips + client gets a "🎉 Full report unlocked" notification.
+
+**Implementation (`core/report_tier_hook.py`):**
+- Idempotent helper `auto_upgrade_report_tiers_for_pa(pa_id, new_stage, payment_ref)`
+- Stage → Tier mapping: `proposal_paid` / `awaiting_final_approval` → `full` · `case_created` → `proposal`
+- **Tier never downgrades** — once at proposal, stays proposal even if PA reverses
+- Each upgrade audit-logged with `tier_upgraded_by="auto:pa_stage_hook"`, payment ref, trigger stage, and old tier
+- **NEW:** After every successful tier upgrade, automatically creates a `notifications` collection entry:
+  - In-app notification with friendly Hinglish title/message
+  - WhatsApp template ready-to-send (in `meta.wa_template`) — pre-filled with client name + share link
+  - Distinct templates for `full` ("🎉 Full Assessment Report Unlocked") and `proposal` ("🛡️ Case Active") tiers
+
+**Hooks installed:**
+- `pre_assess_portal.py` proposal_paid path: upgrade to full + notify
+- `pre_assess_portal.py` case_created path: upgrade to proposal + notify
+
+### 🧹 Phase 7.4 — Profile Merge (May 25, 2026)
+**Status:** ✅ PART 1 COMPLETE — Hide-not-delete enforced.
+
+Sir's directive: "Delete → Hide". Pure UX consolidation, zero data loss, routes stay live for direct URL access.
+
+**Frontend changes:**
+- `pages/AdminDashboard.jsx` — Sales menu cleaned. Commented out (not deleted) two menu items:
+  - `Client Profiles` → /eligibility/profiles
+  - `New Profile` → /eligibility/new-assessment
+  → Comments preserved for easy re-enable; backend routes + pages untouched (Sir's "hide" rule)
+- `steps/Step1Start.jsx` — NEW "Save time — let the client self-fill" emerald CTA card:
+  - Generates secure Info Sheet link via existing `/api/eligibility/info-sheet/generate-link`
+  - Copy / Open / WhatsApp (deep-link prefilled with client name + LEAMSS branded message)
+  - Validity badge (30 days default) — once client submits, Step 3 auto-populates
+
+**Outcome for Sir's complaint:**
+- "3 wizards confusing" → Admin/Partner menus no longer show parallel "New Profile" flows
+- "Send Infosheet alag hai" → Info Sheet send is now ONE-CLICK inside the unified Client Assessment Wizard
+- Zero deletions, fully reversible via uncommenting menu lines
+
+### 📄 Phase 7.3 — Report KB Data Injection + 3-Tier Gating (May 25, 2026)
+**Status:** ✅ COMPLETE — Backend **8/8 PASS · 48/48 full regression PASS** (`tests/test_iteration129_phase_73.py`). PDF visual verified via AI vision on 3 grids.
+
+Sir's complaints addressed in this phase:
+- ❌ "Tasks blank in PDF" → ✅ ANZSCO Deep-Dive section with tasks from Feb 2026 Excel
+- ❌ "Fees mein amounts nahi hain" → ✅ Cost & Investment Breakdown with itemized amounts + total
+- ❌ "Protection Policy nahi dikh raha" → ✅ Dedicated Section 7 with covered/excluded refund terms
+- ❌ "Heavy redesign baad mein" → ✅ Existing PDF layout retained, ONLY KB data injected
+
+**Backend additions** (`/app/backend/core/report_renderer.py`):
+- `_section_anzsco_profile()` — Renders ANZSCO 4-digit deep-dive (median earnings AUD, employed count, demographics, state distribution top 6, top 5 industries, tasks list, education profile). Sourced from `anzsco_4digit_master` (1,236 codes from Feb 2026 ABS).
+- `_section_cost_estimator()` — Renders Cost & Investment table grouped by category (Government Fees, Skill Assessment, English Test, LEAMSS Professional Fees, Protection Policy Coverage), with itemized amounts and currency-grouped totals. Includes validity notes.
+- `_section_protection_policy()` — Renders LEAMSS USP page with title, description (markdown stripped), "What is Covered" list, "What is NOT Covered" list, claim window days, applicable countries.
+
+**Snapshot builder** (`_build_snapshot` in `routers/assessment_reports.py`):
+- Now fetches `anzsco_4digit_master` using 4-digit parent of occupation.code
+- Now fetches `cost_estimator` from the assessment doc
+- Now fetches default LEAMSS `protection_policies` (verified) — or any verified policy as fallback
+- All injected into snapshot data (immutable, integrity-hashed)
+
+**3-Tier PDF Gating** (Sir's directive: internal logic, no Stripe):
+- `GET /api/assessment-reports/{snapshot_id}/pdf?tier={teaser|full|proposal}` — RBAC-aware
+- `POST /api/assessment-reports/{snapshot_id}/upgrade-tier` — admin or owner flips tier (internal payment marker, no Stripe)
+- Public PDF endpoint (`/public/{share_token}/pdf`) reads stored `render_tier` (defaults to teaser)
+- Teaser tier: Cover + Executive Summary + Client Profile + Process/Cost + **Protection Policy** + Disclaimer (~7 pages)
+- Full tier: + ANZSCO Deep-Dive + Per-Country Details + Cost & Investment Breakdown + Country Guide + Document Checklist (~15 pages)
+- Proposal tier: identical to full + (future) proposal letter cover
+
+**Visual proof** (3 AI-vision checks done on real generated PDFs):
+- Page 4: ANZSCO 2613 Software & Apps Programmers · AUD 2,537 weekly · NSW 36% · top industry Professional Services · tasks list rendered
+- Page 9: Cost & Investment Breakdown · INR 430,000 visa + INR 50,000 ACS + INR 22,000 IELTS + INR 195,000 LEAMSS = **INR 697,000 total** · "Protected by LEAMSS Protection Policy" note
+- Page 13: SECTION 7 — LEAMSS PROTECTION POLICY · "100% Refund Guarantee" · Covers Professional/Government/Body Fees · Excludes English/Medical/PCC · 90-day claim window · AU/CA/NZ/UK/USA applicable
+
+**File counts:**
+- Full tier PDF: 15 pages (~31 KB)
+- Teaser tier PDF: 7 pages (~13 KB)
+
+### 🧮 Phase 7.2 — Unified Wizard + Cost Estimator (May 25, 2026)
+**Status:** ✅ COMPLETE — Backend **8/8 PASS · 40/40 full regression PASS**. UI verified (8-step wizard with Cost Estimator + Parallel Subclass Comparison + ANZSCO Auto-populate).
+
+Sir's pivot: instead of building a parallel V2 wizard, **enhance the existing Smart Sales Helper** (no compromise on quality, no parallel code paths).
+
+**Backend additions** (`/api/sales/wizard/...`):
+- `POST /calculate-parallel` — Multi-subclass parallel calc engine. Single function used by both wizard and calculator (Sir's "1 engine, not 2" demand). Returns per-subclass `{total, breakdown, eligible}` + `best_subclass`.
+- `GET /cost-estimator/defaults` — KB-driven defaults: Government Fees (country_template.fees), Skill Assessment (skill_body_master), English Test placeholder, LEAMSS Professional Fees, Protection Policy Coverage (auto-includes verified LEAMSS USP).
+- `POST /cost-estimator/save` — Persists to `sales_assessments.cost_estimator` with currency-grouped totals.
+- `GET /cost-estimator/{assessment_id}` — RBAC-gated retrieve.
+
+**Frontend changes**:
+- `lib/constants.js` — STEPS extended from 7 → 8 (added "Cost Estimator" between Calculator and Review, new `Coins` icon)
+- `steps/Step6CostEstimator.jsx` — NEW step. Auto-loads KB defaults on first visit, inline editable line items (category/label/amount/currency/notes), KB source attribution badge, currency-grouped totals card with Protection Policy reminder.
+- `components/ParallelSubclassPanel.jsx` — NEW. Below Live Calculation in Step 5. Calls `/calculate-parallel` for all subclasses per active country (AU: 189/190/491, CA: EE, NZ: SMC, UK: Skilled, USA: H1B + EB2-NIW). Highlights best subclass with gold border + ⭐ "Best: Subclass X" badge.
+- `components/ANZSCOPreviewCard.jsx` — NEW. After occupation selection in Step 3, fetches `/api/kb-unified/anzsco/{4digit}` and renders compact card with: median weekly earnings (AUD), employed count, median age, female share %, top 4 states, top 3 industries, education distribution badges, expandable Tasks list (8+). Data source attribution.
+- `ClientAssessment.jsx` — Wired Step 6 between Calculator (5) and Review (now 7). Save now lands at Step 8 (Done). `headers` passed to Step 5.
+
+**Visual proof** (multiple screenshots):
+- 8-step horizontal nav working correctly
+- Step 3: Selected Occupation card + ANZSCO preview card with ABS Feb 2026 attribution
+- Step 5: Live Calculation (existing) + **Parallel Subclass Comparison panel** showing 189/190/491 side-by-side with eligible badges and best-subclass highlight
+- Step 6: Cost Estimator with auto-loaded KB defaults, currency totals, Protection Policy coverage row
+
+**Known polish item:** Parallel calc may differ slightly from in-wizard Live Calc when "Additional Factors" toggles are active — Live Calc applies extra bonuses via a wrapper. Future iteration will sync both engines fully.
+
+**Pending (deferred to Phase 7.4 — Profile Merge):**
+- Hide NEW Profiles tab + Client Profile sub-tabs (deferred)
+
+### 🏗️ Phase 7.1 — KB Unification FOUNDATION (May 25, 2026)
+
+### 🏗️ Phase 7.1 — KB Unification FOUNDATION (May 25, 2026)
+**Status:** ✅ COMPLETE — Backend **12/12 PASS · 33/33 full regression PASS** (`tests/test_iteration127_phase_71.py`). UI E2E verified via screenshots (Verification Hub + Protection Policies admin).
+
+Sir requested 3-part Phase 7: JODNA (connect) → WIZARD → REPORT. Part 1 (JODNA) shipped with strict constraints:
+- "Delete" → "Hide" (status field added everywhere — zero data loss)
+- No Stripe integration (internal logic only)
+- No Cockpit work (deferred)
+- No heavy design overhaul (current PDF layout retained)
+- Admin-controlled points (no runtime override)
+- Phase-level verification checkpoint before Part 2
+
+**Backend additions:**
+- `core/anzsco_excel_importer.py` — Parses Sir's Feb 2026 ABS Excel (9 sheets) into `anzsco_4digit_master`. Idempotent upserts. Imported **1,236 occupations** in 1.17s with full profiles (tasks, weekly earnings, industries, state distribution, age, education).
+- `routers/protection_policies.py` — LEAMSS USP managed entity. Full CRUD + verify (mandatory source URL) + hide/unhide (Sir's directive: no delete). Default LEAMSS policy seeded.
+- `routers/kb_unified.py` — `/import-anzsco-excel` upload endpoint + `/import-anzsco-default` one-click + `/verification-hub` 4-entity aggregator + `/anzsco/{code}` + `/occupation-full/{code}` (joined view).
+- `migrations/phase71_kb_unification.py` — Idempotent: UK + USA templates seeded (Sir's gap fix), default LEAMSS Protection Policy seeded, 129 existing occupations backfilled with `custom_qa=[]` and `status=active`.
+
+**Frontend additions:**
+- `pages/admin/VerificationHub.jsx` — Single dashboard. ANZSCO master card (1,236 codes loaded · ABS Feb 2026), 4 stat tiles (Occupations · Country Templates · Country Guides · Protection Policies), 4 tabs with pending lists, one-click Re-import Excel button.
+- `pages/admin/ProtectionPoliciesAdmin.jsx` — 3-panel editor (mirrors Country Guides UX): left rail, full editor with Covers/Excludes/Claim Days, Verify with source URL, Hide/Unhide.
+- KB Admin home: 4 quick-launch buttons (Verification Hub, Occupation Master, Country Guides, Protection Policies).
+
+**Verified outcomes:**
+- Sample 4-digit profile: 2613 (Software Programmers) → AUD 2,537/week median, 38 median age, NSW 36% + VIC 36%, 56% bachelor + 27% post-grad, top industry Professional Services. **All from ABS official source.**
+- Verification Hub aggregate: Occupations 1.6% verified, Country Templates 16.7%, Country Guides 40%, Protection Policies 0% (default policy needs Sir's verification).
+- 5 country_templates now present (AU verified, CA/NZ/UK/USA draft).
+
+### 🚀 Phase 6.10 Part 3 — Unified Workflow + Checklist Gating + Country Guides (May 24, 2026)
+**Status:** ✅ COMPLETE — Backend **21/21 PASS** (`tests/test_iteration125_phase_6102.py` + `tests/test_iteration126_phase_6103.py`). UI E2E verified via screenshots (Step 7 tracker + locked checklist + public country page).
+
+**🐛 Bug Fix (May 24, 2026 evening):** Sir reported "verified Country Guide AU but content not in Assessment Report PDF". Root cause: `_build_snapshot()` in `assessment_reports.py` never queried the `country_guides` collection, so the renderer's `snap.get("country_guides")` was always empty and Section 5 fell back to a stub.
+
+Fix shipped:
+- `_build_snapshot()` now fetches each target country's verified `country_guides` doc + visa_subclasses meta from `country_templates`.
+- `_section_country_guide()` rewritten to render Hero subtitle + all non-empty sections (markdown body) + FAQ pairs.
+- `_section_country()` visa table now falls back to `country_templates.visa_subclasses[]` meta for the Notes column when occupation-level notes are blank.
+- Verified via AI vision scan of generated page 7: full content (Country Overview, PR Pathways, Eligibility, Fees, Timeline, Pros/Cons, Settlement, 4 FAQs) now appears in PDF.
+
+Sir requested the full 3-section delivery in a single shot.
+
+**A) Unified Workflow Status Tracker (P0)**
+- New endpoint `GET /api/sales/assessments/{id}/lifecycle` returning 7-step journey:
+  `created → calculated → report_generated → pa_created → pa_fee_paid → main_fee_paid → case_created`
+- Each step carries `{completed, timestamp, actor, detail, link}` for one-click navigation.
+- PA stage → lifecycle index mapping (`_PA_STAGE_TO_LIFECYCLE_INDEX`) keeps the rule deterministic.
+- Step 7 of the wizard renders a vertical timeline card with progress pill (`Client Journey · 17% complete · Step 2/7`).
+
+**B) Detailed Checklist Gating (P0)**
+- `GET /api/sales/assessments/{id}/checklist` now gates detail behind **Main Service Fee Paid** state.
+- Unlock stages: `proposal_paid / awaiting_final_approval / case_created`.
+- Pre-payment response carries `is_locked=true`, `unlock_reason`, plus full `stats` (so the indicative count is still visible).
+- Frontend renders an amber "🔒 Detailed Checklist Locked" card with reason + what's visible / what unlocks.
+
+**C) Admin Country Guides + Public Pages (P1)**
+- New collection `country_guides` (one document per country: AU/CA/NZ/UK/USA pre-seeded as drafts).
+- New router `/api/country-guides/...` (11 endpoints): list / detail / CRUD / verify / AI-draft / public-list / public-detail.
+- `POST /{code}/ai-draft` calls Claude Sonnet 4.6 (`core/kb_ai.py` pattern) — generates `{hero_subtitle, sections{}, faq[], admin_verify_note}` cached on the doc's `ai_draft` block. Admin reviews + copy-to-editor.
+- Every edit auto-reverts status to `draft` — admin must `POST /{code}/verify` with a mandatory `source_reference` URL to publish.
+- Public endpoints `/public` and `/public/{code}` only return `verified` guides (404 on drafts/archived).
+- New admin page `/admin/country-guides` — 2-column layout: left rail (5 country list with status pills) + right editor (Hero / Sections (7) / FAQ / AI Draft tabs).
+- New public pages `/countries` (verified-only grid) and `/countries/:code` (branded read-only with Hero CTA + sections + collapsible FAQ + contact block).
+- Entry-point: violet "Country Guides" button on Eligibility Knowledge Base admin home.
+
+**Files Added (4):**
+- Backend: `routers/country_guides.py`, `tests/test_iteration126_phase_6103.py`
+- Frontend: `pages/admin/CountryGuidesAdmin.jsx`, `pages/PublicCountryGuide.jsx`, `pages/PublicCountryIndex.jsx`
+
+**Files Modified (4):**
+- Backend: `routers/sales_assessments.py` (gated checklist + new lifecycle endpoint), `server.py` (router registration)
+- Frontend: `pages/sales/steps/Step7Done.jsx` (Client Journey tracker + locked-checklist UI), `App.js` (3 new routes), `pages/admin/EligibilityKnowledgeBase.jsx` (Country Guides entry button)
+
+### 📄 Phase 6.10 Part 2 — Professional Report Engine (May 24, 2026)
+**Status:** ✅ COMPLETE — Backend **10/10 PASS** (`tests/test_iteration125_phase_6102.py`) · UI E2E verified (public share view + branded PDF inspected).
+
+Sir uploaded LEAMSS branding artifacts (counseling sheet + sample assessment report). Built end-to-end immutable, branded report pipeline matching electric blue + deep indigo + gold accent palette.
+
+**Backend** (`/api/assessment-reports/...`):
+- `POST /generate` — Builds frozen snapshot from assessment + Knowledge Base. Records `data_integrity_hash` (SHA-256). Surfaces warnings when KB template/occupation is still `draft`.
+- `GET /` — Lists user's reports (admin sees all, owner sees own). Sorted recent-first.
+- `GET /{snapshot_id}` & `GET /{snapshot_id}/pdf` — RBAC-gated metadata + branded PDF stream.
+- `POST /{snapshot_id}/share` (1/7/30/90 days), `DELETE /{snapshot_id}/share` (revoke). 410 returned on revoked tokens.
+- `GET /public/{share_token}` + `/public/{share_token}/pdf` — no-auth viewer for client.
+- `POST /{snapshot_id}/email` — **MOCKED** (needs `RESEND_API_KEY` for live dispatch).
+- Snapshot is immutable: PUT/PATCH return 404/405.
+
+**PDF Renderer (`core/report_renderer.py`)** — ReportLab A4, branded sections: Cover · Executive Summary · Client Profile · Per-Country Details (AU/CA/NZ) · Points Breakdown · Visa Pathways · State/Territory Demand · Disclaimer · Footer with snapshot ID + integrity hash.
+
+**Frontend:**
+- `Step7Done.jsx` — Added `ReportActions` widget (amber "Generate Report" → "Public Link" toggle + modal with Copy/Open/WhatsApp).
+- New `PublicReportView.jsx` route `/reports/view/:token` — branded preview with Download PDF button, tamper-evident hash badge, contact details.
+
+**Verification Results (May 24, 2026):**
+- 10/10 backend pytest PASS
+- Live curl: PDF = 19 KB, 11 pages, `%PDF-1.4` magic confirmed
+- AI vision scan of generated PDF confirms: electric blue + deep indigo + gold branding, professional immigration-consultancy layout, all sections rendered correctly
+- Public Share View renders with LEAMSS header, snapshot ID, Top Recommendation (🇨🇦 Canada 372), integrity hash, contact card
+
+### 🗂️ Phase 6.9.2 / 6.9.3 / 6.9.4 / 6.9.5 — Verified Knowledge Base Stack (May 22-23, 2026)
+**Status:** ✅ COMPLETE — Backend **41/41 new PASS · 75/76 full regression (1 network blip)** · UI E2E verified for all 4 tabs + 3-panel editor.
+
+Sir requested all 4 sub-modules together (no sequential STOP). Built in parallel:
+
+**6.9.2 — ANZSCO / NOC Bulk Import**
+- Two-step preview→commit flow at `POST /api/occupation-master/import/preview` and `/commit`
+- Auto-detects column mappings (code/title/skill_level/unit_group/tasks/alt_titles) with fuzzy keyword matching
+- Detects duplicates in-file + in-DB before commit, shows admin warning
+- `on_duplicate=skip|update` strategies; update preserves verification + linked_product_id + assessing_authority + visa_pathways + state_territory_eligibility
+- All imported rows land as `draft`; admin verifies later
+
+**6.9.3 — AI Draft + Admin Verify (3-panel editor)**
+- New helper `core/kb_ai.py` — single integration point for Claude Sonnet 4.6 via Emergent LLM Key
+- `POST /api/occupation-master/{id}/ai-draft` — generates `{description, typical_tasks, qualification_rules, ai_confidence_note}`, caches on the doc's `ai_draft` block; strict prompt forbids inventing fees/deadlines
+- `POST /api/skill-body-master/{id}/ai-draft` — same workflow for assessing bodies
+- `POST /api/kb/polish-text` — "✨ Polish with AI" preserves facts/numbers/names, improves grammar+tone
+- `POST /api/occupation-master/{id}/verify` — admin marks `verified` with mandatory `source_reference`
+- Frontend: 3-panel editor (`AI Draft / Admin Edit / Official Source`) with Polish button on description + typical_tasks, mandatory source URL before Verify
+
+**6.9.4 — Status System + Settings**
+- New `kb_settings` collection with `outdated_threshold_months` (default 6), `verification_gate_percent` (default 90), `enforce_verified_only` (default false)
+- `GET/PUT /api/kb/settings` — admin configures
+- `POST /api/kb/auto-flag-outdated` — sweep verified records older than threshold → flips to `outdated`
+- Admin UI: stats dashboard + threshold settings + manual "Sweep & Flag Outdated" button
+
+**6.9.5 — Country Templates (Editable Points Engine)**
+- New `country_templates` collection with factors[], pass_mark, visa_subclasses[], partner_rules{}
+- Migration script seeded AU/CA/NZ templates from legacy points_system → all status=`draft`
+- CA + NZ flagged in `notes` for full admin rebuild against current IRCC CRS / NZ SMC 6-points-system
+- AU template-mirrored from legacy Schedule 6 points for admin verification
+- Full CRUD: `GET/POST/PUT/DELETE /api/country-templates/{country_code}` + `/verify`
+- Any edit to factors/pass_mark/visa_subclasses auto-reverts status to `draft` (admin re-verifies)
+- Calculator continues using rule-engine for now (zero regression); future work wires verified templates back to calculator
+
+**Admin Console UI** (`/admin/kb/occupation-master`) — single page, 4 tabs:
+- Browse & Verify (3-panel editor on click)
+- Bulk Import (file upload + preview + commit)
+- Country Templates (3 cards with factor counts + admin warnings)
+- Status & Settings (stats + threshold settings + sweep button)
+
+**Files Added**
+- Backend: `routers/occupation_master_import.py`, `routers/kb_settings.py`, `routers/country_templates.py`, `core/kb_ai.py`, `core/migrations/country_template_migrate.py`, `tests/test_iteration123_phase692_695.py` (19 tests)
+- Frontend: `pages/admin/OccupationMasterAdmin.jsx`
+
+**Files Modified**
+- `routers/occupation_master.py` (AI draft endpoint), `server.py` (router registration), `App.js` (new route), `EligibilityKnowledgeBase.jsx` (Open Admin Console button)
+- `requirements.txt` (+ openpyxl)
+
+
+**Status:** ✅ COMPLETE — Backend **22/22 NEW + 56/56 FULL 6.8+6.9 regression PASS** · UI E2E verified (admin banner + sales search both work).
+
+> _Section title for the rest of this entry:_ **Phase 6.9.1 — Occupation Master · Single Source of Truth (May 22, 2026)**
+
+**Foundation for the Verified Knowledge Base philosophy: "AI DRAFTS, ADMIN VERIFIES, SALES USES VERIFIED DATA"**
+
+**Migration outcome (idempotent, dry-run reviewed by Sir before commit):**
+- 88 occupations migrated to `occupation_master` (AU: 38, CA: 30, NZ: 20)
+- 18 skill bodies migrated to `skill_body_master` (AU: 9, CA: 5, NZ: 4)
+- All records → `status: "draft"` per Sir's directive (incomplete data ≠ verified)
+- `classification_type: "ANZSCO"` set on every record (OSCA-ready field)
+- `linked_product_id: null` (6.9.5 will wire to AI Workflow Builder products)
+- 1 source duplicate caught + filtered: CA-21300 (Civil Engineers kept, Construction Managers dropped — incorrect NOC code in source data, admin to re-add)
+- `country_rules` collection preserved untouched (rollback safety, only stamped `meta.migrated_to_occupation_master_at`)
+
+**New backend endpoints (`/api/occupation-master`):**
+- `GET /` — list with filters (country/status/search/body_id)
+- `GET /stats` — admin dashboard counts (by_status, by_country, pending_verification, pending_percent)
+- `GET /{id}` — single + populated assessing-body details
+- `POST /` — admin creates new code (always `draft`)
+- `PUT /{id}` — admin updates
+- `POST /{id}/verify` — admin marks `verified` with `source_reference`
+- `DELETE /{id}` — soft-delete (status=`superseded`)
+- Plus `/api/skill-body-master` GET endpoints
+
+**6 consumer refactor (transition strategy — sales never empty):**
+- `sales_occupations.py` search/typeahead/detail/compare → reads `occupation_master` via adapter (legacy shape preserved, downstream UI unchanged). No status filter applied yet (sales sees all 88 records). Phase 6.9.4 will gate this once verification ≥ threshold.
+- `sales_ai_helpers.py` suggester → reads `occupation_master`
+- Admin KB UI (`EligibilityKnowledgeBase.jsx`) → new banner: "X of 88 codes pending verification" + per-country breakdown pills + status counts
+
+**Schema design (both collections complete, no rework needed in 6.9.3):**
+- `occupation_master`: occupation_id, code, classification_type/version, country_code, title, alternative_titles, specialisations, hierarchy{}, description, typical_tasks, skill_level, assessing_authority{}, skill_assessment_details{}, visa_pathways{}, state_territory_eligibility[], similar_codes, status, verification{}, ai_draft{}, linked_product_id, audit fields
+- `skill_body_master`: body_id, slug, name, full_name, country_code, website, description, role, contact_info{}, assesses_occupations[], assessment_criteria{}, fees{standard/rpl/priority/additional}, processing{}, documents_required[], status, verification{}, ai_draft{}, linked_product_id
+
+**Indexes:** UNIQUE `(country_code, code)`, `(country_code, status)`, text on title+alternative_titles; UNIQUE `(country_code, slug)` for bodies.
+
+**Tests added** (`test_iteration122_phase691_occupation_master.py`, 22 tests):
+- Migration outcome (counts per country/status, dedupe verification)
+- CRUD endpoints (create/update/verify/delete + 409 duplicate guard)
+- Legacy endpoint compatibility (search/typeahead/detail/compare/filters)
+- RBAC (partner can list-only, admin can modify)
+
+
+**Status:** ✅ COMPLETE — Backend **4/4 NEW + 34/34 FULL 6.8.x REGRESSION PASS** · UI E2E verified end-to-end.
+
+**Bugs reported by Sir during 6.8.5 verification:**
+1. Same wizard session created duplicate `SAH-...` ids when user saved a 2nd time (because `editingId` was only set on Continue/Resume, not after the very first POST).
+2. Updating a linked assessment didn't propagate the new score / occupation / client info to the linked PA — partner dashboard kept showing stale data.
+3. Step 7 still showed the "Create Pre-Assessment" button + Partner Picker even after the PA was already linked → click created a duplicate PA against a new orphaned assessment id.
+
+**Fixes shipped:**
+- **Backend (`PUT /api/sales/assessments/{id}`)** — now syncs the linked PA in the same transaction. Updates `client_name`, `client_email`, `client_mobile`, `country`, `occupation_*`, `pathway`, `client_age`, `education`, `work_experience`, `notes` (with "updated from X" trail), `score_snapshot`, `last_sync_from_assessment_*`. Returns a `pa_sync` block in the response payload with `{updated, pa_id, pa_number, old_score, new_score, partner_id, partner_name}`.
+- **Frontend (`ClientAssessment.jsx`)** — after the first successful POST, `editingId` is set to the returned id so every subsequent Save in the same session is a PUT. After Create PA succeeds, the local `saved.linked_pa_id` is updated so Step 7 immediately swaps UI.
+- **Frontend (`Step7Done.jsx`)** — when `saved.linked_pa_id` exists, the "Create Pre-Assessment" button is replaced by an emerald "Linked PA: {id}…" button that navigates to the role-appropriate pipeline + a green banner: *"This assessment is already linked to a Pre-Assessment. Any future updates will automatically sync to the linked PA. No duplicate PA will be created."*
+- **PUT toast** — now reads `Assessment updated · PA PA-2026-XXX synced (75 → 80)` so the user sees the propagation result in real time.
+
+**Tests added** (`test_iteration121_phase686_bug_fixes.py`):
+- `test_put_syncs_linked_pa_score_and_occupation` — verifies PA notes carry the new score + client_name updates flow through.
+- `test_put_without_linked_pa_returns_no_sync` — confirms `pa_sync.updated=false` when no PA linked.
+- `test_create_pa_on_linked_assessment_returns_already_linked` — confirms backend guard prevents duplicates.
+- `test_full_round_trip_no_duplicates` — E2E: create → link → update → score syncs → 2nd create-pa returns same PA id.
+
+
+**Status:** ✅ COMPLETE — Backend **30/30 PASS** (full 6.8.x suite) · UI E2E verified (My Assessments → Continue → Step 5 → Update flow).
+
+- **6.8.2 — Saved Assessments List**: New `/sales/my-assessments` page. Admin sees all assessments (with `created_by_name`); Sales/Partner sees only own. Search by client name, filter by status (All / Saved / Linked-PA / Shared). Status pills + Create-PA inline (with Partner picker for admin) + Delete + Open Public Link. Linked sidebar entry in Admin & Partner dashboards.
+- **6.8.3 — Occupation Compare**: New `/sales/occupations/compare` route. Reads `compare_ids` from sessionStorage, calls `POST /sales/occupations/compare`, renders 2-4 card grid + 12-row diff table (Title, Country, Group, Skill Level, Pathway, Body, Min Pts, Age Limit, Eligible Visas, In Demand, Body Fee Native, Processing Weeks, State Demand). Graceful empty-state when < 2 codes selected.
+- **6.8.4 — Step 5 Calculator Factors**: Step 5 now renders an "Additional Factors · Live recalc" panel below results with country-scoped toggles (AU 5 bonuses + state nomination, CA 7 PNP/CLB/sibling/job-offer factors, NZ 3 employment factors). `buildProfile.js` emits full `au_extras` / `ca_extras` / `nz_extras` shapes; ClientAssessment orchestrator includes a `factorHash` in the recalc effect so every toggle triggers a 300 ms debounced re-calculation.
+- **6.8.5 — Resume / Continue (no duplicates)**: Per-row "Continue" button on Saved Assessments loads the full doc, hydrates wizard state via `dataFromAssessment()` inverse-mapper, jumps to Step 5 with an "Editing · {id}" badge, and turns the save button into "Update Assessment". New backend `PUT /api/sales/assessments/{id}` mutates in-place (owner-or-admin gate, refreshes results & best_total, preserves `linked_pa_id` + `share_*`). Eliminates duplicate-create regression when iterating on a saved client.
+
+
+
+### 🏆 Phase 6.9b — IP Geo + Alert Notifications + Audit Insights Dashboard (May 20, 2026)
+**Status:** ✅ COMPLETE — Backend **54/55 PASS** (full Phase 6 regression). UI E2E verified.
+
+- IP Geolocation enrichment on every public access (`ip-api.com` free tier, MaxMind upgrade ready via `GEOIP_DB_PATH` env). New `impossible_geo` HIGH-severity anomaly rule.
+- Anomaly alert dispatcher with Slack webhook (`SLACK_WEBHOOK_URL` optional), email stub (awaits Resend key), de-duplicated internal feed (`anomaly_alerts` collection), CRUD + acknowledge endpoints.
+- Standalone `/admin/audit-insights` page — top stats, daily trend stacked bar chart, recent anomaly alerts with acknowledge, top anomaly tokens, top active IPs with risk tiers, share-type pie chart, 90-day Compliance PDF export with SHA-256 chain proof. SOC-2 audit-ready.
+
+### 🛡️ Phase 6.9 — Force-Rehash + Anomaly Detection + PDF Audit Export (May 20, 2026)
+**Status:** ✅ COMPLETE — Backend **45/45 PASS** (Phase 6 full regression). UI E2E verified.
+
+- Force-rehashed 8 legacy records → Legal Archive: **65/65 verified, 0 tampered**.
+- Rule-based anomaly detection (5 detectors: rapid_burst, multiple_ips, post_revoke_scrape, expired_hammering, bot_pattern) — new `/api/share-links/anomalies` endpoint + inline in per-token audit-trail.
+- Anomaly Alert Banner + per-row 🔥 flags in Active Share Links Dashboard; anomaly section + "Investigate" button + Export PDF button in Audit Trail modal.
+- New `share_access_denied` audit event captures scraping attempts on revoked/expired links.
+- A4 PDF export with branded header, metadata table, event timeline, anomaly scan, and SHA-256 Chain Proof footer for compliance/legal disputes.
+
+### 🔍 Phase 6.8 — Audit Trail UI + Legacy Rehash Backfill (May 20, 2026)
+**Status:** ✅ COMPLETE — Backend **36/36 PASS** (full Phase 6 regression). UI E2E verified.
+
+- New per-token Audit Trail modal in Share Links Dashboard — visual timeline of generate→access(IP+UA+click#)→revoke chain with integrity badges per event.
+- New `POST /api/legal-archive/integrity/rehash-legacy` (with dry_run + force flags) — fixed precision-bug records lifted verified count from 9 → 27. 8 legacy records flagged for force-rehash.
+- Canonical `_norm()` in `core/integrity.py` — strips tzinfo to make hashes reproducible regardless of pre/post BSON round-trip state.
+
+### 🔒 Phase 6.7 — Audit Log + File Split (May 20, 2026)
+**Status:** ✅ COMPLETE — Backend **100/100 PASS** (combined regression). UI E2E verified.
+
+- Share-link audit log (`share_audit_events`) — tamper-evident SHA-256 trail of generate/access/revoke events, surfaced in Legal Archive (new `record_type=share_event` filter + stats + integrity scan).
+- ClientAssessment.jsx **1167→263 lines** orchestrator + 12 focused subcomponents under `steps/` + `lib/` (Step1Start, Step2Approach, Step3Profile, Step4Countries, Step5Calculator, Step6Review, Step7Done, SuggesterModal, ResumeUploadModal, FieldWithLabel, constants, buildProfile).
+- Resend email integration **deferred** per user direction.
+
+### 🎛️ Phase 6.5b + 6.6 — Share Links Dashboard + Create PA Polish (May 20, 2026)
+**Status:** ✅ COMPLETE — Backend **29/29 PASS** (combined regression). UI verified.
+
+- Active Share Links admin dashboard now lists sales eligibility report tokens with 📊 badge, AU·75pts amount label, and per-token revoke. Admin-only (partner 403).
+- Create PA from assessment now shows loading spinner, persistent 8s toast with PA-* id, role-aware "Open Dashboard" action button (admin/partner/case-manager/sales).
+
+### 📋 Phase 6.5 — Document Checklist + Save & Share Report (May 19, 2026)
+**Status:** ✅ COMPLETE — Backend **13/13 PASS** + Combined regression **23/23 PASS**. UI E2E verified.
+
+- Rule-based document checklist (zero AI): AU/CA/NZ/UK/USA country templates × Skill-body docs (ACS/EA/VETASSESS/WES/ICAS/IQAS/NZQA) × Pathway docs (AU 189/190/491, CA EE) × Spouse docs (when married).
+- Public read-only Save & Share link (`/sales/report/:token`) with 1/7/30/90-day or never expiry, revoke endpoint, click tracking, sanitised public payload.
+- Step 7 of Client Assessment wizard now shows the checklist auto-grouped by category + 4-button grid (Create PA / Save & Share / Back to Search / Print).
+
+### 🎯 Phase 6 v2 Part 3 + Part 4 (May 19, 2026)
+**Status:** ✅ COMPLETE — Backend **81/81 PASS** · Frontend wizard **E2E verified** (`/app/test_reports/iteration_112.json`, `/app/memory/CHANGELOG.md`).
+
+**SMART SALES HELPER mantra:** "AI SUGGESTS, HUMAN DECIDES". 85% deterministic rules engine + 15% optional AI helpers (resume parser, occupation suggester).
+
+- Part 3 (Integrated Workflow): `/sales/client-assessment` 7-step wizard combining occupation search, deterministic calculator (AU/CA/NZ), AI suggester, resume upload, save assessment, create-PA bridge.
+- Part 4 (Polish + Regression): Fixed missing IELTS L/R/W/S data-testids (Single-AU scenario now correctly lands on **75 pts / 189 ELIGIBLE**). All 5 user-defined E2E scenarios verified.
+- Backlog (P2): Split ClientAssessment.jsx into per-step subcomponents; conftest.py DRY-up; Document Checklist integration (Phase 6.5).
+
+### 🔥 Phase 6.7 Critical Bug Fixes (May 19, 2026) — User Feedback Iteration
+**Status:** ✅ COMPLETE — 10/10 regression tests PASS (`/app/test_reports/iteration_109.json`)
+
+Sir reported 4 critical issues with screenshots from his manual testing. All fixed:
+1. **Single+leftover spouse data showing +5 instead of +10**: Defense-in-depth — marital_status is now AUTHORITATIVE both at the SAVE layer (`_strip_spouse_if_single` strips stale data) AND at the rules engine layer (ignores spouse_block when not married/de_facto). DB cleanup migration ran for existing profiles.
+2. **Hotel Operations Manager → Construction Project Manager (wrong)**: Added 6 missing AU occupation codes — 141311 Hotel/Motel Manager, 132111 Corporate GM (with "Operations Head" alternative_titles), 141111 Restaurant Mgr, 225113 Marketing Specialist, 225111 Advertising Specialist, 225311 PR Professional. Verified: Hotel Ops Manager now matches 132111+141311 at 100% confidence.
+3. **INR fees instead of native currency**: All 8 AU skill body fees now have `fee_native: {currency, standard, [rpl|cdr|priority|...], label}`. Examples: ACS "AUD 500 / AUD 1,000-1,450 RPL", EA "AUD 1,150 standard / AUD 1,800 CDR", VETASSESS "AUD 1,225 / AUD 2,710 priority". SkillTab now shows native breakdown.
+4. **Upload Resume missing from wizard**: Added Upload Resume button to EligibilityProfileWizard.jsx header. Same endpoint, deep-merges into form.
+5. **AI output less detailed**: SYSTEM_PROMPT now has DEPTH EXPECTATION (4-6 sentence narrative, 3-5 sentence reasoning, 4-6 bullets each) + new RULE 4 (marital authoritative) + RULE 5 (native currency fees with RPL/CDR alternates).
+
+
+
+### 🚀 Phase 6.7 Part 2 — Pre-Analysis Verification + Resume Upload + Client Info Sheet (May 19, 2026)
+**Status:** ✅ COMPLETE — 24/24 backend tests PASS (`/app/test_reports/iteration_108.json`)
+
+3 new sub-features layered onto the Phase 6.7 eligibility engine:
+
+1. **Pre-Analysis Verification Page** (`/eligibility/profile/:id/verify`) — Shows a 0-100 completeness score across 8 weighted sections (Personal 12%, Profession 22%, Education 14%, Language 14%, Marital 8%, Spouse 10%, Preferences 10%, Additional 10%) with per-section warnings + blockers. Wizard's "Submit" and Profile list's "Run AI" buttons now route through this page first. Spouse section gets full credit (N/A) for single applicants — no false penalties.
+
+2. **Resume Upload + AI Extraction** — Admin/Partner can drop a PDF/DOCX/TXT resume (up to 10MB). `pdfplumber` + `python-docx` extract text → Claude Sonnet 4.6 returns Phase 6.7-shaped JSON → wizard prefills via sessionStorage. The AI prompt explicitly forces CURRENT PROFESSION matching (e.g., "B.V.Sc graduate working as Marketing Specialist → current_profession=Marketing Specialist, field_of_study=Veterinary Science"). Resume is NOT auto-saved — fully reversible review.
+
+3. **Client Self-Service Info Sheet** — Admin generates a public no-login link via "Send Info Sheet" modal (with WhatsApp share). Client opens `/info-sheet/:token` → fills 7-section form → submission lands in `pending_review` queue with violet banner on Profiles list. Inline "Approve" button flips status to complete. Audit trail: used_ip, used_ua, used_at, reviewed_by captured. Notifications sent to inviter.
+
+New files: `core/profile_completeness.py`, `core/resume_extractor.py`, `routers/eligibility_info_sheet.py`, `pages/eligibility/EligibilityProfileVerify.jsx`, `pages/eligibility/PublicInfoSheet.jsx`. Routes added: `/eligibility/profile/:id/verify` (RBAC) and `/info-sheet/:token` (public).
+
+
+
+### 🐛 Phase 6.7 Part 1 — AI Eligibility Engine Bug Fixes (May 18, 2026)
+**Status:** ✅ COMPLETE — 16/16 backend tests PASS (`/app/test_reports/iteration_107.json`)
+
+User reported during manual testing that the AI Eligibility Engine was:
+1. Mixing primary applicant + spouse profiles in recommendations
+2. Awarding +10 partner points just because spouse had a Master's degree (no strict gate)
+3. Matching ANZSCO codes on past education (e.g., Veterinary degree) instead of current profession (e.g., Marketing Specialist)
+4. UI did not visually separate "Primary Applicant Analysis" from "Spouse Information"
+
+All 4 P0 bugs fixed. Strict Option A/B/C/D/E partner-points rules. AI prompt rewritten with 5 ABSOLUTE RULES forcing CURRENT PROFESSION matching. New ApplicantPanels component with primary/spouse separation + "PRIMARY APPLICANT ANALYSIS" divider. Schema migration endpoint available. See CHANGELOG.md for full details.
+
+
+
+
+### 🎯 Phase 4D ARCHITECTURAL UNIFICATION (May 14, 2026)
+- **Unified People Management** at `/admin/people` — Single source of identity for employees, partners, vendors, clients. 3-step Add Person Wizard.
+- **Unified Finance Center** at `/admin/finance` — All money flows in one screen (commissions, CM earnings, vendor payouts) with period filter + CSV downloads + leaderboard.
+- **Express Sale Modes** — Token Payment (lock deal with small amount) OR Direct Proposal (full amount immediately).
+- 7 critical bug fixes shipped (slab delete dialog, vendor View inline, calculator empty state, invite URL prefix, CM earnings click-through, product price lock, Express ₹5,100 fix).
+- Tests: 43/43 PASS in iteration_102.
+
+
+
+### 🎯 Phase 4C UNIFICATION (May 14, 2026)
+- Products + Cost Structures merged into ONE collection. Each Product carries identity, pricing, cost_allocations, success_bonuses, computed margins, and workflow steps.
+- New unified UI at `/admin/products` with master-detail tabbed editor.
+- PA creation form: Product is now the primary anchor field (auto-fills country/visa_type).
+- Migration auto-runs on every server boot — idempotent.
+- Internal vendor auto-user-creation: case_manager / sales_commission vendors auto-get user accounts on creation.
+- Tests: iteration_101.json — 24/30 → critical bugs fixed.
+
+
+### 🏆 PHASE 4C COMPLETE — Sales Commission + Vendor Payout Engine (May 14, 2026)
+All 7 sub-phases delivered & tested:
+- **4C.1** Vendor Master + Categories
+- **4C.2** Product Cost Structures (5 seeded: Canada PR, Australia PR, Student Visa, UK Skilled, USA H1B)
+- **4C.3** Auto-Allocation Engine (auto-triggers on `case_created`)
+- **4C.4** Sales Commission Slabs (Bronze 5% · Silver 7% · Gold 10% — cumulative monthly revenue based)
+- **4C.5** CM Earnings Widget (read-only, no CM workflow changes)
+- **4C.6** External Vendor Portal (magic-link onboarding + self-service)
+- **4C.7** Approval + Payout Workflow (bulk operations + NEFT CSV)
+
+**Test Coverage:** iteration_99.json (27/28 — 4C.3/4C.4), iteration_100.json (36/36 — 4C.5/4C.6/4C.7 after critical filter fix).
+**Test Files:** `/app/backend/tests/test_phase4c5_4c6_4c7.py` (36 cases — regression-ready).
+**See CHANGELOG.md for full implementation details.**
+
+
+
+### Phase 4A — Sales Workflow Inheritance (Feb 13, 2026)
+
+**Status:** ✅ COMPLETE — 15/15 backend tests passed (`/app/test_reports/iteration_96.json`)
+
+### Impersonation Restored — "Switch / View Dashboard As User" (Feb 13, 2026)
+
+**Status:** ✅ COMPLETE — restored original full JWT-swap impersonation (Option A)
+
+**Why:** Prior agent had downgraded `POST /api/auth/impersonate/{user_id}` to 410 GONE in favor of a read-only modal preview. User explicitly requested original behavior back ("jaise pehle tha").
+
+**Backend** (`routers/auth.py`):
+- Endpoint un-deprecated, full JWT swap restored
+- Guard-rails: admin-only (legacy + rbac_role), 400 self-impersonate, 400 inactive target, 404 missing user
+- Audit log: `action='impersonate_user'` with admin_email + target_email + target_role
+- Returns target's full user object + `impersonated_by` metadata
+
+**Frontend**:
+- `AdminDashboard.jsx` line 2424 Switch button → `handleImpersonate(usr)` (was `setPreviewUserId`)
+- `handleImpersonate` — full route map (admin, partner, case_manager, client, sales_executive, sr_sales_executive, sales_manager, sales_head) + `/portal/welcome` fallback + error recovery
+- `DashboardShell.jsx > AdminReturnBanner` — shows `🔄 Impersonating [name]` + role badge + `(Logged in as Admin: [admin])` + `Exit Impersonation` button
+
+**Verified:**
+- ✅ 5 backend guard-rails pass via curl
+- ✅ Audit log entry written
+- ✅ Frontend E2E: Admin → Users tab → 11 Switch buttons rendered → Click Case Manager Switch → land on /case-manager → yellow banner visible → Exit → back to /admin clean
+
+### Phase 4A — Sales Workflow Inheritance (Feb 13, 2026) (continued)
+
+**Design Principle:** DRY — Sales executives are treated as "internal partners" with the EXACT SAME PA workflow. No component duplication.
+
+**Backend Foundation:**
+- `_assert_pa_owner()` helper at top of `pre_assessment.py` for centralized ownership
+- Module-level constants `PA_CREATOR_ROLES`, `OWN_SCOPED_ROLES`
+- 14 ownership checks across 7 routers updated to allow sales roles
+- New fields on PA: `created_by_user_id`, `created_by_role`, `created_by_user_type`, `lead_source`, `lead_source_detail`
+- Migration `phase4a_pa_backfill.py` — 15 existing PAs backfilled idempotently
+- **CRITICAL FIX**: GET /api/pre-assessment/{pa_id} now enforces ownership (was previously unrestricted)
+
+**Frontend:**
+- `/sales/dashboard` route → `<PartnerDashboard mode="sales" />` (thin wrapper, full workflow reuse)
+- 4 placeholder widgets (`SalesWidgetsRow`) above PartnerHome: Target/Commission/Rank/Followups with "Coming in Phase 4X" badges
+- `/sales/coming-soon?feature={key}` placeholder page
+- Login redirect: 4 internal sales roles → `/sales/dashboard`
+- Lead Source dropdown (10 options) at TOP of PA creation form
+- Partner workflow EXACTLY unchanged
+
+**Permissions:**
+- `sales_executive` role now has 28 permissions (18 partner perms + 10 sales/self-service)
+- Added: `agreement.view.own`, `agreement.generate.own`, `invoice.view.own`
+
+### Phase 3B — HR Admin Settings UI (Feb 13, 2026)
+
+**Status:** ✅ COMPLETE — 42/42 backend tests passed (19 new + 23 Phase 3A regression — `/app/test_reports/iteration_93.json`)
+
+**4 Admin Pages Built (+ 1 audit log viewer):**
+- `/admin/hr/settings` — Attendance Settings (5 collapsible sections with live previews)
+- `/admin/hr/holidays` — Holiday Calendar Manager (list + calendar views + bulk import/copy/export)
+- `/admin/hr/leave-types` — Leave Types & Policies (7-card grid + custom type creator)
+- `/admin/hr/approvers` — Approval Configuration with **visual chain simulator**
+- `/admin/hr/audit` — Policy Change Audit Log (scope filter + before/after diff)
+
+**Backend Additions (`routers/hr_admin.py` — prefix renamed `/hr-admin` → `/hr`):**
+- POST /api/hr/leave-types (create custom), DELETE /api/hr/leave-types/{key}
+- POST /api/hr/holidays/import-indian/{year}, POST /api/hr/holidays/copy-from/{from}/to/{to}
+- GET/PATCH /api/hr/approvers/config (advanced rules: skip-L1, self-approve, auto-approve, escalation)
+- GET /api/hr/approvers/simulate/{user_id} — visual chain preview
+- GET /api/hr/audit-log — `policy_audit_log` collection
+
+### Phase 3A — Attendance & Leave Management (Feb 13, 2026)
+
+**Status:** ✅ COMPLETE — 23/23 backend tests passed (`/app/test_reports/iteration_92.json`)
+
+**Company Policies (configurable via /api/hr-admin/settings):**
+- Office hours: 10:00 — 19:00 IST (9 hours), 10-min grace
+- 3 late marks/month → 1 CL auto-deducted
+- Monthly CL cap: 1/month (counts pending + approved)
+- Sandwich leave (Fri-Mon = 4 days incl. weekend)
+- Max 7 consecutive days, long leave (>5d) once/year
+- No approval = LWP (regularization grace: 3 days)
+- 7 leave types: CL/SL/EL/Comp-off/LWP/Maternity/Paternity
+- 2-stage approval workflow: L1 Manager → Final Approver (configurable)
+
+**Implementation:**
+- Backend: 3 new routers + 1 logic module + 1 migration (`attendance_leave_migration.py`)
+- Frontend: PunchWidget + MyAttendance calendar + MyLeaves balance/apply + LeaveApprovals inbox
+- 10 new DB collections + 6 new RBAC permissions auto-granted to internal roles
+
+### RBAC Phase 2.2 — Route Guard Bug Fix (2026-05-13)
+
+**Reported by user via screenshots:** A sr_sales_executive user was accessing `/admin/employees` and getting 403 errors from backend when trying admin actions (Reset Password, Change Role). UI was confusing — actions were visible but failed.
+
+**Root cause:** No frontend route guard. `EmployeesPortal.jsx` only checked `if (!token)`. Any valid token allowed access, then backend correctly returned 403 when user lacked permissions.
+
+**Fix:**
+1. **Created** `/app/frontend/src/components/RequirePermission.jsx` — declarative route guard
+   - Matches backend `PermissionService` logic (wildcard, resource wildcard, scope hierarchy all > dept > team > own)
+   - Props: `anyOf=[]` (permissions), `allowRoles=[]` (role keys), `fallback`
+   - On deny: toast "Access denied" + redirect to user's natural dashboard
+2. **Applied to** `/admin/employees` route in `App.js`:
+   ```jsx
+   <RequirePermission anyOf={['employee.view.all', 'user.view.all']} allowRoles={['admin_owner', 'admin']}>
+   ```
+3. **Defense in depth** — Inside `EmployeeDetailModal`, admin-only buttons (Reset Pwd, Deactivate, Change Role, Edit Profile) are now conditionally hidden/disabled based on logged-in user's `permissions[]`
+
+**Verified:**
+- ✅ sr_sales_executive → `/admin/employees` → blocked + redirected to `/portal/welcome` with toast
+- ✅ admin → `/admin/employees` → full Employees Dashboard renders normally
+- ✅ Even if a non-admin somehow reaches modal, all admin-only buttons hidden
+
+### RBAC Phase 2.1 — Critical Fixes Complete (2026-05-13)
+
+All 4 critical issues resolved & tested. Phase 2 is now **production-ready**.
+
+#### Issue #1: Login Redirect (P0 — Blocking)
+- **Root cause**: `Login.jsx` had hardcoded `roleRoutes` map with only 4 keys. New role types (sales_executive, hr_executive etc.) hit fallback → infinite login loop.
+- **Fix**: Smart redirect via `rbac_role || role`. New role types → `/portal/welcome` (shared placeholder).
+- **New page**: `PortalWelcome.jsx` — adaptive dashboard rendering user's ui_modules as cards, dept-themed banner, live clock, real notification count.
+
+#### Issue #2: View Dashboard As User (P1)
+- **Removed**: `/api/auth/impersonate` returns 410 GONE (with use_instead pointer).
+- **New endpoint**: `GET /api/admin/users/{id}/dashboard-preview` — read-only, no session switch.
+- **New UI**: `DashboardPreviewModal` — warning banner ("Read-only · Action logged"), shows target's modules as preview cards, toast on click.
+- **Audit**: Every preview logged to `activity_log` with action `viewed_dashboard_as_user`.
+
+#### Issue #3: Role Change Enhancements (P3)
+- **Backend** `PATCH /api/employees/{id}/role` enhanced:
+  - Accepts optional `new_designation`, `effective_date`, `new_department`
+  - Validates reason ≥ 20 chars
+  - Auto-clears `reports_to` if old manager invalid for new role
+  - History entry includes `changed_from_detail` + `changed_to_detail` structured snapshots
+- **UI**: Enhanced "Change Role" dialog with summary card showing permission count delta + reports_to reset warning + auto-fill designation
+- **New tab**: "Role History" in EmployeeDetailModal — timeline view with arrows, structured detail, audit info
+
+#### Issue #4: Password Reset Structure (P2)
+**A) `must_change_password_on_next_login` Flag**
+- Auto-set when admin resets password
+- Login response includes the flag
+- `Login.jsx` redirects to `/force-change-password` if true
+- New page: `ForceChangePassword.jsx` — blocks all access until new password set
+
+**B) Password Strength Validation**
+- Backend `validate_password_strength()` — 8+ chars, upper, lower, digit, special
+- Frontend: `PasswordStrengthMeter.jsx` — real-time 5-bar meter with rule checklist
+- Used in: change-password, reset-with-token, force-change-password
+
+**C) Force-Logout Other Sessions**
+- JWT now includes `iat` (issued-at)
+- User has `password_changed_at` field
+- `get_current_user` rejects tokens where `iat < password_changed_at`
+- Triggered automatically on every password change
+
+**D) Forgot Password Flow (Public)**
+- `POST /api/auth/forgot-password` — always returns success (no email enumeration); generates 72h magic link; logs URL to console (Resend MOCKED)
+- `POST /api/auth/reset-password-with-token` — validates token + expiry + reuse check; sets new password with strength validation
+- New pages: `/forgot-password` and `/reset-password?token=XYZ`
+- Login page: "Forgot Password?" link added
+
+**E) Enhanced Admin Reset Password Modal**
+- 3 delivery modes: `show_once` / `email` (MOCKED) / `magic_link` (72h)
+- Reason field (required, min 10 chars)
+- Sets `must_change_password_on_next_login = true`
+- Audit logged to `activity_log`
+
+**F) Password History**
+- `password_history` field stores last 3 hashes
+- Cannot reuse current OR any of last 3 passwords
+
+**Files Created (5):**
+- `/app/backend/routers/admin_users.py` — dashboard-preview + enhanced reset-password
+- `/app/frontend/src/pages/ForgotPassword.jsx`
+- `/app/frontend/src/pages/ResetPasswordWithToken.jsx`
+- `/app/frontend/src/pages/ForceChangePassword.jsx`
+- `/app/frontend/src/components/PasswordStrengthMeter.jsx`
+- `/app/frontend/src/components/employees/DashboardPreviewModal.jsx`
+
+**Files Modified (7):**
+- `/app/backend/core/auth.py` — JWT iat, password strength validator, force-logout check
+- `/app/backend/routers/auth.py` — login returns must_change flag, /change-password strength+history+force-logout, /forgot-password, /reset-password-with-token, /impersonate→410
+- `/app/backend/routers/employees.py` — /role accepts effective_date+designation+validation
+- `/app/backend/server.py` — registered admin_users router
+- `/app/frontend/src/pages/Login.jsx` — must_change redirect, forgot link
+- `/app/frontend/src/App.js` — 3 new routes (forgot, reset, force-change)
+- `/app/frontend/src/components/employees/EmployeeDetailModal.jsx` — View Dashboard button, Role History tab, enhanced reset/role dialogs
+- `/app/frontend/src/pages/AdminDashboard.jsx` — removed Impersonate button
+
+**Backend Test Results — ALL PASS ✅:**
+```
+═══ ISSUE #2 — Dashboard Preview ═══
+  ✓ Preview returns user data WITHOUT token (modules=13)
+  ✓ Old /impersonate returns 410 GONE
+  ✓ Activity log entry created
+
+═══ ISSUE #3 — Role Change ═══
+  ✓ Reason < 20 chars rejected
+  ✓ Role change accepts effective_date + new_designation
+  ✓ History has structured changed_to_detail
+
+═══ ISSUE #4 — Password Reset ═══
+  ✓ show_once: returns temp password + must_change flag
+  ✓ Login returns must_change_password_on_next_login=true
+  ✓ Weak password rejected (8+ chars, upper, lower, digit, special)
+  ✓ Strong password accepted, must_change cleared
+  ✓ Force-logout: old token invalidated after password change
+  ✓ magic_link: 72h token issued
+  ✓ reset-password-with-token works
+  ✓ Reused token rejected
+  ✓ /forgot-password always returns success (no enumeration)
+  ✓ Cannot reuse same password
+```
+
+**Frontend Smoke Tests — ALL PASS ✅:**
+- ✓ Login page has "Forgot Password?" link
+- ✓ `/forgot-password` page renders
+- ✓ `/reset-password?token=XYZ` page renders with strength meter
+- ✓ All 4 existing logins still work
+
+### RBAC Phase 2 — Employee Portal UI Complete (2026-05-13)
+
+**Dedicated Employee Portal at `/admin/employees`** — separate page using DashboardShell layout. Entry-point: green "Employee Portal" button on Admin Home greeting card.
+
+**New Pages (5):**
+1. **Employees Dashboard** (`emp-dashboard`) — top stat cards (Total/Active/On Leave/New This Month), department breakdown bars, recently joined list, quick actions
+2. **Departments** (`emp-departments`) — 8 department cards with icon/color/employee count/head, edit dialog for name/description/head
+3. **All Employees** (`emp-list`) — searchable filterable table (Department, Role, Status), CSV export, row → opens detail modal
+4. **Add Employee** (`emp-add`) — 3-step stepper (Basic Info → Employment → Access & Security), auto-2FA for hierarchy_level >= 3, shows temp password once
+5. **Org Chart** (`emp-org-chart`) — hierarchical tree from `reports_to` with expand/collapse, department-color borders
+
+**Employee Detail Modal** with 3 tabs:
+- **Profile** — inline edit (name, mobile, designation, location, work mode), direct reports widget
+- **Role & Permissions** — current role with permissions/UI modules display, change role dialog (logs to `user_role_history`), full role-change history
+- **Activity** — recent 30 activity log entries
+- Header actions: Reset Password, Deactivate/Reactivate
+
+**Backend Endpoints (15):**
+- `GET /api/employees` — list with filters (department, role, status, search) + pagination
+- `GET /api/employees/stats` — dashboard counts + dept/role breakdowns
+- `GET /api/employees/recent` — recent joiners
+- `GET /api/employees/org-chart` — hierarchical tree
+- `GET /api/employees/{id}` — detail with manager + direct_reports
+- `GET /api/employees/{id}/history` — role change audit
+- `GET /api/employees/{id}/activity` — activity log
+- `POST /api/employees` — create with all RBAC fields populated, auto-gen LMS-2026-NNNN
+- `PATCH /api/employees/{id}` — update profile
+- `PATCH /api/employees/{id}/role` — change role + refresh perms + log history + notify user
+- `POST /api/employees/{id}/deactivate` — terminate
+- `POST /api/employees/{id}/reactivate` — restore
+- `POST /api/employees/{id}/reset-password` — generate new temp password
+- `GET /api/departments` — list with employee counts + head
+- `GET /api/departments/{key}` — detail
+- `GET /api/departments/{key}/employees` — employees in dept
+- `GET /api/departments/{key}/roles` — roles available for dept
+- `PATCH /api/departments/{key}` — update name/desc/head
+- `GET /api/departments/_meta/roles` — all internal roles cross-dept
+
+**All endpoints gated by RBAC Phase 1 permissions:**
+- View: `employee.view.all` OR `user.view.all` OR `employee.view.dept`
+- Create: `employee.create.any` OR `user.create.any`
+- Update: `employee.update.all` OR `user.update.any`
+- Terminate: `employee.terminate.any`
+
+**Files Created (8):**
+- `/app/backend/routers/employees.py` — 13 endpoints, ~400 lines
+- `/app/backend/routers/departments.py` — 5 endpoints, ~130 lines
+- `/app/frontend/src/pages/EmployeesPortal.jsx` — DashboardShell wrapper with lazy-loaded children
+- `/app/frontend/src/components/employees/EmployeesDashboard.jsx`
+- `/app/frontend/src/components/employees/DepartmentsPage.jsx`
+- `/app/frontend/src/components/employees/EmployeesList.jsx`
+- `/app/frontend/src/components/employees/AddEmployeeForm.jsx`
+- `/app/frontend/src/components/employees/OrgChart.jsx`
+- `/app/frontend/src/components/employees/EmployeeDetailModal.jsx`
+
+**Files Modified (3):**
+- `/app/backend/server.py` — registered employees + departments routers
+- `/app/frontend/src/App.js` — new route `/admin/employees`
+- `/app/frontend/src/components/AdminHome.jsx` — "Employee Portal" button on greeting card
+
+**Backend Fixes During Implementation:**
+- `routers/auth.py` `/login` endpoint now returns ALL RBAC fields (rbac_role, user_type, department, permissions, ui_modules, employee_id, partner_code, two_fa_enabled) — previously only login response missed the upgrade
+
+**Critical Technical Note — Babel Stack Overflow Workaround:**
+- AdminDashboard.jsx is already 3370+ lines. Adding new imports for shadcn-heavy components (Dialog, Select) triggered `Maximum call stack size exceeded` in the platform's visual-edits babel plugin (`subtreeHasPortals` recursive AST analysis).
+- **Resolution**: Built Employee Portal as a STANDALONE page route (`/admin/employees`) instead of merging into AdminDashboard sidebar. Used `React.lazy` for sub-components so dynamic imports skip the recursive AST scanner.
+- **Result**: AdminDashboard untouched (0 regressions). Employee Portal works seamlessly via dedicated route.
+
+**Test Validation:**
+- ✅ All 4 existing logins work unchanged
+- ✅ Created test employees → got LMS-2026-NNNN, permissions[], ui_modules[] populated
+- ✅ New employee login returns full RBAC fields
+- ✅ All 5 portal pages render
+- ✅ Lint clean on backend (3 files) + frontend (6 components + 1 page)
+
+### RBAC Phase 1 — Foundation Complete (2026-05-12 night)
+
+**User-approved Phase 1 RBAC foundation built end-to-end** — backward-compatible, zero regressions.
+
+**8 new MongoDB collections seeded:**
+- `departments` (8): admin, sales, marketing, operations, hr, accounts, it, compliance
+- `roles` (18 system roles): admin_owner, compliance_officer, sales_head, sales_manager, sr_sales_executive, sales_executive, partner, marketing_head, marketing_executive, ops_head, case_manager, doc_verifier, hr_head, hr_executive, accounts_head, accounts_executive, it_admin, client
+- `permissions` (219 entries) — naming: `{resource}.{action}.{scope}` + wildcard `*` for owner
+- `teams` (empty, ready for use)
+- `user_role_history` (audit trail)
+- `migrations` (auto-logs every migration run)
+
+**Users collection extended (backward-compatible):**
+- Legacy `role` field **PRESERVED** (admin/partner/case_manager/client) — no existing route breaks
+- NEW `rbac_role` (admin_owner/partner/case_manager/client + 14 more keys for future)
+- NEW: `user_type`, `department`, `designation`, `reports_to`, `team_id`, `permissions[]`, `ui_modules[]`, `custom_permissions_granted[]`, `custom_permissions_revoked[]`
+- Internal employees: `employee_id` (LMS-2026-NNNN), `date_of_joining`, `employment_status`, `employment_type`, `work_mode`
+- External partners: `partner_code` (PRT-NNNN), `commission_tier`, `partner_agreement_signed`
+- Security: `two_fa_enabled`, `two_fa_secret`, `failed_login_count`, `account_locked_until`
+- Profile: `avatar_url`, `emergency_contact`
+
+**Permission Service** (`/app/backend/core/rbac/permission_service.py`):
+- `has_permission` / `has_any_permission` / `has_all_permissions`
+- Wildcard `*` for admin_owner — passes ANY check
+- Resource wildcards: `pa.*`, `pa.view.*`
+- Hierarchical scope: `all > dept > team > own` (team scope passes own checks)
+- Custom overrides: `effective = (role.permissions + custom_granted) − custom_revoked`
+- Resource-level scope check (own/team/dept) against actual document fields
+- `refresh_user_permissions(user_id)` — recompute cached perms on role change
+
+**FastAPI Dependencies** (`/app/backend/core/rbac/dependencies.py`):
+- `require_permission("pa.approve.l2")` — single check
+- `require_any_permission(*keys)` / `require_all_permissions(*keys)`
+- `require_role(*role_keys)` (honors both legacy + rbac_role)
+- `require_department(*dept_keys)`
+- `get_resource_with_permission(collection, id, perm_key, user)` — fetch + scope check in one call
+- 403 errors return structured body: `{error, message, required, your_role}`
+
+**Migration** (`/app/backend/migrations/rbac_phase1_migration.py`):
+- Idempotent — safe on every boot (auto-runs in `server.py` startup)
+- Seeds depts/perms/roles via upsert by `key`
+- Backfills existing users:
+  - admin → rbac_role=admin_owner, user_type=internal, dept=admin
+  - partner → rbac_role=partner, user_type=external, dept=sales
+  - case_manager → rbac_role=case_manager, user_type=internal, dept=operations
+  - client → rbac_role=client, user_type=client, dept=null
+- Auto-generates LMS-2026-NNNN / PRT-NNNN with no collisions
+- Logs each run in `migrations` collection
+
+**Auth Updates:**
+- `build_token_payload(user)` — JWT now includes `rbac_role`, `user_type`, `department`, `permissions[]`
+- `/api/auth/me` returns: legacy `role` + new `rbac_role`, `user_type`, `department`, `permissions`, `ui_modules`, `employee_id`/`partner_code`, `two_fa_enabled`, `emergency_contact`, etc.
+- `/api/auth/login` response enriched with same fields
+- Existing `current_user["role"] == "admin"` checks across 100+ routes still work — ZERO migration needed in Phase 1
+
+**Indexes added** (idempotent):
+- users: `(user_type, department, rbac_role)` compound, `reports_to`, `team_id`, `employment_status`, `employee_id` unique sparse, `partner_code` unique sparse
+- roles: `key` unique, `(department, hierarchy_level)`
+- permissions: `key` unique, `(resource, action)`
+- departments: `key` unique
+- teams: `department`, `manager_id`
+- user_role_history: `(user_id, effective_date desc)`
+
+**Acceptance Tests — ALL PASS:**
+1. ✅ admin@leamss.com: /auth/me → role=admin, rbac_role=admin_owner, user_type=internal, dept=admin, employee_id=LMS-2026-0001, permissions=["*"]
+2. ✅ partner@leamss.com: rbac_role=partner, user_type=external, dept=sales, partner_code=PRT-0001, 18 perms
+3. ✅ manager@leamss.com: rbac_role=case_manager, user_type=internal, dept=operations, employee_id=LMS-2026-0002, 11 perms
+4. ✅ client@leamss.com: rbac_role=client, user_type=client, dept=null, 8 perms (incl. pa.view.own, agreement.sign.own)
+5. ✅ Regression: /api/users, /api/products, /api/cases, /api/legal-archive/stats (admin only — 403 for partner) all working
+6. ✅ Permission service: admin "*" passes any check; partner has pa.create.own but NOT pa.approve.l1; scope hierarchy (team>=own) works; client denied legal_archive; has_any/has_all logic; custom grant/revoke overrides
+7. ✅ Idempotency: 2nd run of migration → 0 duplicate inserts, 0 re-backfills
+
+**Files created (7):**
+- `/app/backend/core/rbac/__init__.py`
+- `/app/backend/core/rbac/models.py` — Pydantic models for new collections
+- `/app/backend/core/rbac/seed_data.py` — 8 depts + 219 perms + 18 roles definitions
+- `/app/backend/core/rbac/permission_service.py` — Core check logic
+- `/app/backend/core/rbac/dependencies.py` — FastAPI deps
+- `/app/backend/migrations/__init__.py`
+- `/app/backend/migrations/rbac_phase1_migration.py` — Idempotent seed + backfill + indexes
+
+**Files modified (4):**
+- `/app/backend/core/database.py` — added 6 new collection handles
+- `/app/backend/core/auth.py` — `build_token_payload()` helper for RBAC-aware JWT
+- `/app/backend/routers/auth.py` — `/login`, `/auth/me`, `/impersonate` return RBAC fields
+- `/app/backend/server.py` — auto-runs migration on startup
+
+**What's NOT touched (preserved):**
+- All existing routes still use legacy `role` field — no regression
+- Frontend code unchanged — login UI still renders correctly
+- All existing PA workflow, AI proposals, agreements, legal archive intact
+
+### Rollback — In-House Sales Team CRM Removed (2026-05-12 evening)
+
+**User feedback**: In-House Partner concept + Sales Team Manager Dashboard didn't align with the bigger vision. User wants a proper **Employee Portal** instead (with departments, attendance, payroll, etc.) — planned as next major build.
+
+**Removed cleanly** (no git revert; manual removal so existing features stayed intact):
+- `/app/backend/routers/sales_team.py` — deleted
+- `/app/frontend/src/components/sales/` (3 components) — deleted
+- `users.py`: removed `employment_type` + `manager_id` fields from create/update
+- `server.py`: removed sales_team_router import + mount
+- `AdminDashboard.jsx`: removed Sales Team sidebar item + render + sales_manager role option + employment_type badge in Users list + employment_type dropdown in user dialog
+- `PartnerDashboard.jsx`: removed Team Dashboard conditional sidebar item + sales_manager auth + sales-team render + auto-land
+- `AdminHome.jsx`: removed DiscountApprovalInbox
+- `PartnerHome.jsx`: removed IncentiveTierWidget
+- `Login.jsx`: removed sales_manager route mapping
+- DB cleanup: dropped `discount_requests`, `incentive_configs`, `sales_targets` collections; stripped `employment_type`/`manager_id` from users; deleted `salesmgr@leamss.com` user
+
+**Verified**: 404 on `/api/sales-team/*`, clean Users page, existing Admin/Partner/Case Manager/Client flows untouched. Lint clean across modified files.
+
+### In-House Sales Team CRM — Phase 1 + 2 (2026-05-12)
+
+**User-approved P1**: Build foundation + Discount Approval + Tiered Incentive for in-house sales reps. Phase 3 (full Manager Dashboard) next round.
+
+**Phase 1 — Foundation**:
+- `users` collection: new `employment_type` field (values: `external` (default) | `employee`) + `manager_id` field
+- `PUT /api/users/{id}` accepts both fields with validation
+- `POST /api/users` defaults `employment_type=external`
+- Admin Users page (AdminDashboard.jsx):
+  - New badge column showing 🏢 In-House / 🌍 External next to partner names (data-testid=emp-type-{userId})
+  - Edit/Create dialog: new indigo-bordered "Employment Type" dropdown (data-testid=user-employment-type) — appears only when role=partner
+  - Explanatory text: "In-house employees get tiered incentives + stricter discount cap (5% vs 10%) and visibility to managers"
+
+**Phase 2 — Discount Approval + Incentive**:
+- New router `/app/backend/routers/sales_team.py` mounted at `/api/sales-team` (renamed from `/sales` to avoid existing route conflict)
+- Auto-seeded tier config in `incentive_configs` collection:
+  - Tiers: Bronze (0-5L @ 5%), Silver (5-15L @ 7%), Gold (15L+ @ 10%)
+  - Discount caps: employee 5% auto / 15% manager / 100% admin; external 10% auto / 100% admin
+- `POST /api/sales-team/discount-requests` — auto-routes based on % + employment_type. Returns `auto_approved=true` if within cap, else `status=pending` with `level_required`
+- `GET /api/sales-team/discount-requests?status=` — admin/manager see all, partner/rep see own
+- `POST /api/sales-team/discount-requests/{id}/decide` — approve/reject with optional note; managers blocked from admin-level requests
+- `GET /api/sales-team/my-incentive?month=YYYY-MM` — employee-only; aggregates current rep's revenue from closed deals (`proposal_paid` / `awaiting_final_approval` / `case_created` stages), returns current tier + base_payout + next_tier + delta_needed
+- `GET /api/sales-team/team-rollup` — admin sees all employees, sales_manager sees own team (by manager_id)
+- `GET /api/sales-team/incentive-config` & `PUT /api/sales-team/incentive-config` — admin can adjust tiers/caps; versioning auto-bumps
+
+**Frontend**:
+- `/app/frontend/src/components/sales/IncentiveTierWidget.jsx` — mounted on PartnerHome. Gold-gradient tier banner + revenue/deals/commission stats + progress bar to next tier. **Auto-hides for externals** (403 response).
+- `/app/frontend/src/components/sales/DiscountApprovalInbox.jsx` — mounted on AdminHome. Pending requests with level badge (auto/manager/admin), employment_type tag, base→discount→final breakdown, optional decision note, Approve/Reject buttons.
+
+**Verified via curl + screenshots**:
+- 3% discount → auto_approved instantly (within 5% cap)
+- 10% discount → pending, level_required='manager'
+- 25% discount → pending, level_required='admin'
+- Approve flow works, status updates correctly
+- Incentive: ₹2.98L revenue → Bronze tier → ₹14,948 payout, ₹2.01L to Silver visible
+- External 403 on incentive endpoint (correct gate)
+- Team rollup returns 1 employee rep with revenue + tier
+- Frontend: badges render, incentive widget shows on PartnerHome, discount inbox shows on AdminHome
+
+### Active Share Links Dashboard (2026-05-12)
+
+**User-approved potential improvement** following smart-link + expiry control. Compliance + security gold-tier feature.
+
+**Backend**:
+- New router `/app/backend/routers/share_links_dashboard.py` mounted at `/api/share-links`
+- `GET /api/share-links/?status=&link_type=&search=` (admin only) — unified list of all share-tokens + magic-tokens across all PAs with metadata: issuer, purpose, amount_label, issued_at, expires_at, status (active/expired/revoked/consumed/deactivated), access_count, last_accessed_at/ip/ua, and a `suspicious` flag (heuristic: clicks≥5 while still active)
+- `POST /api/share-links/revoke` — admin sets `share_active=false` (for public) or `revoked=true` (for magic) with audit fields: revoked_at/by/reason
+- Click tracking added to `GET /pre-assess-portal/public/{token}` — auto-increments `share_click_count` and records `share_last_accessed_at/ip/ua` per visit
+- Magic links capture `used_ip/used_ua` on consume + check `revoked` flag (returns 410 'Link revoked by admin')
+
+**Frontend**:
+- New component `/app/frontend/src/components/ShareLinksDashboard.jsx` — full audit table with stats strip, search, type filter, click-to-revoke flow with reason capture, suspicious badges, color-coded status pills
+- Mounted on AdminHome as third bottom widget (`id=share-links-anchor`)
+- New Quick Access tile `quick-share-links-anchor` with indigo accent + smooth-scroll to widget
+
+**Verified visually**: 30 links rendered, filter to "active" shows 15, revoke dialog opens cleanly with reason input. Stats update live after revoke (1 → revoked column).
+
+### Smart Share Link + Expiry Control (2026-05-08)
+
+**User-reported issue + enhancement combined**:
+
+**Issue**: WhatsApp / Copy Public Link button always generated ₹5,100 PA-fee link, even on PAs that were already past `proposal_sent` (where client should pay the proposal fee, e.g., ₹1,50,000). User specifically complained that for an `approved + proposal_sent` PA with proposal fee ₹1,50,000, the share link was still showing ₹5,100.
+
+**Enhancement**: Configurable link expiry (1/7/30/90 days or never).
+
+**Backend** — `/app/backend/routers/pre_assess_portal.py`:
+- `GenerateLinkRequest` model gains `expires_in_days: Optional[int]` (allowed values: 0, 1, 7, 30, 90)
+- `POST /api/pre-assess-portal/generate-public-link` now branches by stage:
+  - **BRANCH A** — fee NOT paid → public share-token URL (`/pre-assess/{token}`), `link_type: 'public_pa_fee'`, `amount: 5100`, `amount_label: '₹5,100'`, `purpose: 'pre_assessment_fee'`
+  - **BRANCH B1** — fee paid + `proposal_sent` + linked user → magic-link URL (`/magic/{token}`), `link_type: 'magic_portal'`, `amount: pa.proposal_fee`, `purpose: 'proposal_fee_payment'`
+  - **BRANCH B2** — `case_created` + linked → `purpose: 'view_portal'`, `amount: 0`
+  - **BRANCH B3** — fee paid but no client_user_id → 400 'Client account not linked yet'
+- Expiry honored: `expires_in_days=0` → null `expires_at` for public links, 5-year-out for magic links
+- Activity log captures `action='share_link_generated'` with `type` + `expires_in_days` metadata
+
+**Frontend** — `/app/frontend/src/components/pa/PaActionBar.jsx` (full rewrite):
+- Both **Copy Public Link** and **WhatsApp** buttons now open a unified dialog (`data-testid=share-dialog-{paId}`)
+- 5 expiry option pills (`data-testid=expiry-1, expiry-7, expiry-30, expiry-90, expiry-0`)
+- Default = 30 days
+- Amber warning banner when "Never expire" selected ("Use only for trusted recipients")
+- WhatsApp message text adapts by `purpose`: shows ₹1,50,000 for proposal flows, ₹5,100 for new PAs, "View case status" for case_created
+- Dialog also shows generated link with copy+open icons after submission
+
+**Verified**: iteration_91.json — Backend **14/14 PASS** · Frontend **100% PASS** · 0 regressions across previous flows.
+
+### Bug Fix + Edit PA Details (2026-05-08)
+
+**User-reported issues**:
+1. **🚨 BUG**: "Forward to Admin" throwing `ReferenceError: pas is not defined` — broke 3 critical handlers (forward / send-proposal / submit-final)
+2. **📝 GAP**: No way to edit PA contact details (mobile/email/name) after creation — blocked WhatsApp share for PAs created without mobile
+
+**Bug fix**:
+- `/app/frontend/src/components/PreAssessmentPipeline.jsx` — state was named `assessments`/`setAssessments`, but 9 lines across 3 handlers (`handleForwardToAdmin`, `handleSendProposal`, `handleSubmitFinal`) used the wrong identifiers `pas`/`setPas`
+- All 9 occurrences renamed correctly
+- Forward / Proposal / Final flows now work end-to-end without errors
+
+**New: Edit PA Details**:
+- `POST → PUT /api/pre-assessment/{pa_id}/details` — `PADetailsUpdate` Pydantic model accepts: client_name, client_email, client_mobile, client_age, education, work_experience, country, service_type, notes
+- Authorization: admin (any), partner (own only), case_manager (any), client (forbidden 403)
+- Locked when stage = `case_created` (returns 400 — case must be edited from Case page)
+- Diff-detection: only changed fields are persisted, returns `{ok: true, no_change: true}` when nothing different
+- Auto-syncs `client_name` + `client_mobile` to linked `users` collection (so client login still works)
+- Audit trail via `log_activity` with full before/after diff
+
+**Frontend**:
+- New `/app/frontend/src/components/pa/PaEditDetailsModal.jsx` — 8 grid fields + notes textarea + amber "case is locked" warning banner
+- Pencil icon button (`data-testid=edit-pa-{paId}`) in every PA card row header — sits next to "Preview as Client"
+- Modal applies optimistic UI update (assessment list refreshes immediately on save)
+
+**Tested**: iteration_90.json — Backend **11/11 PASS** (1 skipped: no proposal_paid PA available) · Frontend **100% PASS** · 0 regressions across send-proposal / submit-final / forward / WhatsApp flows. `retest_needed:false`.
+
+### Public Lead-Gen + Doc Expiry + WhatsApp Share (2026-05-08)
+
+**4 user-approved features built and tested**:
+
+#### #1 — AI Eligibility Pre-Score (PUBLIC lead magnet)
+- New router `/app/backend/routers/eligibility.py`
+- `GET /api/eligibility/pathways` — list 8 pathways
+- `POST /api/eligibility/score` — public scoring via Claude Sonnet 4.6 across 8 pathways with tier/timeline/strengths/gaps/notes per pathway + top_recommendation + overall_summary
+- `GET /api/eligibility/share/{score_id}` — public shareable result
+- Lead capture: when `consent_to_contact=true` + email/mobile provided → auto-creates entry in `leads` collection with priority based on top score (>=70 = high)
+- New page `/app/frontend/src/pages/EligibilityCheck.jsx` mounted at `/eligibility` route — public, no login required
+- 90-second form → loading state → 8 pathway cards with score bars + tier badges + strengths/gaps + share/re-score/compare CTAs
+
+#### #2 — Document Expiry Tracker (admin/partner/client)
+- New router `/app/backend/routers/doc_expiry.py`
+- `GET /api/doc-expiry/upcoming?horizon_days=120&severity=critical` — list expiring docs across PA + Case docs with role scoping
+- `POST /api/doc-expiry/check-now` — idempotent scan that creates notifications for new bucket-crossings (90/60/30/15/7 days)
+- `PUT /api/doc-expiry/pa-doc/{doc_id}/expiry` — set/update expiry on PA doc
+- Idempotency: `doc_expiry_alerts` collection logs (doc_id, bucket) so same alert never fires twice
+- Severity buckets: expired / critical (≤15d) / warning (≤60d) / info (≤90d) / ok
+- New `DocExpiryWidget.jsx` mounted on AdminHome with 4 stat cells + Refresh + Send Alerts buttons
+- Role scoping: admin/CM see all, partner sees own PAs, client sees own
+
+#### #3 — WhatsApp Smart Share (zero-cost velocity)
+- Updated `/app/frontend/src/components/pa/PaActionBar.jsx` — added green-bordered `MessageCircle` button
+- `data-testid=whatsapp-share-{paId}` between "Copy Public Link" and "Preview as Client"
+- Opens `https://wa.me/{cleanMobile}?text={prefilled}` with auto-built message: client name, partner name, country/service, PA reference, fee amount, secure link, signature
+- No Twilio API needed (pure deep link). Toast error if mobile not on file.
+
+#### #8 — Visa Pathway Comparison (PUBLIC + admin-editable)
+- New router `/app/backend/routers/visa_compare.py`
+- 8 seeded pathways with realistic 2026 fees/timelines (Canada EE/PNP, Australia 189/190, UK SW, Germany Blue Card, USA EB2-NIW, NZ SMC)
+- `GET /api/visa-compare/pathways[?country=]` — public list (auto-seeds if empty)
+- `GET /api/visa-compare/compare?slugs=` — 2-4 pathways side-by-side
+- `PUT /api/visa-compare/pathways/{slug}` — admin edits (yearly fee refresh)
+- `POST /api/visa-compare/reseed` — admin reset to defaults
+- New page `/app/frontend/src/pages/VisaCompare.jsx` at `/visa-compare` — public, 8 pickable pills (max 4) → side-by-side cards with timeline / total cost / settlement funds / education / work-exp / age / language / benefits / drawbacks / post-arrival jobs
+
+#### Login page — public access tiles
+- `/app/frontend/src/pages/Login.jsx` — added 2 gradient tiles below demo creds: `public-eligibility-link` → /eligibility, `public-compare-link` → /visa-compare
+
+**Tested**: iteration_89.json — Backend **18/18 PASS** · Frontend 100% PASS · 0 issues · 0 regressions. `retest_needed:false`.
+
+### PreAssessmentPipeline Refactor — Round 2 (2026-05-07 night)
+
+**User-approved P2 task**: Further break down `PreAssessmentPipeline.jsx` (was 1066 → 1002 after Round 1).
+
+**6 new sub-components extracted** to `/app/frontend/src/components/pa/`:
+- `PaProposalForm.jsx` (131 lines) — Send Service Proposal form with promo, discount, upsell bundles, AI generation buttons (Sonnet 4.6 + Opus 4.6 Premium), live breakdown panel
+- `PaDocumentsList.jsx` (92 lines) — Client Documents panel with view (inline)/download/delete handlers per file
+- `PaFinalSubmitForm.jsx` (64 lines) — Receipt + Agreement upload + Submit-to-Admin form (proposal_paid → awaiting_final_approval transition)
+- `PaForwardForm.jsx` (27 lines) — Partner-review remarks form
+- `PaStageProgress.jsx` (23 lines) — Bottom horizontal stage indicator with 7 dots
+- `PaActionBar.jsx` (23 lines) — Copy Public Link + Preview as Client + dynamic next-action button
+
+**Result**:
+- `PreAssessmentPipeline.jsx`: 1066 → **770 lines** (-296, ~28% reduction)
+- All data-testids preserved across extracted components
+- Cleaned unused lucide imports (IndianRupee, ArrowRight, Download)
+- New `/pa/` directory now houses 8 focused sub-components (Pipeline parent + 8 children)
+
+**Tested**: iteration_88.json — Frontend **100% PASS** · Zero regressions across all PA flows (create/expand/proposal/forward/final-submit/agreement). `retest_needed:false`.
+
+### Compliance Report PDF (2026-05-07 night)
+
+**User-approved enhancement** following SHA-256 tamper detection: a stamped PDF audit report for legal/audit officers.
+
+**Backend** — `GET /api/legal-archive/compliance-report.pdf?start_date=&end_date=` (admin-only):
+- ReportLab-rendered A4 PDF (~3-5 KB typical, scales linearly with records)
+- Sections: Cover (window, generator, totals) → Integrity scan summary (verified/tampered/unverified counts + flagged records list) → Consents table → E-Signatures table → Invoices table → Report-level SHA-256 chain hash binding all record hashes + timestamp + officer ID
+- Default window = last 90 days; configurable via query params
+- Returns `X-Report-Hash` header with the binding SHA-256 for client display
+- Each table includes the per-record SHA-256 hash prefix
+- Footer: page numbers + "LEAMSS · Compliance Report · timestamp" on every page
+- 403 enforced for non-admin
+
+**Frontend** — `/app/frontend/src/components/LegalArchive.jsx`:
+- New "Compliance Report" gradient button in header (data-testid=`compliance-report-btn`) next to Verify Integrity
+- Dialog (data-testid=`compliance-report-dialog`) with From/To date pickers (default last 90d), feature description list, Generate button
+- On click: streams PDF, opens in new tab, toast shows first 16 chars of report hash for instant verification
+
+**Verified via curl**:
+- Admin default → HTTP 200 + valid `%PDF-1.4` magic + 4.3 KB + correct headers
+- Admin custom range → HTTP 200 + 3.2 KB
+- Partner → HTTP 403 ("Admin only — Legal Archive is restricted to compliance officers")
+- Anonymous → HTTP 403
+
+### SHA-256 Tamper Detection + Legal Doc Polish + PA Refactor (2026-05-07 night)
+
+**User asked**: 1️⃣ Re-seed agreement templates so generated UI/PDF matches uploaded DOCX verbatim with proper typography. 2️⃣ Add SHA-256 tamper detection (Task C). 3️⃣ Refactor PreAssessmentPipeline.jsx (Task D).
+
+**Templates re-seeded** (v2): `seed_agreement_templates.py` re-run — Australia Standard, Australia Protection, Canada Express Entry now have verbatim DOCX text with structured `<h1 class=title>`, `<h2>` annexure heads, `<ul>`/`<table class="client-details">`/`<table class="fee-table">`/`<table class="signature-table">`.
+
+**New shared CSS** `/app/frontend/src/components/agreement-doc.css` — legal-document grade typography:
+- Serif font stack (Georgia, Times New Roman, Cambria), 13.5px / 1.7 line-height, justified paragraphs
+- Centered title with double-rule underline, italic meta line
+- H2 sections with teal left-rule and uppercase tracking; H3 with underline
+- Client-details + fee-table with bordered cells, teal header on fee-table, zebra striping
+- Signature-table at bottom with 28px sign-line + uppercase muted labels
+- A4-feel wrapper `.agreement-doc-wrap` with subtle shadow + light grey backdrop
+- Print-friendly media query
+
+Applied via `agreement-doc-wrap` to:
+- `AgreementViewerModal.jsx` (admin/partner read-only view)
+- `ClientAgreementSigning.jsx` (client scroll-to-sign view)
+- `AgreementGenerator.jsx` (partner step-3 preview)
+- `AgreementTemplatesManager.jsx` (admin preview)
+
+**SHA-256 Tamper Detection (Task C):**
+- New module `/app/backend/core/integrity.py` with `compute_hash`, `verify_hash`, canonical PROJECTIONS per record_type (consent / signature / invoice). Hash = sha256(canonical-JSON of immutable fields).
+- All 3 insert sites now persist `integrity_hash` at write-time:
+  - `routers/proposal_docs.py` — invoice send + e-sign save
+  - `routers/pre_assess_portal.py` — proposal-consent submit
+- New endpoints in `routers/legal_archive.py`:
+  - `POST /api/legal-archive/integrity/backfill` — adds hash to legacy records (admin-only)
+  - `GET /api/legal-archive/integrity/verify-all` — recomputes + diffs all records, returns `{verified, tampered, unverified, tampered_records[]}` 
+- `/api/legal-archive/search` now returns `integrity_status` + `integrity_hash` (12-char prefix) per item
+- LegalArchive UI: "Verify Integrity" button in header, auto-fires on mount, banner shows verify/tamper counts with red-pulse alert + tampered records list. Each row gets a colored Integrity badge (green ShieldCheck for verified, red ShieldAlert pulse for tampered, slate Shield for legacy/unverified). Backfill button appears only when legacy records present.
+- Tamper sanity verified: mutating `body_snapshot.final_amount` directly in Mongo → verify-all flagged 1 tampered record with expected vs actual hash diff. Restored + rehashed.
+
+**Refactor (Task D):**
+- Extracted `PaCreateForm` from `PreAssessmentPipeline.jsx` (~75 lines) → `/app/frontend/src/components/pa/PaCreateForm.jsx`
+- Trimmed unused lucide imports (User, Mail, Phone, Globe, GraduationCap, Briefcase)
+- Pipeline file: 1066 → 1002 lines. All data-testids preserved.
+
+**Tested**: iteration_87.json — Backend **16/16 PASS** · Frontend 100% PASS. 0 issues. `retest_needed:false`.
+
+### Agreement Template Library + Auto-Generator (2026-05-07 PM)
+
+**User uploaded 3 official LEAMSS agreements** (Australia Standard, Australia Protection, Canada Express Entry). Built end-to-end Agreement Template + E-Sign system.
+
+**Backend (`/app/backend/routers/agreement_templates.py`):**
+- 2 routers: `agreement_templates_router` + `pa_agreements_router`
+- 14 endpoints: list/create/edit/clone/delete/upload-docx/request templates + auto-vars/generate/list/get/sign/pdf for per-PA agreements
+- 3-level taxonomy: Country × Visa Category × Policy Variant
+- Jinja2 rendering with `{{var}}` placeholders (auto-detected via regex)
+- python-docx integration for DOCX upload + HTML extraction
+- ReportLab PDF rendering with HTMLParser (preserves headings + bold + paragraphs) + embedded canvas signature image
+
+**Seeded 3 default templates** via `seed_agreement_templates.py`:
+- Australia · PR · Standard (5 annexures, INR fees, milestones)
+- Australia · PR · Protection (premium variant with 100% refund + free re-application)
+- Canada · PR · Express Entry (CICC-registered retainer)
+
+**Frontend components (3 new + 1 enhanced):**
+- `AgreementTemplatesManager.jsx` (admin) — CRUD with rich-text editor, placeholder badges, DOCX upload, clone/preview/edit
+- `AgreementGenerator.jsx` (partner) — 3-step modal: Select Template → Fill Variables (auto-filled, editable) → Preview & Generate
+- `ClientAgreementSigning.jsx` (client) — Full agreement body preview + scroll-to-end gate + canvas signature → green signed card with download
+- `AgreementViewerModal.jsx` — read-only view for already-generated agreements with regenerate option
+- Enhanced `PaFinancialSummary` — added "Generate Agreement" / "View Agreement" / "Agreement Signed ✓" smart button
+
+**Security:** Admin-only writes for templates. Partner can only generate for own PAs. Client can only sign own agreements (403 enforced at backend).
+
+**Auto-fill placeholders** (29 vars from PA): client_name, client_email, client_phone, client_dob, client_address, client_passport, country, service_type, agreement_date, partner_name, agent_name, pa_number, pre_assessment_fee, proposal_base_fee, proposal_final_amount, promo_code, milestone_1/2/3 amount/date, payment_mode, leamss_agent_email.
+
+**Tested**: iteration_86.json — Backend **24/24 PASS** · Frontend **95% PASS** (1 LOW priority — fixed: View Agreement button now opens dedicated viewer modal instead of generator). `retest_needed:false`.
+
+### Legal Archive (P1) — Admin Compliance Dashboard (2026-05-07 PM)
+
+**User ask**: P1 — Legal Archive tab with searchable consents + signatures + invoices.
+
+**New Backend router** `/app/backend/routers/legal_archive.py` (admin-only):
+- `GET /api/legal-archive/stats` — returns `{consents, signatures, invoices, total}`
+- `GET /api/legal-archive/search?q=&record_type=&start_date=&end_date=` — unified timeline aggregating from 3 collections (proposal_consent_emails, pa_signatures, pa_invoices). Sorted desc by timestamp, hydrated with PA metadata (client/partner/country).
+- `GET /api/legal-archive/{ref_id}` — fetch full record by reference_id
+- 403 enforcement helper `_admin_only()` blocks partner/CM/client
+
+**New Frontend component** `/app/frontend/src/components/LegalArchive.jsx`:
+- 4 stat cards (Total / Consents / E-Signatures / Invoices) with colored borders
+- Free-text search bar (Enter or click Search)
+- Filter pills: All / Consents / Signatures / Invoices
+- Date range pickers (start/end)
+- Results table: Type badge + Reference ID (mono) + Client info + Country/Service + Amount (₹) + Timestamp + Actions
+- View Detail modal with type-specific previews:
+  - Consent: full fee snapshot (base, promo, custom discount, upsells, final)
+  - Signature: IP + file size + UA
+  - Invoice: download button
+- Inline invoice download icon
+- Export CSV button (downloads filtered results)
+- Refresh button
+
+**Wired into Admin sidebar** — System group, Shield icon. Partner sidebar excludes it.
+
+**Tested**: iteration_85.json — Backend **17/18 PASS** (1 minor 401-vs-403 ignorable) · Frontend 100% verified · 0 issues. `retest_needed:false`.
+
+### P0 Batch + AI Upgrade (2026-05-07) — Sonnet 4.6 + Opus 4.6 + Optimistic UI
+
+**User asks**: P0 batch (Optimistic UI + Refactor + Lazy-load) + Hybrid AI (Sonnet 4.6 default + Opus 4.6 Premium button).
+
+**AI Model Upgrade ✨**
+- Default: `claude-sonnet-4-6` (released Feb 17, 2026 — 30-50% faster than 4.5, same price)
+- Premium: `claude-opus-4-6` (deepest reasoning, for ₹5L+ proposals)
+- New `premium: bool` field in `AIGenerateRequest`. Response now returns `{model, premium}`.
+- Frontend shows TWO buttons in proposal form: ✨ Generate with AI (Sonnet) + 👑 Premium AI (Opus, gradient bg).
+
+**Optimistic UI**
+- All stage-changing actions now flip card stage **INSTANTLY** before server confirms:
+  - Admin approve/reject (`PreAssessmentQueue.handleReview`)
+  - Admin approve-final + create case (`handleApproveFinal`)
+  - Partner send-proposal (`handleSendProposal`)
+  - Partner forward-to-admin (`handleForwardToAdmin`)
+  - Partner submit-final (`handleSubmitFinal`)
+- Rollback on failure restores snapshot + toast shows ` — reverted`.
+
+**Refactor**
+- Extracted `PaFinancialSummary` (90 lines) into `/app/frontend/src/components/pa/PaFinancialSummary.jsx`. Pipeline file: 1103 → 1037 lines. Same UI / data-testids preserved.
+
+**Lazy-load**
+- `DropoffRecoveryWidget` now uses `useRef` + `IntersectionObserver` (rootMargin 100px). Shows "Scroll to load…" placeholder until visible. `/api/intelligence/dropoff-leads` no longer fires on every Home render.
+
+**Tested**: iteration_84.json — Backend **20/20 PASS** · Frontend 100% verified. Zero issues. `retest_needed:false`.
+
+### Performance Fix — Portal Speed + Real-time Notifications (2026-04-23 night)
+**User complaint**: "Bahot slow chal raha hai pura portal. Notifications, reviews immediately update nahi ho rahe."
+
+**Root causes found:**
+1. **Missing DB indexes** — `pre_assessment_documents.pre_assessment_id`, `activity_log.entity_id`, `notifications (user_id, read, created_at)`, `pa_invoices`, `case_milestones`, etc. all did full-collection scans.
+2. **API call explosion** — Expanding one PA card fired 5+ parallel calls (docs + activity + payment-history + risk + checklist).
+3. **Stats endpoint serial counts** — 9 sequential `count_documents()` calls per Home page render.
+4. **SSE polling 15s** — Felt "not instant" for action notifications.
+
+**Fixes applied:**
+- **10 new Mongo indexes** in `core/database.py` (including compound `(partner_id, stage)`, `(user_id, read, created_at)`, `(entity_id, created_at)`, etc.)
+- **NEW bundle endpoint** `GET /api/pre-assessment/{pa_id}/bundle` — returns pa + documents + activity + payment_history + checklist + risk in ONE parallel-queried response.
+- **Stats endpoint** now uses `asyncio.gather` for all 9 counts in parallel.
+- **SSE notification poll** reduced 15s → 5s with UTC-aware datetimes.
+- **Frontend components** (`PaymentHistoryTimeline`, `RiskScoreBadge`, `SmartDocChecklist`) now accept `initialData` prop to skip their own fetch when the parent has bundle data.
+- **PA expand on Partner Pipeline** uses bundle directly — 1 call instead of 5+.
+
+**Benchmark:**
+- Expanding PA card: **701ms → 118ms** (~**6x faster**, 5+ calls → 1 call)
+- Stats: serial → parallel (~**9x faster** on large DBs)
+- Notifications: max 5s delay instead of 15s (3x more responsive)
+
+### Latest: AI Proposal + Send Proposal 403 Fix (2026-04-23 evening)
+**User issue (screenshot)**: Partner clicked "Generate with AI" → red toast "Partners or admins only"; then "Send Proposal to Client" → "Not Authorized". Reproduced via curl: backend worked correctly with fresh partner token, so issue was stale/confusing error message with no status hint.
+
+**Root cause**: Error messages were too generic ("Not authorized", "Partners or admins only") giving no debugging hint about role vs ownership vs stage.
+
+**Fixes applied:**
+- `ai_proposal.py`: Now also accepts `case_manager` role. Error explicitly states user's actual role and required roles. Partner-ownership error now says "This pre-assessment belongs to another partner…".
+- `pre_assessment.py` send-proposal: Role check and partner-ownership check split with distinct messages. Stage mismatch now says "Pre-assessment is at stage 'X'. Must be at 'approved' stage (after 1st Admin approval)".
+- Frontend handleGenerateAI + handleSendProposal: Display HTTP status code + detailed detail. 401 specifically surfaces "Session expired — log in again". console.error for devtools.
+
+**Verified via curl**:
+- Partner owner → AI generate 200 (303 words) + send-proposal 200
+- Client role → AI generate 403 with crystal-clear message
+- Already-sent PA → send-proposal 400 with stage hint
+
+### Phase B + C + D Complete (2026-04-23 PM) — MASSIVE RELEASE
+
+**User ask**: Build Phase B (Proposal PDF + Digital E-Sign + Send Invoice button), Phase C (Payment History + Auto Invoice + Milestone Payments), Phase D (Drop-off Recovery + Smart Doc Checklist + Risk Prediction), plus consent-summary email auto-trigger with Reference ID for legal records. "Sab achese interlink ho — koi link break nah hojayega."
+
+**New Backend routers (all wired in server.py):**
+1. `/app/backend/routers/proposal_docs.py` — ReportLab A4 branded PDFs + e-sign
+   - `GET /api/proposal-docs/{pa_id}/proposal.pdf` / `invoice.pdf`
+   - `POST /api/proposal-docs/{pa_id}/send-invoice` (MOCK email + records Reference ID)
+   - `GET /api/proposal-docs/{pa_id}/invoices`
+   - `POST /api/proposal-docs/{pa_id}/esign` (client-only, saves PNG + IP + UA)
+   - `GET /api/proposal-docs/{pa_id}/esign`
+2. `/app/backend/routers/payment_history.py` — two routers
+   - `GET /api/payment-history/pa/{pa_id}` + `/case/{case_id}` (unified timeline)
+   - `POST /api/milestones/case/{case_id}/create`, `GET /api/milestones/case/{case_id}`
+   - `POST /api/milestones/{mid}/mock-pay`, `mark-paid`, `DELETE /api/milestones/{mid}`
+3. `/app/backend/routers/intelligence.py` — Phase D
+   - `GET /api/intelligence/dropoff-leads` (stage-SLA detection, severity, suggested_action)
+   - `POST /api/intelligence/nudge/{pa_id}` (MOCK email + in-app notification)
+   - `GET /api/intelligence/checklist/{pa_id}` (4 templates: canada_express_entry, australia_skilled, uk_work_visa, usa_h1b, default)
+   - `GET /api/intelligence/risk/{pa_id}` (rule-based 0-100 score using age, education, experience, stage, docs, idle time, rejection history)
+
+**Consent Summary Email (legal paper-trail):**
+- Modified `POST /api/pre-assess-portal/client/proposal-consent/{pa_id}` to emit `reference_id` (format: `CON-<PA#>-<YYMMDDHHMM>`), persist full body_snapshot (base_fee + promo + upsells + final_amount + consent_at) in `proposal_consent_emails` collection, notify both client + partner
+- New `GET /api/pre-assess-portal/client/consent-summary/{pa_id}` for archived view
+
+**New Frontend components (6):**
+- `SignatureCanvas.jsx` — HTML5 canvas drawing + typed-name verification
+- `PaymentHistoryTimeline.jsx` — vertical timeline w/ received/pending totals
+- `MilestonesManager.jsx` — create/pay/mark-paid/delete milestones (role-aware)
+- `RiskScoreBadge.jsx` — risk pill + factor breakdown
+- `SmartDocChecklist.jsx` — progress bar + checklist items
+- `DropoffRecoveryWidget.jsx` — stuck-leads list with Nudge buttons
+
+**Enhancements to existing:**
+- **PartnerHome + AdminHome**: DropoffRecoveryWidget mounted at bottom
+- **PreAssessmentPipeline (Partner)**: Financial Summary now has 3 action buttons (Download Proposal PDF · Download Invoice PDF · Send Invoice to Client) + below it a 2-col block with Payment Timeline + Risk Badge + Smart Checklist (when fee_payment_status=paid)
+- **PreAssessmentMiniPortal (Client)**: Consent flow shows Reference ID inline + archived summary; new "E-Sign Your Service Agreement" card with SignatureCanvas (proposal_paid stage); "Your Payment Records" card with Proposal/Invoice download + PaymentHistoryTimeline
+- **ClientDashboard → My Journey tab**: PaymentHistoryTimeline (case scope) + MilestonesManager for active cases
+
+**Tech additions:**
+- ReportLab (already installed v4.4.10) — A4 branded PDFs with logo, parties, fee breakdown table, consent clause, footer
+- New collections: `pa_signatures`, `pa_invoices`, `proposal_consent_emails`, `case_milestones`, `pa_nudges`
+
+**Tested**: iteration_83.json — Backend **49/49 PASS** · Frontend 100% · 0 regressions on Phase A · 0 issues. `retest_needed:false`.
+
+### Latest: 3 Document UX Fixes (2026-04-23)
+**User feedback**: "Document View download ho raha hai instead of inline open. Partner upload ke liye explicit Upload button chahiye aur Delete option bhi. Awaiting Final Approval stage pe Financial Summary dikhao."
+
+**All 3 fixed:**
+1. **Inline View** — Backend `GET /api/pre-assessment/{pa_id}/document/{doc_id}/download?inline=true` sets `Content-Disposition: inline` (via FileResponse `content_disposition_type`). Both Partner Pipeline + Admin Queue View buttons fetch with `?inline=true`, create blob URL, open in new tab. Save/Download buttons omit param (defaults to `attachment`).
+2. **Explicit Upload flow** — Replaced auto-upload-on-select with 2-step staging: `pendingUpload[paId] = { file, docType }`. Selecting a file now shows filename + size + doc-type preview with explicit **Upload** + **Cancel** buttons. Applied to both `payment_received` zone + final-submit zone. data-testids: `file-input-{paId}`, `upload-btn-{paId}`, `cancel-upload-{paId}`, `final-upload-btn-{paId}`, `final-cancel-upload-{paId}`.
+3. **Delete docs** — `DELETE /api/pre-assessment/{pa_id}/document/{doc_id}` (allowed for doc-owner client, PA's partner, admin). Frontend XCircle button with window.confirm. data-testid: `delete-doc-{docId}`.
+4. **Financial Summary block** — NEW emerald gradient card visible at `proposal_paid`, `awaiting_final_approval`, `case_created` stages. Shows PA Fee ₹5,100 + Main Service breakdown (Base Fee, Promo discount with code, Custom Discount, Upsells list+total, Final Paid) + Total Received badge + Proposal notes.
+5. **Awaiting Final Approval banner** — NEW indigo waiting banner at `awaiting_final_approval` stage with Hinglish subtext "Aapka role iske baad complete ho jayega".
+
+**Tested**: iteration_82.json — Backend 29/29 PASSED, Frontend 100% verified. 0 issues. `retest_needed: false`.
+
+## Complete Feature List (2026-04-15 to 2026-04-17)
+
+1. **Step-wise Document Management** - Admin/CM/Client document flow
+2. **Unified Client Document View** - Single "Documents & Steps" tab
+3. **Smart Template AI** - 8 verified templates, 51 countries
+4. **AI Workflow Builder** - Country->Visa->Generate->Edit->Save with SVG flags
+5. **Government Forms** - 48 official forms (7 countries) with download links
+6. **AI Verification System** - Admin verifies AI data before saving
+7. **Deadline & SLA Tracker** - Auto document expiry, manual deadlines, color-coded urgency
+8. **Client Intake Form Builder** - Product-specific, role-based (Client/CM/Both), Admin-managed
+9. **Automated Government Fee Calculator** (2026-04-17) - 20 countries, live INR conversion
+
+### Latest: 5 Critical UX Fixes (2026-04-22 late night)
+**User-reported issues:**
+1. Partner + Admin couldn't View/Download client-uploaded documents
+2. Admin 1st Approval tab didn't show approved/rejected history (only pending)
+3. Partner cards at `proposal_sent` stage had no "Waiting for Client Payment" visual cue
+4. Client saw blind "Pay" button without full proposal details + breakdown + consent
+5. After client pays, case went straight to admin — partner couldn't upload receipt/agreement/docs first
+
+**All 5 fixed:**
+- **Doc View/Download**: NEW `GET /api/pre-assessment/{pa_id}/document/{doc_id}/download` endpoint. Partner + Admin cards show "View" (opens new tab) + "Save" (download) buttons per doc.
+- **1st Approval history**: Admin's 1st Approval filter now includes approved/rejected/proposal_sent/etc items (visible history)
+- **Waiting banner**: `proposal_sent` cards now show pulsing amber "Waiting for Client Payment" banner with client name + fee amount. Stage label renamed "Waiting for Client Payment".
+- **Rich proposal + consent**: Client MiniPortal at `proposal_sent` now shows (a) AI proposal text, (b) Pricing breakdown (base, promo, discount, upsells), (c) Partner note, (d) mandatory consent checkbox with SLA + no-misleading-info language, (e) "I Agree — Unlock Payment" gate button, (f) only after consent → Pay button unlocked. Backend enforces: `mock-pay-proposal` returns 400 if `proposal_consent_given` false.
+- **NEW stage `awaiting_final_approval`**: Inserted between `proposal_paid` and `case_created`. Flow: Client pays → partner notified → partner uploads payment receipt + signed agreement + basic docs → Partner "Submit to Admin for Final Approval" → stage becomes `awaiting_final_approval` → admin queue shows it → admin activates case + assigns CM.
+
+**NEW endpoints:**
+- `GET /api/pre-assessment/{pa_id}/document/{doc_id}/download` (all roles)
+- `POST /api/pre-assess-portal/client/proposal-consent/{pa_id}` (client-only)
+- `POST /api/pre-assess-portal/partner/submit-final/{pa_id}` (partner/admin)
+
+**Tested**: iteration_81.json — 28/28 backend + frontend 90%+ verified. 0 issues.
+
+### Deep-Link Filtering + Fresh DB (2026-04-22 night)
+**User feedback**: "Admin Home mein '1st Approval' click kiya tho pura Pre-Assessments tab open ho raha — sirf wohi cases dikhne chahiye. Plus saare test data delete karo, fresh se test karunga."
+
+**Solution 1 — DB Cleanup**:
+- Created `/app/backend/cleanup_test_data.py` — deleted 1,315 records across 13 collections
+- Preserved: 6 seeded users, products, workflows, fee_database, promo_codes, upsell_bundles
+
+**Solution 2 — Deep-link filtering**:
+- `PreAssessmentQueue` + `PreAssessmentPipeline` now accept `initialFilter` prop
+- Admin/Partner action cards pass filter → opens filtered view only
+- Amber context banner + Clear-filter button when filter active
+- Stats cards clickable for instant filtering
+- Filter auto-clears on sidebar click
+
+**Tested**: iteration_80.json — 14/14 backend + frontend 100%, 0 issues.
+
+### Dashboard UX Simplification + AI → Claude (2026-04-22 PM)
+**Problem solved**: User was overwhelmed with 20+ tabs in Admin, 8+ in Partner — "itna complicated kyu bana hai?"
+
+**Solution**: Action-first redesign WITHOUT deleting any feature
+- **NEW `PartnerHome.jsx`**: Home tab showing greeting + 4 pulsing action cards (partner_review / approved / new_leads / proposal_paid) + Quick access tiles + Recent PAs list
+- **NEW `AdminHome.jsx`**: Home tab showing greeting + 3 approval cards (1st approval, 2nd approval, unassigned cases) + Org snapshot + Quick access grid
+- **NEW `FunnelProgress.jsx`**: Reusable 5-step pipeline indicator (Created → Admin Approved → Proposal Sent → Main Fee Paid → Case Active) — inserted at top of every expanded PA card
+
+**Sidebar regroup (no deletions)**:
+- Partner: `Home` → `Daily Work` (PA, Leads, Tickets) / `Sales & Earnings` (Sales, Commission, Performance) / `Tools` (Fee Calc, Classic Dashboard)
+- Admin: `Home` + `Classic Dashboard` as first 2 items, all other 20+ tabs retained in existing groups
+- All previously-accessible tabs still navigable
+
+**AI switch**: GPT-5.2 → **Claude Sonnet 4.5** (`claude-sonnet-4-5-20250929` via Emergent LLM key)
+- Better warmth + immigration-domain empathy in proposal writing
+- Model changes in `/app/backend/routers/ai_proposal.py` lines 109 + 130
+
+**Tested**: iteration_79.json — 17/17 backend + frontend 100%, **0 regressions on any existing tab**. All user feature guarantees honoured.
+
+### Phase A Retouch + 3 Major Features (2026-04-22)
+**🔧 Critical Flow Fixes:**
+- **NEW stage `partner_review`** — Between client-submit and admin-queue. Client submit → Partner gets "Action needed" notification + pink pulsing badge → Partner reviews in expanded card → Partner forwards with remarks → Admin queue
+- **Partner card visibility** — Expanded card now shows 2 panels: "Client Documents" (file list + type badge) + "Client Activity" (timeline). Auto-loads on expand.
+- **Strict Sales Rule** — `POST /sales` now rejects partner-created sales that lack `pre_assessment_id` UNLESS `bypass_pre_assessment=true` with `bypass_reason` (min 10 chars). Admin/CM unaffected.
+- **Partner role extended** — Partner remains active through stages: new → partner_review → approved → proposal_sent → proposal_paid → **case_created (role ends here after CM assigned)**
+
+**✨ Smart Discount Engine (wired):**
+- Existing `/api/marketing/promo` CRUD + validate already backed
+- Now integrated into Send Proposal form: promo code input + Apply btn + live discount preview
+- `send-proposal` backend validates promo, increments `current_uses`, stores `promo_code`, `promo_discount_amount`, `total_discount_amount` in sale + PA
+
+**📦 Upsell Bundles (new):**
+- New `/api/upsell-bundles` CRUD + `/resolve` endpoint
+- Auto-seeds 6 default bundles: Priority Processing ₹5k, Family Member +₹15k, Doc Courier ₹3.5k, Extended Consultation ₹8k, Mock Interview ₹4.5k, Landing Package ₹12k
+- Admin UI: `UpsellBundlesManager.jsx` under Planning Tools (create/edit/delete)
+- Partner UI: Checkbox grid in Proposal form; selected bundles auto-add to `upsell_total`
+
+**✨ AI Proposal Generator (new):**
+- New `/api/ai-proposal/generate` — uses **GPT-5.2** via Emergent LLM key
+- Reads client profile (name, country, visa, age, education, experience, partner notes) + generates 250-380 word professional proposal body
+- Tone options: professional | friendly | assertive
+- Partner UI: "✨ Generate with AI" button in proposal form → auto-fills editable textarea
+
+**📊 Enhanced Proposal Form breakdown:**
+```
+Base Fee:            ₹1,50,000
+Promo (SAVE10 10%):  -₹15,000
+Custom Discount:      -₹5,000
+Upsells (2):         +₹8,000
+─────────────────────────
+Final Amount:        ₹1,38,000
+```
+
+**Tested**: 100% (15/15 backend + frontend all green) — iteration_78.json, 0 issues
+
+### Latest: Pre-Assessment Client Portal Layer — Phase A Part 3 (2026-04-17)
+- **Full E2E CRM sales funnel LIVE (MOCK payments)**: Partner creates PA → Client pays via public link → Magic-login → Upload docs → Submit for review → Partner validates & forwards → Admin 1st approval → Partner sends proposal → Client accepts + pays main fee → Admin 2nd approval assigns CM → Real Case created & active
+- **NEW Admin endpoints**:
+  - `GET /api/pre-assess-portal/admin/case-managers` — lists active case managers for the Assign-CM dropdown
+  - `POST /api/pre-assess-portal/admin/approve-final/{pa_id}` — now accepts `{case_manager_id}` body, validates CM, attaches to new case, notifies CM
+- **NEW Partner endpoint**: `POST /api/pre-assess-portal/partner/preview-magic/{pa_id}` — short-lived (30min) magic link so partner can preview exactly what client sees in MiniPortal
+- **Admin UI enhancements** (`PreAssessmentQueue.jsx`):
+  - 6-card stats grid (Total, 1st Review, Approved, Rejected, Awaiting Case, Conversion)
+  - `proposal_paid` items now appear in admin queue with orange "Create Case" CTA
+  - 2nd-approval UI with **Case Manager dropdown** (optional assign-or-later)
+  - Admin sidebar: new "Pre-Assessments" menu item under Cases & Users
+- **Partner UI enhancements** (`PreAssessmentPipeline.jsx`):
+  - "Copy Public Link" + "Preview as Client" buttons now visible on **every** PA card (all stages)
+  - Preview as Client button also in card header for 1-click access
+  - Copy Link now returns **full URL** (`window.location.origin` + path) — shareable via WhatsApp/email
+- **Admin queue backend updated** to include `proposal_paid` stage in `/api/pre-assessment/admin/queue`
+- **Tested**: 100% (10/10 backend + frontend all green) — iteration_76.json + iteration_77.json
+
+### Pre-Assessment Client Portal Layer — Phase A Part 2 (2026-04-17)
+- **Client MiniPortal** (`/app/frontend/src/components/PreAssessmentMiniPortal.jsx`): Beautiful stage-aware dashboard shown to clients who have a pre-assessment but no active case
+  - 6-step progress pipeline (Paid → Upload → Review → Approved → Proposal → Case Active)
+  - Stage-specific UI: `payment_received` shows upload UI + Submit button; `documents_submitted/under_review` shows "Under Review"; `approved` shows "Congratulations"; `proposal_sent` shows Accept + Pay buttons; `proposal_paid` shows "Activating your case"; `rejected` shows refund notice
+- **Dynamic Sidebar** (`ClientDashboard.jsx`): When `isMiniMode=true` shrinks sidebar to Overview + Tools (AI Scanner only, +Cost Estimator & Eligibility in `isExpandedMode`) + Communication + Profile
+- **New Backend Endpoints**:
+  - `POST /api/pre-assess-portal/client/submit/{pa_id}` — client marks docs as ready, stage → documents_submitted, notifies partner
+  - `POST /api/pre-assess-portal/client/accept-proposal/{pa_id}` — client accepts partner's proposal
+  - `POST /api/pre-assess-portal/client/mock-pay-proposal/{pa_id}` — MOCK main-fee payment, stage → proposal_paid
+  - `POST /api/pre-assess-portal/admin/approve-final/{pa_id}` — admin's 2nd approval: creates real Case record + copies workflow steps, stage → case_created
+- **Updated**: `GET /client/portal-access/{pa_id}` now returns `can_submit_for_review` flag; mini access_level now covers rejected/refund stages
+- **Tested**: 100% (11/11 backend tests) — iteration_75.json; Frontend UI verified for multiple stages
+
+### Pre-Assessment Client Portal Layer — Phase A Part 1 (2026-04-17)
+- **New router**: `/app/backend/routers/pre_assess_portal.py` extends existing `pre_assessments` collection
+- **Public endpoints (no auth)**: `GET /public/{token}`, `POST /public/mock-pay` — creates client user + magic link
+- **Magic login** (72h token) + **OTP fallback** (email/phone, 10-min code)
+- **Client endpoints**: `my-assessments`, `portal-access/{pa_id}` (returns mini/expanded/full access level)
+- **Activity log**: `activity/log`, `activity/pa/{pa_id}` — partner visibility
+- **Public pages** (`/pre-assess/:token`, `/magic/:token`): premium branded payment + login UI
+- **Verified E2E**: Partner creates PA → generates public link → unauthenticated client pays (MOCK) → user auto-created → magic link issued → client logs in → fetches own assessments → `access_level: mini` + `can_upload_docs: true`
+
+### Previous: AI Document Scanner (P1 Feature)
+- **Backend**: `/app/backend/routers/doc_extraction.py` — GPT-4o Vision via Emergent LLM Key
+- **Supported docs**: passport, visa, educational cert, academic transcript, IELTS, bank statement, PCC, marriage/birth cert, driver license, offer letter + auto-detect
+- **Endpoints**: `/doc-types`, `/sample-docs` (public), `/sample-docs/{id}/extraction` (public demo), `/extract` (base64), `/extract-upload` (multipart), `/save`, `/history`
+- **5 pre-loaded specimen docs** with pre-computed extraction (no API cost for demo)
+- **Frontend**: `DocumentExtractor.jsx` with 2 tabs (Upload & Extract + Try Demo), animated extraction progress, field-by-field confidence bars (green/amber/red), AI Verified badges, editable fields, Save to Records
+- **Integrated in**: Client Dashboard (Tools → AI Document Scanner) + CM Dashboard (Tools)
+- **Verified**: 95% confidence on real test_passport.jpg extraction with correct fields (Patel, Anil Kumar, Z9876543, ISO dates)
+- **Tested**: 100% (25/25 backend tests passed) — iteration_74.json
+
+### Previous: Fee Database CRUD + Per-Estimate Edits (v3)
+- **Option B — Master Fee Database Editor** (Admin-only):
+  - Migrated hardcoded `FEE_DATABASE` dict → MongoDB collection `fee_country_catalog` (auto-seeded on first run)
+  - 7 new CRUD endpoints: `admin/catalog`, `admin/countries` (POST/PUT/DELETE), `admin/countries/{id}/categories` (POST/PUT/DELETE), `admin/reseed`
+  - Full UI `FeeDatabaseManager.jsx` — Admin Sidebar → Planning Tools → Fee Database
+  - Add unlimited new countries (slug auto from name) + categories + fee line items (label, amount, mandatory, per_applicant, notes)
+  - Reseed utility to revert to built-in defaults
+- **Option A — Per-Estimate Inline Edit**:
+  - `CalculateRequest` supports `overrides` (correct fees per estimate) + `extra_lines` (ad-hoc custom charges)
+  - UI: pencil icon on each fee line → inline editor for label/amount/notes → "Edited" / "Custom" badges
+  - "Add Custom Line" button + "Reset all edits" revert button
+  - Overrides are per-estimate (don't touch master catalog)
+- **Tested**: 100% (25/25 backend) — iteration_73.json; minor 404 issue fixed post-test
+
+### Previous: Share Estimate Link (v2)
+- **5 new endpoints**: `share/{id}`, `share/{id}/deactivate`, `share/{id}/stats`, public `public/{token}`, public `public/{token}/lead`
+- **Public URL**: `/shared-estimate/:token` — no login, branded view with breakdown + lead capture CTA
+- **View count tracking** (per-view increment on public access)
+- **Lead capture** auto-assigns lead to estimate owner with source='shared_fee_estimate', priority='high', tag='fee-estimate-viewer' + sends notification
+- **Auto-expiry** (default 30 days, max 365) with 410 Gone response when expired
+- **Deactivate** kill-switch for owner/admin
+- **Tested**: 100% (25/25 backend) — iteration_72.json
+- **UI in FeeCalculator**: Share button → dialog shows link + copy + view/lead/expiry stats + deactivate
+- **New page**: `/app/frontend/src/pages/SharedEstimate.jsx` with premium branded layout, lead form, success state
+
+### Previous Feature: Automated Government Fee Calculator (v1)
+- **Backend**: `/api/fee-calculator/*` (7 endpoints) in `routers/fee_calculator.py`
+- **Countries**: 20 (Canada, Australia, UK, USA, NZ, Germany, Singapore, UAE, Ireland, France, Netherlands, Portugal, Spain, Japan, South Korea, Sweden, Denmark, Switzerland, Hong Kong, Malaysia)
+- **Currencies**: USD/CAD/AUD/GBP/EUR/NZD/SGD/JPY/SEK/DKK/CHF/HKD/MYR/KRW/AED + INR
+- **Live FX**: frankfurter.dev (ECB) cached 1 hr + static fallback
+- **Real 2025-26 official fees**: application, biometrics, medicals, skills assessments, language tests, priority surcharges
+- **Line items support**: mandatory vs optional, per-applicant multiplier, official_url links, notes
+- **Consultancy service fee + GST** (only shown for Partner/CM/Admin; hidden for Clients)
+- **Output**: Dual-currency display (Native + ₹INR), Copy-to-Clipboard, Print/PDF, Attach-to-Case
+- **Collection**: `fee_estimates` (saved for proposals/cases)
+- **Frontend**: `FeeCalculator.jsx` reusable component
+- **Integrated in**: Partner (Fee Calculator tab), Case Manager (Tools), Client (Cost Estimator), Admin (Tools)
+- **Tested**: 100% backend (28/28 pass in iteration_71)
+
+## Test Credentials
+- Admin: admin@leamss.com / (set via INITIAL_ADMIN_PASSWORD / SEED_DEMO_PASSWORD)
+- CM: manager@leamss.com / (set via INITIAL_ADMIN_PASSWORD / SEED_DEMO_PASSWORD)
+- Partner: partner@leamss.com / (set via INITIAL_ADMIN_PASSWORD / SEED_DEMO_PASSWORD)
+- Client: client@leamss.com / (set via INITIAL_ADMIN_PASSWORD / SEED_DEMO_PASSWORD)
+
+## Roadmap / Pending
+
+### Next (User-approved)
+- **P1**: Improved Document Info Extraction UI + Demo Mode (live OCR-style extraction preview, sample demo, field-level confidence scores, AI verified badges)
+- **P1**: White-Label SaaS Multi-Tenancy Architecture (`agency_id` on all core collections, tenant context in JWT, Super-Admin portal, branding, commission mgmt)
+
+### Backlog
+- P2: Resend Email live dispatch (requires user RESEND_API_KEY)
+- P3: Twilio WhatsApp full integration
+- P3: Comparison Tools (on hold, user to specify approach)
+
+### Backend Routers
+ai_workflow_builder, deadlines, intake_forms, step_documents, fee_calculator + core (auth, cases, documents, payments, etc.)

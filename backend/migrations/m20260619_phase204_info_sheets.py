@@ -10,7 +10,7 @@ Migrates flat-keyed `information_sheets` docs to canonical 6-section schema:
   6. resume (NEW — file_url + AI-extracted JSON + summary)
 
 Idempotent. Registers Phase 19.6 revocable batch with full pre-state snapshots.
-Backup snapshot saved to /app/memory/snapshots/ before mutation.
+Backup snapshot saved to backups/snapshots/ (git-ignored) before mutation.
 
 Old flat-key pattern (Phase 6.7 era):
   child_0_name, child_0_dob, ... child_19_*
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 COLLECTION = "information_sheets"
 SCHEMA_VERSION = 2
-SNAPSHOT_DIR = Path(f"{APP_ROOT}/memory/snapshots")
+SNAPSHOT_DIR = Path(f"{APP_ROOT}/backups/snapshots")
 
 
 # Personal Details section fields (flat → personal.*)
@@ -182,7 +182,7 @@ async def migrate(db: AsyncIOMotorDatabase, user_id: str = "system", dry_run: bo
     """Run idempotent migration.
 
     Skips docs already at SCHEMA_VERSION=2. Backs up entire collection
-    to /app/memory/snapshots/<ts>_information_sheets_premigration.json.
+    to backups/snapshots/ (git-ignored)<ts>_information_sheets_premigration.json.
     """
     from services import import_batch_service as ibs
 

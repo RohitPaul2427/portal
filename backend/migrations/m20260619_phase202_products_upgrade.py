@@ -31,7 +31,7 @@ for line in env_path.read_text().splitlines():
         os.environ.setdefault(k.strip(), v.strip())
 
 
-BACKUP_DIR = Path(f"{APP_ROOT}/memory/snapshots")
+BACKUP_DIR = Path(f"{APP_ROOT}/backups/snapshots")
 BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
 VALID_CATEGORIES = {

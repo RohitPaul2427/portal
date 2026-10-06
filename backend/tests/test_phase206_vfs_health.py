@@ -10,7 +10,7 @@ import pytest
 
 SCRIPT_PATH = Path("/app/backend/scripts/verify_vfsglobal_urls.py")
 MAP_PATH = Path("/app/backend/data/vfsglobal_country_map.json")
-HEALTH_PATH = Path("/app/memory/seeds/vfsglobal_url_health.json")
+HEALTH_PATH = Path(__file__).resolve().parents[1] / "seeds" / "reference" / "vfsglobal_url_health.json"
 
 
 def test_206_vfs_map_file_exists():
