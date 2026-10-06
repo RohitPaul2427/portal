@@ -26,6 +26,7 @@ Endpoints:
   GET    /api/pa-agreements/{aid}/pdf                      — render as PDF
   POST   /api/pa-agreements/{aid}/sign                     — client signs (attaches canvas signature)
 """
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import os
 import uuid
 import base64
@@ -48,8 +49,8 @@ pa_col = db["pre_assessments"]
 notifications_col = db["notifications"]
 signatures_col = db["pa_signatures"]
 
-AGREEMENT_PDF_DIR = "/app/uploads/agreements"
-SIG_DIR = "/app/uploads/signatures"
+AGREEMENT_PDF_DIR = f"{UPLOADS_ROOT}/agreements"
+SIG_DIR = f"{UPLOADS_ROOT}/signatures"
 os.makedirs(AGREEMENT_PDF_DIR, exist_ok=True)
 
 # SECURITY: template *markup* is admin-controlled, but the values merged into it
@@ -774,7 +775,7 @@ def _render_agreement_pdf(a: dict, out_path: str):
         if a.get("signature_id"):
             # best-effort fetch from file system via id pattern
             import glob
-            found = glob.glob(f"/app/uploads/signatures/agr_sig_{a['id']}_*.png")
+            found = glob.glob(f"{UPLOADS_ROOT}/signatures/agr_sig_{a['id']}_*.png")
             if found:
                 sig = Image(found[0], width=160, height=60)
         left = [Paragraph("<b>Client Signature</b>", body)]

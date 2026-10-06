@@ -1,12 +1,15 @@
 """One-shot script to delete all test pre-assessments, cases, sales, documents, and activity.
 Preserves: users (admin/partner/cm/client), products, workflows, fee_database, promo_codes, upsell_bundles.
 """
+import os as _os, sys as _sys  # noqa: E401
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401,E402
 import asyncio
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 
-load_dotenv('/app/backend/.env')
+load_dotenv(f'{APP_ROOT}/backend/.env')
 
 COLLECTIONS_TO_CLEAR = [
     "pre_assessments",

@@ -8,6 +8,9 @@ Run: cd /app/backend && python3 migrations/m20260619_phase202_products_upgrade.p
 """
 from __future__ import annotations
 
+import os as _os, sys as _sys  # noqa: E401
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401,E402
 import asyncio
 import hashlib
 import json
@@ -16,19 +19,19 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.path.insert(0, "/app/backend")
+sys.path.insert(0, f"{APP_ROOT}/backend")
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # Load .env
-env_path = Path("/app/backend/.env")
+env_path = Path(f"{APP_ROOT}/backend/.env")
 for line in env_path.read_text().splitlines():
     if "=" in line and not line.startswith("#"):
         k, v = line.split("=", 1)
         os.environ.setdefault(k.strip(), v.strip())
 
 
-BACKUP_DIR = Path("/app/memory/snapshots")
+BACKUP_DIR = Path(f"{APP_ROOT}/memory/snapshots")
 BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
 VALID_CATEGORIES = {

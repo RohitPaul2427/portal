@@ -3,6 +3,7 @@
 A unified product carries both workflow-builder fields AND cost-structure fields
 (country, visa_type, service_price, cost_allocations, success_bonuses, computed margin).
 """
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import os
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
@@ -419,7 +420,7 @@ async def delete_workflow_step(product_id: str, step_order: int, current_user: d
 # Package Info Document Upload (PDF) — admin uploads a document
 # describing a specific package (e.g. Standard/Smart/Premium/custom)
 # ──────────────────────────────────────────────────────────────
-PACKAGE_DOCS_DIR = "/app/uploads/product_packages"
+PACKAGE_DOCS_DIR = f"{UPLOADS_ROOT}/product_packages"
 os.makedirs(PACKAGE_DOCS_DIR, exist_ok=True)
 
 

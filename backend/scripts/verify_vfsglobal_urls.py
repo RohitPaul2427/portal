@@ -8,9 +8,9 @@ Output: /app/memory/seeds/vfsglobal_url_health.json
 """
 from __future__ import annotations
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import os as _os, sys as _sys  # noqa: E401
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401,E402
 from core.net import HTTP_VERIFY  # noqa: E402
 import asyncio
 import json
@@ -23,7 +23,7 @@ import httpx
 
 
 MAP_PATH = Path(__file__).resolve().parent.parent / "data" / "vfsglobal_country_map.json"
-OUT_PATH = Path("/app/memory/seeds/vfsglobal_url_health.json")
+OUT_PATH = Path(f"{APP_ROOT}/memory/seeds/vfsglobal_url_health.json")
 OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 SEMAPHORE_LIMIT = 10

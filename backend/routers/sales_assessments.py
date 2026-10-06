@@ -18,6 +18,7 @@ import secrets
 import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, File, UploadFile
 from pydantic import BaseModel, Field
 
@@ -26,6 +27,8 @@ from core.database import db
 from core.sales_calculator import calculate, calculate_with_rules
 from core.sales_checklist import build_checklist
 from core.share_audit import record_share_event
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/sales/assessments", tags=["Smart Sales Helper - Assessments"])
 

@@ -6,6 +6,7 @@ Codes are sourced from official ANZSCO/NOC/NZ ANZSCO lists.
 Usage:
     python -m core.eligibility_kb_bulk_seed
 """
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 from datetime import datetime, timezone
 from typing import List, Dict, Any
 
@@ -282,7 +283,7 @@ async def expand_seed():
     import os
     from motor.motor_asyncio import AsyncIOMotorClient
     from dotenv import load_dotenv
-    load_dotenv('/app/backend/.env')
+    load_dotenv(f'{APP_ROOT}/backend/.env')
     client = AsyncIOMotorClient(os.environ['MONGO_URL'])
     db = client[os.environ['DB_NAME']]
 

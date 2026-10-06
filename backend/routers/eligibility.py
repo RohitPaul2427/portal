@@ -5,6 +5,7 @@ score 8-10 visa pathways and returns ranked recommendations.
 
 Public (no auth) endpoint to maximize lead generation reach.
 """
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import os
 import uuid
 import json
@@ -449,7 +450,7 @@ async def get_share(score_id: str):
     return rec
 
 
-REPORTS_DIR = "/app/uploads/reports"
+REPORTS_DIR = f"{UPLOADS_ROOT}/reports"
 os.makedirs(REPORTS_DIR, exist_ok=True)
 
 _TIER_PDF = {
@@ -460,7 +461,7 @@ _TIER_PDF = {
 }
 
 
-LOGO_PATH = "/app/frontend/public/leamss-logo.png"
+LOGO_PATH = f"{APP_ROOT}/frontend/public/leamss-logo.png"
 _CONTACT = {
     "website": "www.leamss.com",
     "phone": "+91 77188 82427",
