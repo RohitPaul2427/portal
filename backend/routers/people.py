@@ -16,6 +16,7 @@ Endpoints:
   POST   /api/people/{id}/reset-password      — admin force reset (sets temp password)
   GET    /api/people/stats                    — counts by type/role/status
 """
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import uuid
 import secrets
 import os
@@ -35,7 +36,7 @@ router = APIRouter(prefix="/people", tags=["Phase 4D - Unified People Management
 vendors_col = db["vendors"]
 
 # Phase 4D+ — Onboarding document storage
-ONBOARDING_DIR = Path("/app/uploads/people_documents")
+ONBOARDING_DIR = Path(f"{UPLOADS_ROOT}/people_documents")
 ONBOARDING_DIR.mkdir(parents=True, exist_ok=True)
 MAX_DOC_SIZE = 10 * 1024 * 1024  # 10 MB per document
 ALLOWED_DOC_MIME = {

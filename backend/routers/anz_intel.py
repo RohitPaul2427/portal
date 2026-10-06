@@ -1938,17 +1938,14 @@ async def ai_extract_preview(
     "raw_ai_response": text,
 }
     except Exception as e:
-   
-
-     traceback.print_exc()
-
-    raise HTTPException(
-        status_code=500,
-        detail={
-            "type": type(e).__name__,
-            "error": str(e),
-        },
-    )
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "type": type(e).__name__,
+                "error": str(e),
+            },
+        )
 
     # Strip code fences if present
     # if text.startswith("```"):

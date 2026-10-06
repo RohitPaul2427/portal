@@ -12,6 +12,7 @@ Checks:
 
 Rate limited: max 1 concurrent run per user · max 10 runs / day / workspace.
 """
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import os
 import re
 import json
@@ -44,7 +45,7 @@ MAX_SAMPLE = 25
 DAILY_RUN_CAP = 10
 RUN_TTL_DAYS = 90
 
-ATLAS_DIR = Path("/app/frontend/public/atlas")
+ATLAS_DIR = Path(f"{APP_ROOT}/frontend/public/atlas")
 PUBLIC_BASE = (os.environ.get("REACT_APP_BACKEND_URL") or "http://localhost:3000").rstrip("/")
 
 
@@ -187,7 +188,7 @@ async def _run_audit_in_background(run_id: str, scope: str, sample_size: int) ->
             for fpath in _collect_atlas_pages(sample_size):
                 try:
                     html = fpath.read_text(encoding="utf-8")[:200_000]
-                    rel = "/" + str(fpath.relative_to(Path("/app/frontend/public"))).replace("\\", "/")
+                    rel = "/" + str(fpath.relative_to(Path(f"{APP_ROOT}/frontend/public"))).replace("\\", "/")
                     pages.append(await _audit_one_page(html, rel, ["BreadcrumbList", "FAQPage"], sample_links))
                 except Exception as e:
                     logger.warning("Atlas page audit failed for %s: %s", fpath, e)

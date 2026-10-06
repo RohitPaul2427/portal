@@ -2,6 +2,7 @@
 
 Employee submits → manager approves → HR approves → eligible for next payroll run.
 """
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import uuid
 import os
 from pathlib import Path
@@ -20,7 +21,7 @@ reimb_col = db["reimbursement_claims"]
 activity_col = db["activity_log"]
 
 # Phase 21 Slice 3 Backlog B.1 — bill file storage
-UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", "/app/backend/uploads"))
+UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", f"{APP_ROOT}/backend/uploads"))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 BILL_MAX_BYTES = 5 * 1024 * 1024  # 5 MB
 BILL_ALLOWED_MIME = {

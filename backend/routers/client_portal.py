@@ -20,6 +20,7 @@ X5 (Option D): Admin/CM/sales preview endpoint:
 """
 from __future__ import annotations
 
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import logging
 import os
 import uuid
@@ -42,7 +43,7 @@ DOCS_COLL = "client_documents"
 PROP_COLL = "proposals"
 INFO_SHEETS_COLL = "information_sheets"
 PA_COLL = "pre_assessments"
-UPLOAD_DIR = "/app/backend/uploads/client_docs"
+UPLOAD_DIR = f"{APP_ROOT}/backend/uploads/client_docs"
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 ALLOWED_MIME = {"application/pdf", "image/png", "image/jpeg", "image/webp",

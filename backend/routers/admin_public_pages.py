@@ -113,7 +113,7 @@ DEFAULTS = {
 # ─── Module 1: URL Browser + QR ─────────────────────────────────────────────
 @router.get("/urls")
 async def list_public_urls(
-    country: Optional[str] = Query(None, regex="^(AU|CA|NZ|all)$"),
+    country: Optional[str] = Query(None, pattern="^(AU|CA|NZ|all)$"),
     search: Optional[str] = Query(None, max_length=80),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),

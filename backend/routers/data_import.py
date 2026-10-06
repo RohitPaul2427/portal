@@ -11,6 +11,7 @@ Auth: admin only on all routes (audit-logged on commit).
 """
 from __future__ import annotations
 
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import logging
 import os
 import uuid
@@ -38,7 +39,7 @@ from services import jsa_importer
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/data-import", tags=["data-import"])
 
-STORAGE_DIR = Path(os.environ.get("DATA_IMPORT_STORAGE", "/app/backend/storage/jsa_imports"))
+STORAGE_DIR = Path(os.environ.get("DATA_IMPORT_STORAGE", f"{APP_ROOT}/backend/storage/jsa_imports"))
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 PARSER_REGISTRY = {

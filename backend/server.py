@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+import core.llm_env  # noqa: E402,F401  (maps provider API keys for AI features)
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware

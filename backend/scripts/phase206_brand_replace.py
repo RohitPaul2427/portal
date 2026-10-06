@@ -5,6 +5,9 @@ tokens across priority frontend files. Idempotent — re-running has no effect.
 
 Run: cd /app && python3 backend/scripts/phase206_brand_replace.py
 """
+import os as _os, sys as _sys  # noqa: E401
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401,E402
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -107,7 +110,7 @@ def apply(text: str) -> Tuple[str, int]:
 
 
 def main():
-    base = Path("/app")
+    base = Path(APP_ROOT)
     out = []
     for rel in PRIORITY_FILES:
         p = base / rel

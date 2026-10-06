@@ -1,4 +1,5 @@
 """Payment Router — Stripe Checkout for Client Payments"""
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import os
 import uuid
 from datetime import datetime, timezone
@@ -259,7 +260,7 @@ async def get_payment_history(sale_id: str, current_user: dict = Depends(get_cur
     return transactions
 
 
-RECEIPTS_DIR = "/app/uploads/receipts"
+RECEIPTS_DIR = f"{UPLOADS_ROOT}/receipts"
 os.makedirs(RECEIPTS_DIR, exist_ok=True)
 
 
@@ -289,7 +290,7 @@ def _generate_receipt_pdf(sale: dict, transaction: dict, filename: str):
     elements = []
 
     # Logo Header
-    logo_path = "/app/backend/uploads/leamss-logo.png"
+    logo_path = f"{APP_ROOT}/backend/uploads/leamss-logo.png"
     if os.path.exists(logo_path):
         logo = Image(logo_path, width=180, height=80)
         logo.hAlign = 'CENTER'

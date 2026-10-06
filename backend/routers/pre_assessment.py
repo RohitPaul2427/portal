@@ -4,6 +4,7 @@ Partner submits docs to Admin → Admin approves/rejects →
 If approved: Partner sends sales proposal with payment link → Client pays → Case starts
 If rejected: ₹5,100 refunded
 """
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import os
 import uuid
 import logging
@@ -52,6 +53,7 @@ def _assert_pa_owner(pa: dict, current_user: dict):
     raise HTTPException(status_code=403, detail="You don't have permission to access this pre-assessment")
 
 pre_assessments_col = db["pre_assessments"]
+cases_col = db["cases"]
 pre_assessment_docs_col = db["pre_assessment_documents"]
 payment_transactions_col = db["payment_transactions"]
 notifications_col = db["notifications"]
@@ -659,8 +661,12 @@ async def upload_pa_document(
         raise HTTPException(status_code=404, detail="Pre-assessment not found")
 
     # Save file
-    os.makedirs(f"/app/uploads/pre_assessments/{pa_id}", exist_ok=True)
-    file_path = f"/app/uploads/pre_assessments/{pa_id}/{file.filename}"
+    os.makedirs(f"{UPLOADS_ROOT}/pre_assessments/{pa_id}", exist_ok=True)
+    # SECURITY: strip any directory components from the client-supplied filename
+    # (prevents "../../" path traversal) and keep only safe characters.
+    _base = os.path.basename((file.filename or "document").replace("\\", "/"))
+    _safe = "".join(c if c.isalnum() or c in "._-" else "_" for c in _base)[:150] or "document"
+    file_path = f"{UPLOADS_ROOT}/pre_assessments/{pa_id}/{uuid.uuid4().hex[:8]}_{_safe}"
     with open(file_path, "wb") as f:
         content = await file.read()
         f.write(content)
@@ -717,7 +723,7 @@ async def set_pa_occupation(
 
     # Lookup occupation details if needed
     if not occ_title or not auth_code:
-        occ = await db_client.get_database()["occupation_master"].find_one(
+        occ = await db["occupation_master"].find_one(
             {"$or": [{"code": occ_code}, {"anzsco_code": occ_code}]},
             {"_id": 0}
         )

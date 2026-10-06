@@ -7,6 +7,7 @@ Endpoints:
   POST /api/proposal-docs/{pa_id}/esign          — save client signature (base64 PNG)
   GET  /api/proposal-docs/{pa_id}/esign          — get signature meta + data_url
 """
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import os
 import uuid
 import base64
@@ -28,8 +29,8 @@ invoices_col = db["pa_invoices"]
 notifications_col = db["notifications"]
 users_col = db["users"]
 
-PDF_DIR = "/app/uploads/proposal_docs"
-SIG_DIR = "/app/uploads/signatures"
+PDF_DIR = f"{UPLOADS_ROOT}/proposal_docs"
+SIG_DIR = f"{UPLOADS_ROOT}/signatures"
 os.makedirs(PDF_DIR, exist_ok=True)
 os.makedirs(SIG_DIR, exist_ok=True)
 
@@ -82,7 +83,7 @@ def _build_proposal_pdf(pa: dict, out_path: str, doc_kind: str = "proposal"):
 
     elems = []
     # Header
-    logo_path = "/app/backend/uploads/leamss-logo.png"
+    logo_path = f"{APP_ROOT}/backend/uploads/leamss-logo.png"
     if os.path.exists(logo_path):
         img = Image(logo_path, width=140, height=60)
         img.hAlign = "LEFT"

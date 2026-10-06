@@ -1,4 +1,5 @@
 """PDF Report Generation Router"""
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import FileResponse
 from core.database import sales_col, users_col, cases_col, products_col, db
@@ -10,7 +11,7 @@ import uuid
 
 router = APIRouter(prefix="/reports/export", tags=["Reports Export"])
 
-REPORTS_DIR = "/app/uploads/reports"
+REPORTS_DIR = f"{UPLOADS_ROOT}/reports"
 os.makedirs(REPORTS_DIR, exist_ok=True)
 
 
@@ -29,7 +30,7 @@ def _generate_sales_pdf(sales_data, title, filename):
     elements = []
 
     # Logo Header
-    logo_path = "/app/backend/uploads/leamss-logo.png"
+    logo_path = f"{APP_ROOT}/backend/uploads/leamss-logo.png"
     if os.path.exists(logo_path):
         logo = Image(logo_path, width=160, height=70)
         logo.hAlign = 'LEFT'
@@ -110,7 +111,7 @@ def _generate_commission_pdf(data, title, filename):
     elements = []
 
     # Logo Header
-    logo_path = "/app/backend/uploads/leamss-logo.png"
+    logo_path = f"{APP_ROOT}/backend/uploads/leamss-logo.png"
     if os.path.exists(logo_path):
         logo = Image(logo_path, width=160, height=70)
         logo.hAlign = 'LEFT'
@@ -320,7 +321,7 @@ def _generate_info_sheet_pdf(data, client_name, case_number, filename):
     elements = []
 
     # Logo Header
-    logo_path = "/app/backend/uploads/leamss-logo.png"
+    logo_path = f"{APP_ROOT}/backend/uploads/leamss-logo.png"
     if os.path.exists(logo_path):
         logo = Image(logo_path, width=160, height=70)
         logo.hAlign = 'CENTER'

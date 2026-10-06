@@ -13,6 +13,7 @@ Endpoints:
 """
 from __future__ import annotations
 
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401
 import logging
 import os
 import uuid
@@ -32,7 +33,7 @@ from services.audit_service import log_action
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/state-nominations", tags=["state-nominations"])
 
-STORAGE_DIR = Path(os.environ.get("STATE_NOM_STORAGE", "/app/backend/storage/state_nominations"))
+STORAGE_DIR = Path(os.environ.get("STATE_NOM_STORAGE", f"{APP_ROOT}/backend/storage/state_nominations"))
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 ADMIN_ROLES = {"admin", "admin_owner", "super_admin"}

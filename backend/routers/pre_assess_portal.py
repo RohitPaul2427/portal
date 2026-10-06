@@ -712,6 +712,12 @@ async def create_order(data: PublicCreateOrderRequest):
         },
     })
 
+    # SECURITY: remember which order belongs to this PA so verify-payment can't be
+    # satisfied with a (cheaper) order/payment from a different PA.
+    await pre_assessments_col.update_one({"id": pa["id"]}, {"$set": {
+        "razorpay_pending_order_id": order["id"],
+        "razorpay_pending_amount_paise": amount_paise,
+    }})
     await _log(pa.get("client_user_id") or "public", pa["id"], "razorpay_order_created",
                {"order_id": order["id"], "amount": amount_rupees})
 
@@ -735,6 +741,12 @@ async def verify_payment(data: PublicVerifyPaymentRequest):
     pa = await pre_assessments_col.find_one({"share_token": data.token}, {"_id": 0})
     if not pa:
         raise HTTPException(status_code=404, detail="Link not found")
+
+    # ---- The order must be the one we created for THIS link ----
+    if not pa.get("razorpay_pending_order_id") or data.order_id != pa.get("razorpay_pending_order_id"):
+        raise HTTPException(status_code=400, detail="Payment verification failed - order does not match this link")
+    if await pre_assessments_col.find_one({"razorpay_payment_id": data.payment_id}, {"_id": 1}):
+        raise HTTPException(status_code=400, detail="This payment has already been used")
 
     # ---- Verify Razorpay signature (this proves the payment is real, not faked) ----
     try:
@@ -1402,6 +1414,9 @@ async def proposal_create_order(pa_id: str, current_user: dict = Depends(get_cur
         "notes": {"pa_id": pa_id, "part_index": str(next_part["index"]), "purpose": "proposal_installment"},
     })
 
+    await pre_assessments_col.update_one({"id": pa_id}, {"$set": {
+        "proposal_pending_razorpay_order_id": order["id"],
+    }})
     await _log(current_user["id"], pa_id, "razorpay_proposal_order_created",
                {"order_id": order["id"], "amount": amount_rupees, "part": next_part["label"]})
 
@@ -1428,6 +1443,13 @@ async def proposal_verify_payment(pa_id: str, data: ProposalVerifyPaymentRequest
     if not razorpay_client or not razorpay:
         raise HTTPException(status_code=500, detail="Razorpay is not configured on this server")
 
+    _pa = await pre_assessments_col.find_one({"id": pa_id}, {"_id": 0, "proposal_pending_razorpay_order_id": 1,
+                                                              "proposal_paid_payment_ids": 1})
+    if not _pa or data.order_id != _pa.get("proposal_pending_razorpay_order_id"):
+        raise HTTPException(status_code=400, detail="Payment verification failed - order does not match this proposal")
+    if data.payment_id in (_pa.get("proposal_paid_payment_ids") or []):
+        raise HTTPException(status_code=400, detail="This payment has already been used")
+
     try:
         razorpay_client.utility.verify_payment_signature({
             "razorpay_order_id": data.order_id,
@@ -1441,8 +1463,9 @@ async def proposal_verify_payment(pa_id: str, data: ProposalVerifyPaymentRequest
         "proposal_last_razorpay_order_id": data.order_id,
         "proposal_last_razorpay_payment_id": data.payment_id,
         "proposal_payment_method": "razorpay_live",
+        "proposal_pending_razorpay_order_id": None,
         "updated_at": _now(),
-    }})
+    }, "$addToSet": {"proposal_paid_payment_ids": data.payment_id}})
 
     # Reuse the existing part-marking logic (this returns the same response shape frontend expects)
     return await client_mock_pay_proposal(pa_id, current_user)

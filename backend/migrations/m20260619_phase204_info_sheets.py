@@ -28,6 +28,9 @@ New canonical pattern (Phase 20.4):
 """
 from __future__ import annotations
 
+import os as _os, sys as _sys  # noqa: E401
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+from core.paths import APP_ROOT, UPLOADS_ROOT  # noqa: F401,E402
 import hashlib
 import json
 import logging
@@ -43,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 COLLECTION = "information_sheets"
 SCHEMA_VERSION = 2
-SNAPSHOT_DIR = Path("/app/memory/snapshots")
+SNAPSHOT_DIR = Path(f"{APP_ROOT}/memory/snapshots")
 
 
 # Personal Details section fields (flat → personal.*)
