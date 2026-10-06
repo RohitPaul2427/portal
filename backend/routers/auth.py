@@ -180,6 +180,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
         # Security
         "two_fa_enabled": current_user.get("two_fa_enabled", False),
+        "must_change_password_on_next_login": current_user.get("must_change_password_on_next_login", False),
 
         # Profile
         "emergency_contact": current_user.get("emergency_contact"),

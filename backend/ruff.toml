@@ -1,0 +1,8 @@
+# Ruff configuration for the LEAMSS backend.
+# CI enforces only "real bug" rules today (syntax errors, undefined names, ...).
+# Tighten gradually: add "F401", "B", "S" once the existing findings are fixed.
+target-version = "py311"
+line-length = 140
+
+[lint]
+select = ["E9", "F63", "F7", "F82"]

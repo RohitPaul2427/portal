@@ -1,3 +1,4 @@
+import os
 """Populate the Skill Assessment Fee Master with official 2026 assessing-authority fees (AU).
 Sources: official authority websites (VETASSESS, TRA, EA, ACS, ANMAC, AITSL, CAANZ, AMC,
 APC, ADC, APS, CPA Australia, IML/AIM, ASMIRT, NAATI, ACECQA, AIMS, SPA, Dietitians,
@@ -11,7 +12,7 @@ for line in open('/app/frontend/.env').read().splitlines():
         API = line.split('=', 1)[1].strip() + '/api'
 
 s = requests.Session()
-tok = s.post(f'{API}/auth/login', json={'email': 'admin@leamss.com', 'password': 'Admin@123'}).json()['token']
+tok = s.post(f'{API}/auth/login', json={'email': os.environ.get('ADMIN_EMAIL', 'admin@leamss.com'), 'password': os.environ['ADMIN_PASS']}).json()['token']
 H = {'Authorization': f'Bearer {tok}'}
 
 # names from the live catalog

@@ -1,5 +1,4 @@
-version: '3.8'
-
+# Production-style stack. Create backend/.env from backend/.env.example first.
 services:
   backend:
     build:
@@ -7,18 +6,27 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - .env
+      - ./backend/.env
+    environment:
+      ENVIRONMENT: production
     ports:
       - "8001:8001"
+    volumes:
+      - uploads:/app/uploads
+      - backend_storage:/app/backend/storage
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - REACT_APP_BACKEND_URL=https://api.leamss.com
+        REACT_APP_BACKEND_URL: https://api.leamss.com
     restart: always
     ports:
       - "3000:80"
     depends_on:
       - backend
+
+volumes:
+  uploads:
+  backend_storage:

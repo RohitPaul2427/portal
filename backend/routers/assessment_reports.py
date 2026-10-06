@@ -230,13 +230,46 @@ async def _build_occupation_comparison(
 
 
 def _occupation_open_map(occ_doc: Dict[str, Any]) -> Dict[str, Optional[bool]]:
-    """From an occupation_master doc, which GSM subclasses accept this occupation."""
+    """Which GSM subclasses accept this occupation, per the official Skilled Occupation List.
+
+    Rule (Home Affairs):
+      • MLTSSL  → open for 189, 190 and 491
+      • STSOL   → open for 190 and 491 (NOT 189)
+      • ROL     → open for 491 only
+    Explicit `visa_eligibility` entries (if present) take priority; otherwise we derive from
+    the occupation's SOL list membership (`pathway_lists`).
+    """
     out: Dict[str, Optional[bool]] = {"189": None, "190": None, "491": None}
     vp = (occ_doc or {}).get("visa_pathways") or {}
+
+    # 1) Derive from SOL list membership
+    lists = {str(x).upper() for x in (vp.get("pathway_lists") or [])}
+    if lists:
+        on_mltssl = "MLTSSL" in lists
+        on_stsol = "STSOL" in lists or "CSOL" in lists  # CSOL is the current short/medium equivalent
+        on_rol = "ROL" in lists
+        out["189"] = bool(on_mltssl)
+        out["190"] = bool(on_mltssl or on_stsol)
+        out["491"] = bool(on_mltssl or on_stsol or on_rol)
+
+    # 2) Explicit per-subclass eligibility overrides the derived value; also fold each
+    #    entry's SOL `list` into the GSM derivation (e.g. a 190 entry on STSOL → 190 open).
+    lists2 = set(lists)
     for ve in (vp.get("visa_eligibility") or []):
         sc = str(ve.get("visa_subclass") or "")
+        lst = str(ve.get("list") or "").upper()
+        if lst in ("MLTSSL", "STSOL", "ROL", "CSOL"):
+            lists2.add(lst)
         if sc in out:
             out[sc] = bool(ve.get("eligible"))
+    if lists2 and lists2 != lists:
+        on_mltssl = "MLTSSL" in lists2
+        on_stsol = "STSOL" in lists2 or "CSOL" in lists2
+        on_rol = "ROL" in lists2
+        for sc, val in (("189", on_mltssl), ("190", on_mltssl or on_stsol),
+                        ("491", on_mltssl or on_stsol or on_rol)):
+            if out[sc] is None and val:
+                out[sc] = True
     return out
 
 

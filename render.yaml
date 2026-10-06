@@ -29,3 +29,16 @@ services:
         sync: false
       - key: INITIAL_ADMIN_PASSWORD
         sync: false
+      - key: APP_ROOT
+        value: /app
+      # Set to 0 after adding "python -m migrations.run_all" as a pre-deploy command
+      - key: RUN_STARTUP_MIGRATIONS
+        value: "1"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: SENTRY_DSN
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false

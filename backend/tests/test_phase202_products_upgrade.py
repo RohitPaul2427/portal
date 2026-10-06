@@ -161,7 +161,7 @@ def test_202_commissions_endpoint(headers):
 
 def test_202_backup_snapshot_exists():
     """Migration backup file must exist."""
-    snapshots = list(Path("/app/memory/snapshots").glob("pre_phase202_products_*.json"))
+    snapshots = list(Path(__file__).resolve().parents[2] / "backups" / "snapshots".glob("pre_phase202_products_*.json"))
     assert len(snapshots) >= 1, "Pre-migration snapshot missing"
     # Snapshot must contain at least 19 product entries
     import json

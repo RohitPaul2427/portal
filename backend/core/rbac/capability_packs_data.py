@@ -3,7 +3,7 @@
 Single source of truth. Both the boot-time seeder (`seed_capability_packs.py`)
 and the API endpoints (`routers/rbac_v2.py`) read from these constants.
 
-Mirrors `/app/memory/FEATURE_INVENTORY_FEB26.md` — 9 packs · 140 features · 14 categories.
+Mirrors `docs/history/FEATURE_INVENTORY_FEB26.md` — 9 packs · 140 features · 14 categories.
 """
 from typing import List, Dict, Any
 

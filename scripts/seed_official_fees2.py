@@ -1,3 +1,4 @@
+import os
 """Second batch — remaining niche AU assessing authorities with confirmed official fees.
 cmba (Chinese Medicine, bundled with AHPRA registration — no fixed skills-assessment fee) and
 isnsw (Surveyors NSW — no published figure) are intentionally left blank for manual entry."""
@@ -9,7 +10,7 @@ for line in open('/app/frontend/.env').read().splitlines():
         API = line.split('=', 1)[1].strip() + '/api'
 
 s = requests.Session()
-tok = s.post(f'{API}/auth/login', json={'email': 'admin@leamss.com', 'password': 'Admin@123'}).json()['token']
+tok = s.post(f'{API}/auth/login', json={'email': os.environ.get('ADMIN_EMAIL', 'admin@leamss.com'), 'password': os.environ['ADMIN_PASS']}).json()['token']
 H = {'Authorization': f'Bearer {tok}'}
 cur = {a['key']: a['authority_name'] for a in s.get(f'{API}/fee-master', headers=H).json()['authorities']}
 
