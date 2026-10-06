@@ -5,6 +5,7 @@ Combined coverage:
 - Phase 19.3: enriched fee data surfaced in atlas templates (occupation + country + hub)
 """
 from __future__ import annotations
+from typing import Any, Dict  # noqa: E402
 import os
 import re
 

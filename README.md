@@ -1,311 +1,138 @@
 # LEAMSS Immigration Portal
 
-## Overview
-A comprehensive immigration and visa consulting management system with 4 role-based portals for streamlined case management, sales tracking, and client communication.
-
-## Features
-
-### 🎯 Core Functionality
-- **4 Role-Based Portals**: Admin, Case Manager, Partner/Sales, Client
-- **Sales Management**: Complete sales workflow from creation to approval
-- **Case Management**: Multi-step workflow system with customizable stages
-- **Document Management**: Secure upload, review, and approval system using MongoDB GridFS
-- **Commission Tracking**: Automated commission calculation for partners
-- **User Management**: Role-based access control with secure authentication
-
-### 👥 User Roles
-
-#### Admin (Owner)
-- Approve/reject sales submissions
-- Create cases and assign case managers
-- Configure products/services and workflow templates
-- Manage users (case managers, partners)
-- View all cases, documents, and reports
-- Access dashboard with key metrics
-
-#### Case Manager
-- View and manage assigned cases only
-- Follow product-specific workflow steps
-- Review, approve, or reject client documents
-- Update case step statuses
-- Add internal notes and track progress
-
-#### Partner/Sales
-- Create new sales with client details
-- Upload mandatory documents (payment receipt, agreement, passport)
-- View sales status and history
-- Track commission earnings
-- Access sales performance dashboard
-
-#### Client
-- View case information and progress
-- Follow step-wise checklist
-- Upload required documents per workflow step
-- View document review status and comments
-- Track case manager communications
-
-## Tech Stack
-
-### Backend
-- **Framework**: FastAPI (Python 3.11)
-- **Database**: MongoDB with Motor (async driver)
-- **Authentication**: JWT tokens with bcrypt password hashing
-- **File Storage**: MongoDB GridFS
-- **API Style**: RESTful with automatic OpenAPI documentation
-
-### Frontend
-- **Framework**: React 19
-- **Styling**: Tailwind CSS with custom design system
-- **UI Components**: Shadcn/UI (Radix UI primitives)
-- **Routing**: React Router v7
-- **HTTP Client**: Axios
-- **Form Handling**: React Hook Form
-- **Notifications**: Sonner
-
-## Installation & Setup
-
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- MongoDB running on localhost:27017
-
-### Backend Setup
-```bash
-cd /app/backend
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Seed database with demo data
-python seed_data.py
-
-# Server runs on port 8001 (managed by supervisor)
-```
-
-### Frontend Setup
-```bash
-cd /app/frontend
-
-# Install dependencies
-yarn install
-
-# Development server runs on port 3000 (managed by supervisor)
-```
-
-## Demo Credentials
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@leamss.com | Admin@123 |
-| Case Manager | manager@leamss.com | Manager@123 |
-| Partner | partner@leamss.com | Partner@123 |
-| Client | client@leamss.com | Client@123 |
-
-## API Documentation
-
-### Authentication
-```bash
-# Login
-POST /api/auth/login
-Body: {"email": "admin@leamss.com", "password": "Admin@123"}
-Response: {"token": "jwt_token", "user": {...}}
-
-# Register (Admin only)
-POST /api/auth/register
-Headers: {"Authorization": "Bearer <token>"}
-Body: {"email": "...", "name": "...", "role": "...", "password": "..."}
-```
-
-### Products
-```bash
-# Create product (Admin)
-POST /api/products
-
-# Get all products
-GET /api/products
-
-# Add workflow step to product (Admin)
-POST /api/products/workflow-step
-```
-
-### Sales
-```bash
-# Create sale (Partner)
-POST /api/sales
-
-# Get my sales (Partner)
-GET /api/sales/my-sales
-
-# Get pending sales (Admin)
-GET /api/sales/pending
-
-# Approve/reject sale (Admin)
-POST /api/sales/approve
-```
-
-### Cases
-```bash
-# Get my cases (Case Manager/Client/Partner)
-GET /api/cases/my-cases
-
-# Get all cases (Admin)
-GET /api/cases
-
-# Get case details
-GET /api/cases/{case_id}
-
-# Update workflow step (Case Manager/Admin)
-POST /api/cases/update-step
-```
-
-### Documents
-```bash
-# Upload document
-POST /api/documents/upload
-Content-Type: multipart/form-data
-
-# Get case documents
-GET /api/documents/case/{case_id}
-
-# Review document (Case Manager/Admin)
-POST /api/documents/review
-```
-
-## Project Structure
-
-```
-/app/
-├── backend/
-│   ├── server.py              # Main FastAPI application
-│   ├── seed_data.py           # Database seeding script
-│   ├── requirements.txt       # Python dependencies
-│   └── .env                   # Environment variables
-├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Login.jsx
-│   │   │   ├── AdminDashboard.jsx
-│   │   │   ├── PartnerDashboard.jsx
-│   │   │   ├── CaseManagerDashboard.jsx
-│   │   │   └── ClientDashboard.jsx
-│   │   ├── components/ui/     # Shadcn UI components
-│   │   ├── App.js             # Main React component
-│   │   └── index.css          # Global styles
-│   ├── package.json
-│   └── .env
-└── design_guidelines.json     # UI/UX design system
-```
-
-## Workflows
-
-### Sale to Case Creation Flow
-1. Partner creates a new sale with client details and uploads mandatory documents
-2. Admin reviews and approves/rejects the sale
-3. On approval:
-   - System auto-creates a Client user account
-   - System auto-creates a Case with workflow steps
-   - Case Manager is assigned
-   - Client receives invitation (email notification - to be implemented)
-
-### Document Review Flow
-1. Client uploads documents for specific workflow steps
-2. Case Manager receives notification of new uploads
-3. Case Manager reviews and approves/rejects/requests revision
-4. Client sees updated document status and comments
-
-### Workflow Step Management
-1. Admin creates products with custom workflow steps
-2. Each step has: name, order, description
-3. When case is created, workflow steps are copied from product
-4. Case Manager updates step statuses: pending → in_progress → completed
-
-## Design System
-
-### Color Palette
-- **Primary**: Deep Slate (#0F172A) - Navigation, headings
-- **Secondary**: Off-White (#F8FAFC) - Page backgrounds
-- **Accent**: Electric Blue (#2563EB) - CTAs, links
-- **Success**: Visa Green (#059669) - Approvals
-- **Warning**: Pending Amber (#D97706) - Pending actions
-- **Error**: Reject Red (#DC2626) - Rejections
-
-### Typography
-- **Headings**: Merriweather (serif) - Professional, trustworthy
-- **Body**: Inter (sans-serif) - Clean, readable
-
-### Components
-- All interactive elements have hover states
-- Status badges with color-coded indicators
-- Responsive grid layouts
-- Dark sidebar with light content area
-
-## Security Features
-
-- JWT-based authentication with token expiry
-- Bcrypt password hashing
-- Role-based access control (RBAC)
-- API endpoint protection with role verification
-- Secure file upload with type validation
-- MongoDB GridFS for secure document storage
-
-## Database Schema
-
-### Collections
-
-**users**
-- id, email, name, role, mobile, password (hashed), created_at
-
-**products**
-- id, name, description, fee, commission_rate, workflow_steps[], created_at
-
-**sales**
-- id, partner_id, client info, product_id, fee_amount, amount_received, payment details, status, commission info, documents[], created_at
-
-**cases**
-- id, case_id (unique), client_id, product_id, case_manager_id, partner_id, status, current_step, steps[], created_at
-
-**documents**
-- id (GridFS file_id), filename, case_id, uploaded_by, upload_date, status, step_name, review_comment
-
-## Future Enhancements
-
-### Phase 2
-- Email notifications (sale approval, case assignment, document status)
-- Ticketing/support system for case-related queries
-- Advanced reporting and analytics
-- Payment gateway integration
-- Multi-country workflow support
-- WhatsApp integration for notifications
-- Mobile app (React Native)
-- Document templates and auto-generation
-- Calendar integration for appointments
-- Advanced search and filtering
-
-## Testing
-
-The application has been tested for:
-- ✅ Login functionality for all 4 roles
-- ✅ Role-based access control
-- ✅ Sales creation and approval workflow
-- ✅ Case creation and assignment
-- ✅ Document upload and review
-- ✅ Workflow step management
-- ✅ Commission calculation
-- ✅ Dashboard statistics
-
-## Support
-
-For issues or questions:
-1. Check the demo credentials are correctly entered
-2. Ensure MongoDB is running on localhost:27017
-3. Verify backend and frontend services are running (supervisor status)
-4. Check browser console for frontend errors
-5. Check backend logs: `tail -f /var/log/supervisor/backend.err.log`
-
-## License
-
-Proprietary - LEAMSS Immigration Services
+All-in-one operating system for **LEAMSS (Ladhani Education and Migration Services)**: lead capture and sales, paid pre-assessments, proposals and agreements, case management with country/visa workflows, a client portal, partner commissions, HR/payroll, and a public SEO "Atlas" of Australian occupations.
+
+| Layer | Stack |
+|---|---|
+| Backend | FastAPI (Python 3.11), MongoDB (Motor), JWT auth, APScheduler, WeasyPrint/ReportLab PDFs |
+| Frontend | React 18, React Router 7, Tailwind CSS, shadcn/ui (Radix), Axios — built with CRA + CRACO |
+| Payments | Razorpay (primary), Stripe (optional) |
+| AI | Anthropic / OpenAI / Gemini via LiteLLM (`backend/emergentintegrations` shim) |
+| Hosting | Backend: Docker (Render / VPS). Frontend: Vercel or nginx Docker image |
 
 ---
 
-**Built with Emergent** 🚀
+## Repository layout
+
+```
+backend/
+  server.py               FastAPI app: router registration, startup tasks, scheduler
+  routers/                ~150 API modules (auth, sales, pre_assessment, cases, atlas, hr, ...)
+  core/                   auth, database, RBAC, scoring engines, report renderers, helpers
+  services/               integrations (Perplexity, JSA importer, authority resolver, ...)
+  migrations/             idempotent data migrations  (run_all.py runs them all)
+  scrapers/ parsers/      assessing-authority + JSA data ingestion
+  seeds/  scripts/        reference data and one-off seed scripts
+  emergentintegrations/   local replacement for the old private Emergent package
+  tests/                  pytest suite (unit/ = no server needed)
+frontend/
+  src/pages, src/components   React app (Admin, Case Manager, Partner, Client portals)
+  public/atlas/               pre-rendered SEO occupation pages (regenerated by the backend)
+docs/                     PRD, roadmap, RBAC design, changelog, historical audits
+.github/workflows/ci.yml  CI: lint, unit + security tests, dependency audit, frontend build
+```
+
+---
+
+## Running locally
+
+### Prerequisites
+- Python **3.11**
+- Node.js **20**
+- MongoDB 6+ on `localhost:27017` (or a MongoDB Atlas URL)
+
+### 1. Backend
+```bash
+cd backend
+python -m venv venv && source venv/bin/activate      # Windows: venv\Scripts\activate
+pip install -r requirements-dev.txt
+cp .env.example .env                                  # then edit .env
+#   - JWT_SECRET: python -c "import secrets; print(secrets.token_urlsafe(48))"
+#   - INITIAL_ADMIN_PASSWORD: password for the first admin account
+uvicorn server:app --reload --port 8001
+```
+API docs: http://localhost:8001/docs
+
+On first boot with an empty database the app creates `INITIAL_ADMIN_EMAIL` (default `admin@leamss.com`) with `INITIAL_ADMIN_PASSWORD`. If you leave it empty, a random one-time password is printed once in the log. Every seeded account must change its password at first login.
+
+### 2. Frontend
+```bash
+cd frontend
+cp .env.example .env            # REACT_APP_BACKEND_URL=http://localhost:8001
+npm ci --legacy-peer-deps
+npm start                        # http://localhost:3000
+```
+
+Windows users can also use `start.bat` / `stop.bat` once `backend/venv` and `frontend/node_modules` exist.
+
+---
+
+## Configuration
+
+All backend settings are environment variables — see **`backend/.env.example`** for the full, commented list. The important ones:
+
+| Variable | Purpose |
+|---|---|
+| `JWT_SECRET` | **Required**, ≥ 32 chars. The server refuses to start without it. |
+| `MONGO_URL`, `DB_NAME` | Database connection |
+| `CORS_ORIGINS` | Comma-separated list of front-end origins allowed to call the API |
+| `INITIAL_ADMIN_EMAIL` / `INITIAL_ADMIN_PASSWORD` | First admin (empty DB only) |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | Live payments |
+| `PAYMENT_MODE=mock` | Enables fake "mock pay" endpoints — **local demos only, never production** |
+| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` | AI features |
+| `RUN_STARTUP_MIGRATIONS` | `1` (default) runs seeds/migrations on boot; set `0` and run `python -m migrations.run_all` per deploy |
+| `SENTRY_DSN`, `LOG_LEVEL` | Error tracking and log verbosity |
+
+Frontend build-time settings live in `frontend/.env.production` (public values only — everything prefixed `REACT_APP_` is visible in the browser).
+
+---
+
+## Deployment
+
+**Backend (Render)** — `render.yaml` builds `backend/Dockerfile`. Set the `sync: false` secrets in the Render dashboard (`MONGO_URL`, `RAZORPAY_*`, `INITIAL_ADMIN_*`, AI keys, `SENTRY_DSN`). `JWT_SECRET` is generated by Render.
+
+**Frontend (Vercel)** — `frontend/vercel.json` builds with `npm run build` and serves `build/`. Set the Vercel project's root directory to `frontend`. `REACT_APP_BACKEND_URL` defaults to `https://api.leamss.com` via `.env.production`; override it in Vercel if needed.
+
+**Single server (Docker Compose)**
+```bash
+cp backend/.env.example backend/.env   # fill in production values
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+The compiled frontend (`frontend/build`) is **not** committed — it is built by Vercel/Docker/CI.
+
+---
+
+## Testing
+
+```bash
+cd backend
+pytest -q tests/unit                                      # fast, no DB/server needed
+API_BASE_URL=http://127.0.0.1:8001 TEST_ADMIN_PASSWORD=... pytest -q tests/test_security_hardening.py
+ruff check .                                              # bug-level lint rules
+pip-audit -r requirements.txt --no-deps --disable-pip     # dependency vulnerabilities
+```
+
+Most of the older files in `backend/tests/` are integration tests written against a live, pre-populated server. To run them against a throw-away local database, start the API with `SEED_LEGACY_TEST_PASSWORDS=1` (never in production).
+
+CI (`.github/workflows/ci.yml`) runs lint, unit tests, the security regression suite against a real MongoDB, a dependency audit and the frontend build on every push and pull request.
+
+---
+
+## Security notes
+
+- Never commit `.env` files, real credentials, client documents or database exports.
+- Staff accounts are created by an admin (`POST /api/auth/register` with an admin token, or the People/Users screens). Anonymous sign-up is disabled unless `ALLOW_PUBLIC_SIGNUP=1`.
+- Login is rate-limited (5 failures per email / 20 per IP per 15 minutes).
+- Payments are only marked as paid after Razorpay signature verification against the order created for that link.
+- Report vulnerabilities privately to the LEAMSS technology team.
+
+---
+
+## Dependency management
+
+`backend/requirements.in` lists top-level packages; `backend/requirements.txt` is the pinned lock file:
+```bash
+cd backend
+uv pip compile requirements.in -o requirements.txt --python-version 3.11
+```

@@ -17,6 +17,9 @@ load_dotenv()
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 import core.llm_env  # noqa: E402,F401  (maps provider API keys for AI features)
+from core.observability import setup_logging, setup_sentry  # noqa: E402
+setup_logging()
+setup_sentry()
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -193,7 +196,28 @@ from routers.email_settings import router as email_settings_router
 from routers.email_templates import router as email_templates_router
 from routers.public_resume import router as public_resume_router
 
-app = FastAPI(title="LEAMSS Portal API", version="3.0")
+from contextlib import asynccontextmanager  # noqa: E402
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    run_migrations = os.environ.get("RUN_STARTUP_MIGRATIONS", "1") == "1"
+    await run_startup_tasks(run_migrations=run_migrations)
+    start_scheduler()
+    yield
+    await shutdown_scheduler()
+
+
+app = FastAPI(title="LEAMSS Portal API", version="3.0", lifespan=lifespan)
+
+
+@app.exception_handler(Exception)
+async def _unhandled_exception_handler(request: Request, exc: Exception):
+    """Log every unhandled error with its route, and return a generic 500
+    (never leak stack traces / internals to the browser)."""
+    from fastapi.responses import JSONResponse
+    logging.getLogger("leamss.api").exception("Unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 # SECURITY: only trusted front-end origins may call the API from a browser.
 # Override with CORS_ORIGINS="https://a.com,https://b.com" (comma-separated).
@@ -215,12 +239,18 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-async def startup():
+async def run_startup_tasks(run_migrations: bool = True):
+    """Database init + idempotent seeds/migrations.
+
+    Called on boot when RUN_STARTUP_MIGRATIONS=1 (default, preserves previous
+    behaviour), or once per deploy via:  python -m migrations.run_all
+"""
     import asyncio
     from core.database import client, db
     client.get_io_loop = asyncio.get_running_loop
     await init_db()
+    if not run_migrations:
+        return
 
     await seed_atlas_countries(db)
     try:
@@ -432,40 +462,6 @@ async def startup():
             print("[EOI Backlog] SkillSelect pool data seeded on startup.")
         except Exception as e:
             print(f"[EOI Backlog WARN — non-fatal] {e}")
-        # Start APScheduler (every 30 min). Disabled in tests via LEAMSS_DISABLE_SCHEDULER env.
-        if not os.environ.get("LEAMSS_DISABLE_SCHEDULER"):
-            try:
-                from apscheduler.schedulers.asyncio import AsyncIOScheduler
-                global _digest_scheduler
-                _digest_scheduler = AsyncIOScheduler(timezone="UTC")
-                _digest_scheduler.add_job(run_digest_once, "interval", minutes=30, id="client_error_digest", replace_existing=True)
-                # Phase 19 — Nightly SEO SSG full sweep @ 03:00 UTC
-                from apscheduler.triggers.cron import CronTrigger
-                _digest_scheduler.add_job(
-                    ssg_regenerate_all,
-                    CronTrigger(hour=3, minute=0, timezone="UTC"),
-                    id="seo_ssg_nightly",
-                    replace_existing=True,
-                )
-                # Phase 19.2c — Monthly scraper cron: 1st Sunday 02:00 UTC, 5-min stagger between bodies
-                try:
-                    from routers.scrapers import list_scraper_objects
-                    monthly_targets = [s for s in list_scraper_objects() if s.scraper_id != "abs_census"]
-                    for idx, scraper in enumerate(monthly_targets):
-                        minute = idx * 5  # 0, 5, 10, 15, 20 UTC minutes
-                        _digest_scheduler.add_job(
-                            scraper.run,
-                            CronTrigger(day="1-7", day_of_week="sun", hour=2, minute=minute, timezone="UTC"),
-                            id=f"scraper_monthly_{scraper.scraper_id}",
-                            replace_existing=True,
-                        )
-                except Exception:  # noqa: BLE001
-                    pass
-                _digest_scheduler.start()
-                app.state.digest_scheduler = _digest_scheduler
-                print("[Phase18.7] Client-error digest scheduler started (30 min interval)")
-            except Exception as e:
-                print(f"[Phase18.7 scheduler ERROR] {e}")
     except Exception as e:
         print(f"[Phase17.0 ERROR] {e}")
 
@@ -474,7 +470,6 @@ async def startup():
 _digest_scheduler = None
 
 
-@app.on_event("shutdown")
 async def shutdown_scheduler():
     try:
         if _digest_scheduler is not None and _digest_scheduler.running:
@@ -482,6 +477,49 @@ async def shutdown_scheduler():
             print("[Phase18.7] Digest scheduler stopped")
     except Exception:  # noqa: BLE001
         pass
+
+
+def start_scheduler():
+    """Start the in-process APScheduler (digests, nightly SEO SSG, monthly scrapers).
+
+    Runs independently of the startup migrations so a failing seed/migration can
+    no longer silently prevent the scheduler from starting.
+    """
+    # Start APScheduler (every 30 min). Disabled in tests via LEAMSS_DISABLE_SCHEDULER env.
+    if os.environ.get("LEAMSS_DISABLE_SCHEDULER"):
+        return
+    try:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        global _digest_scheduler
+        _digest_scheduler = AsyncIOScheduler(timezone="UTC")
+        _digest_scheduler.add_job(run_digest_once, "interval", minutes=30, id="client_error_digest", replace_existing=True)
+        # Phase 19 — Nightly SEO SSG full sweep @ 03:00 UTC
+        from apscheduler.triggers.cron import CronTrigger
+        _digest_scheduler.add_job(
+            ssg_regenerate_all,
+            CronTrigger(hour=3, minute=0, timezone="UTC"),
+            id="seo_ssg_nightly",
+            replace_existing=True,
+        )
+        # Phase 19.2c — Monthly scraper cron: 1st Sunday 02:00 UTC, 5-min stagger between bodies
+        try:
+            from routers.scrapers import list_scraper_objects
+            monthly_targets = [s for s in list_scraper_objects() if s.scraper_id != "abs_census"]
+            for idx, scraper in enumerate(monthly_targets):
+                minute = idx * 5  # 0, 5, 10, 15, 20 UTC minutes
+                _digest_scheduler.add_job(
+                    scraper.run,
+                    CronTrigger(day="1-7", day_of_week="sun", hour=2, minute=minute, timezone="UTC"),
+                    id=f"scraper_monthly_{scraper.scraper_id}",
+                    replace_existing=True,
+                )
+        except Exception:  # noqa: BLE001
+            pass
+        _digest_scheduler.start()
+        app.state.digest_scheduler = _digest_scheduler
+        print("[Phase18.7] Client-error digest scheduler started (30 min interval)")
+    except Exception as e:
+        print(f"[Phase18.7 scheduler ERROR] {e}")
 
 
 async def seed_database():
