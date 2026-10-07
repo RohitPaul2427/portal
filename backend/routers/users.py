@@ -117,6 +117,8 @@ async def delete_user(user_id: str, current_user: dict = Depends(get_current_use
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     await users_col.update_one({"id": user_id}, {"$set": {"status": "inactive"}})
+    from core.governance.access import offboard_user
+    await offboard_user(user_id, current_user, reason="user_deleted")
     return {"message": "User deactivated"}
 
 

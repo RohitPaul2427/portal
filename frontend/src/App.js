@@ -117,6 +117,7 @@ import CompareBar from '@/components/CompareBar';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 import ClientErrorsDashboard from '@/pages/admin/ClientErrorsDashboard';
 import CouponsAdmin from '@/pages/admin/CouponsAdmin';
+import AccessCenter from '@/pages/portal/AccessCenter';
 import FunnelDashboard from '@/pages/admin/FunnelDashboard';
 import ResumeUpload from '@/pages/ResumeUpload';
 import EOIBacklogAdmin from '@/pages/admin/EOIBacklogAdmin';
@@ -199,6 +200,8 @@ function App() {
           <Route path="/admin/portal-hub" element={<Navigate to="/admin/employees" replace />} />
           {/* Phase 21.B — Employee self-service profile */}
           <Route path="/portal/my-profile" element={<MyProfile />} />
+          {/* Backlog Phase 0-1 — sessions, access requests, approvals, kill switch, statutory settings */}
+          <Route path="/access-center" element={<AccessCenter />} />
           {/* Phase 21.E — Tasks (Kanban) */}
           <Route path="/portal/my-tasks" element={<Tasks mode="me" />} />
           <Route path="/admin/employee-tasks" element={<Tasks mode="all" />} />

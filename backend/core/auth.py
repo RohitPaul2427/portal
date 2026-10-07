@@ -113,6 +113,9 @@ def build_token_payload(user: dict) -> dict:
     }
 
 
+BLOCKED_STATUSES = {"inactive", "suspended", "terminated", "deleted", "exited"}
+
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
@@ -123,6 +126,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         user = await users_col.find_one({"id": user_id}, {"_id": 0})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
+
+        # Backlog E07-02: a deactivated account stops working immediately,
+        # not when its token expires.
+        if user.get("status") in BLOCKED_STATUSES:
+            raise HTTPException(status_code=401, detail="Account is inactive")
+
+        # Backlog E02-05: server-side sessions (logout / revoke really work).
+        from core.governance.sessions import check_session
+        session_problem = await check_session(payload.get("sid"), user_id)
+        if session_problem:
+            raise HTTPException(status_code=401, detail=session_problem)
 
         # Force-logout if password was changed AFTER this token was issued
         pwd_changed_at = user.get("password_changed_at")

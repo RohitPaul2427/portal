@@ -573,6 +573,9 @@ async def deactivate(person_id: str, current_user: dict = Depends(get_current_us
         await vendors_col.update_one({"id": v["id"]}, updates)
     if r1.modified_count == 0 and r2.modified_count == 0:
         raise HTTPException(status_code=404, detail="Person not found")
+    if r1.modified_count:
+        from core.governance.access import offboard_user
+        await offboard_user(person_id, current_user, reason="people_deactivated")
     return {"ok": True}
 
 

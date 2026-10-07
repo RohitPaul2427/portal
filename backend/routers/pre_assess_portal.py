@@ -847,7 +847,7 @@ async def magic_login(data: MagicLoginRequest, request: Request):
         if exp < _now():
             raise HTTPException(status_code=410, detail="Link expired")
 
-    user = await users_col.find_one({"id": doc["user_id"]}, {"_id": 0, "password_hash": 0})
+    user = await users_col.find_one({"id": doc["user_id"]}, {"_id": 0, "password_hash": 0, "password": 0, "hashed_password": 0, "two_fa_secret": 0})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     await magic_col.update_one({"token": data.token}, {"$set": {
@@ -856,7 +856,9 @@ async def magic_login(data: MagicLoginRequest, request: Request):
         "used_ip": (request.client.host if request and request.client else None),
         "used_ua": (request.headers.get("user-agent", "")[:120] if request else ""),
     }})
-    jwt_token = create_access_token({"sub": user["id"], "email": user["email"], "role": user["role"]})
+    from core.governance.sessions import create_session
+    sid = await create_session(user, request, kind="magic_link")
+    jwt_token = create_access_token({"sub": user["id"], "email": user["email"], "role": user["role"], "sid": sid})
     await _log(user["id"], None, "magic_login")
     return {"token": jwt_token, "user": user}
 
@@ -870,7 +872,7 @@ async def otp_request(data: OTPReq):
         q["email"] = data.email.lower()
     else:
         q["phone"] = data.phone
-    user = await users_col.find_one(q, {"_id": 0, "password_hash": 0})
+    user = await users_col.find_one(q, {"_id": 0, "password_hash": 0, "password": 0, "hashed_password": 0, "two_fa_secret": 0})
     if not user:
         raise HTTPException(status_code=404, detail="No account found — complete payment first")
 
@@ -918,8 +920,10 @@ async def otp_verify(data: OTPVerify):
     if not match:
         raise HTTPException(status_code=401, detail="Invalid or expired OTP")
     await otp_col.update_one({"_id": match["_id"]}, {"$set": {"consumed": True, "consumed_at": _now()}})
-    user = await users_col.find_one({"id": match["user_id"]}, {"_id": 0, "password_hash": 0})
-    jwt_token = create_access_token({"sub": user["id"], "email": user["email"], "role": user["role"]})
+    user = await users_col.find_one({"id": match["user_id"]}, {"_id": 0, "password_hash": 0, "password": 0, "hashed_password": 0, "two_fa_secret": 0})
+    from core.governance.sessions import create_session
+    sid = await create_session(user, None, kind="otp")
+    jwt_token = create_access_token({"sub": user["id"], "email": user["email"], "role": user["role"], "sid": sid})
     await _log(user["id"], None, "otp_login")
     return {"token": jwt_token, "user": user}
 
