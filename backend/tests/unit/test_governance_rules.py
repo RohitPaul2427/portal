@@ -1,4 +1,8 @@
 """Pure unit tests for the governance foundation (no DB, no server)."""
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from datetime import datetime, timezone
 
 from core.governance import payroll_rules as pr
