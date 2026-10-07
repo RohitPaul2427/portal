@@ -19,6 +19,7 @@ from scrapers.engineers_australia import EngineersAustraliaScraper
 from scrapers.nzqa import NZQAScraper
 from scrapers.vetassess import VETASSESSScraper
 from scrapers.wes import WESScraper
+from scrapers.migroto import MigrotoScraper
 from scrapers.base import db
 
 router = APIRouter(prefix="/scrapers", tags=["scrapers"])
@@ -32,6 +33,7 @@ _SCRAPERS: Dict[str, Any] = {
         NZQAScraper(),
         WESScraper(),
         ABSCensusScraper(),
+        MigrotoScraper(),
     ]
 }
 

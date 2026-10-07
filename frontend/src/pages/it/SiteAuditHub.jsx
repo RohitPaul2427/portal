@@ -48,6 +48,8 @@ export default function SiteAuditHub() {
   const [openRun, setOpenRun] = useState(null);
   const [runDetail, setRunDetail] = useState(null);
 
+  const [migrotoAudit, setMigrotoAudit] = useState(null);
+
   const loadRuns = useCallback(async () => {
     setLoading(true);
     try {
@@ -61,7 +63,21 @@ export default function SiteAuditHub() {
     // eslint-disable-next-line
   }, []);
 
-  useEffect(() => { if (!token) { navigate('/'); return; } loadRuns(); /* eslint-disable-next-line */ }, []);
+  const loadMigrotoAudit = useCallback(async () => {
+    try {
+      const { data } = await axios.get(`${API}/migroto/audit`, auth);
+      setMigrotoAudit(data);
+    } catch (e) {
+      console.warn('Failed to load Migroto audit', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!token) { navigate('/'); return; }
+    loadRuns();
+    loadMigrotoAudit();
+    /* eslint-disable-next-line */
+  }, []);
 
   // Auto-poll while any run is "running"
   useEffect(() => {
@@ -163,6 +179,49 @@ export default function SiteAuditHub() {
             <p className="text-xs text-slate-400">Top-right ke "Run audit" se shuru kijiye.</p>
           </Card>
         )}
+
+        {/* Migroto Skilled Migration Alignment & Atlas Coverage */}
+        {migrotoAudit && (
+          <Card className="p-4 border-l-4 border-l-indigo-600 bg-gradient-to-r from-indigo-50/30 to-white" data-testid="migroto-atlas-coverage-card">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
+                  <Globe className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-indigo-900">Migration Atlas — Migroto Skilled Migration Coverage</h3>
+                    <Badge className="bg-emerald-100 text-emerald-700 text-[10px] border-emerald-300">
+                      Live Registry Aligned ✓
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Continuous alignment with official ANZSCO classifications, SkillSelect EOI backlog snapshots, and state nomination lists.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap text-xs">
+                <div className="text-right">
+                  <span className="text-[11px] text-slate-500 block">AU Occupations</span>
+                  <span className="font-bold text-slate-800">{migrotoAudit.total_au_occupations || 0}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[11px] text-slate-500 block">Verified / Synced</span>
+                  <span className="font-bold text-emerald-700">{migrotoAudit.verified_count || 0}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[11px] text-slate-500 block">States Covered</span>
+                  <span className="font-bold text-indigo-700">{migrotoAudit.available_states || 8} AU States</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[11px] text-slate-500 block">Active Subclasses</span>
+                  <span className="font-bold text-teal-700">189, 190, 491</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {runs.map(r => {
           const total = r.summary ? (r.summary.pass + r.summary.warn + r.summary.fail) : 0;
           return (

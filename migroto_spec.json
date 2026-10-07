@@ -1,0 +1,953 @@
+{
+  "components": {
+    "schemas": {
+      "AssessingAuthority": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "type": "object"
+      },
+      "EoiBacklogData": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/EoiBacklogEntry"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "EoiBacklogEntry": {
+        "properties": {
+          "ahead": {
+            "type": "integer"
+          },
+          "count": {
+            "type": "string"
+          },
+          "points": {
+            "type": "integer"
+          },
+          "top_percent": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "ahead",
+          "count",
+          "points",
+          "top_percent"
+        ],
+        "type": "object"
+      },
+      "EoiTrendMonth": {
+        "properties": {
+          "invited": {
+            "type": "integer"
+          },
+          "lodged": {
+            "type": "integer"
+          },
+          "month": {
+            "type": "string"
+          },
+          "month_label": {
+            "type": "string"
+          },
+          "submitted": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "lodged",
+          "invited",
+          "submitted",
+          "month_label"
+        ],
+        "type": "object"
+      },
+      "EoiTrends": {
+        "properties": {
+          "available_months": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "trends": {
+            "items": {
+              "$ref": "#/components/schemas/EoiTrendMonth"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "trends",
+          "available_months"
+        ],
+        "type": "object"
+      },
+      "Filter": {
+        "properties": {
+          "eoi_backlog_dates": {
+            "items": {
+              "$ref": "#/components/schemas/FilterDate"
+            },
+            "type": "array"
+          },
+          "states": {
+            "items": {
+              "$ref": "#/components/schemas/FilterState"
+            },
+            "type": "array"
+          },
+          "subclasses": {
+            "items": {
+              "$ref": "#/components/schemas/SubclassInfo"
+            },
+            "type": "array"
+          },
+          "years": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "years",
+          "states",
+          "subclasses",
+          "eoi_backlog_dates"
+        ],
+        "type": "object"
+      },
+      "FilterDate": {
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ],
+        "type": "object"
+      },
+      "FilterState": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "type": "object"
+      },
+      "Invitation": {
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "invitations": {
+            "type": "integer"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subclass": {
+            "$ref": "#/components/schemas/VisaSubclass"
+          }
+        },
+        "required": [
+          "date",
+          "score",
+          "subclass",
+          "invitations"
+        ],
+        "type": "object"
+      },
+      "InvitationData": {
+        "properties": {
+          "available_points": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/Invitation"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "available_points"
+        ],
+        "type": "object"
+      },
+      "Occupation": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "title"
+        ],
+        "type": "object"
+      },
+      "OccupationInsight": {
+        "properties": {
+          "eoi_backlog": {
+            "$ref": "#/components/schemas/EoiBacklogData"
+          },
+          "eoi_backlog_last_update": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "eoi_trends": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EoiTrends"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "invitations": {
+            "$ref": "#/components/schemas/InvitationData"
+          },
+          "invitations_last_update": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "occupation": {
+            "$ref": "#/components/schemas/OccupationMeta"
+          },
+          "points_distribution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PointsDistribution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state_programs": {
+            "items": {
+              "$ref": "#/components/schemas/StateProgram"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "occupation",
+          "eoi_backlog",
+          "invitations",
+          "state_programs"
+        ],
+        "type": "object"
+      },
+      "OccupationMeta": {
+        "properties": {
+          "assessing_authorities": {
+            "items": {
+              "$ref": "#/components/schemas/AssessingAuthority"
+            },
+            "type": "array"
+          },
+          "assessment_tips": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "essential_tasks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "subclasses": {
+            "items": {
+              "$ref": "#/components/schemas/SubclassInfo"
+            },
+            "type": "array"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "title",
+          "subclasses",
+          "assessing_authorities"
+        ],
+        "type": "object"
+      },
+      "ParseErrorEnvelope": {
+        "description": "Parse execution error envelope. `status` names the failure class; `kind` (when present) is the closed machine-readable failure kind.",
+        "properties": {
+          "attempts": {
+            "type": "integer"
+          },
+          "block_type": {
+            "type": "string"
+          },
+          "details": {},
+          "error": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "antibot_solvable",
+              "antibot_unsolvable",
+              "business_rule_rejected",
+              "extraction_failed",
+              "input_format_invalid",
+              "input_not_found",
+              "ip_burned",
+              "scraper_bug"
+            ],
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "retry_after": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "snippet": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "blocked",
+              "stale_input",
+              "upstream_error",
+              "error"
+            ],
+            "type": "string"
+          },
+          "upstream_status_code": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string"
+          },
+          "violations": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "PointLevel": {
+        "properties": {
+          "better_than": {
+            "type": "number"
+          },
+          "count_at_or_above": {
+            "type": "integer"
+          },
+          "points": {
+            "type": "integer"
+          },
+          "top_percentage": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "points",
+          "better_than",
+          "top_percentage",
+          "count_at_or_above"
+        ],
+        "type": "object"
+      },
+      "PointsDistribution": {
+        "properties": {
+          "point_levels": {
+            "items": {
+              "$ref": "#/components/schemas/PointLevel"
+            },
+            "type": "array"
+          },
+          "snapshot_date": {
+            "type": "string"
+          },
+          "total_eoi_count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "point_levels",
+          "snapshot_date",
+          "total_eoi_count"
+        ],
+        "type": "object"
+      },
+      "StateProgram": {
+        "properties": {
+          "offshore": {
+            "type": "boolean"
+          },
+          "onshore": {
+            "type": "boolean"
+          },
+          "open_date": {
+            "type": "string"
+          },
+          "program_name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "subclass": {
+            "$ref": "#/components/schemas/VisaSubclass"
+          }
+        },
+        "required": [
+          "state",
+          "status",
+          "onshore",
+          "offshore",
+          "subclass",
+          "open_date",
+          "program_name"
+        ],
+        "type": "object"
+      },
+      "SubclassInfo": {
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "subclass_number": {
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "label",
+          "subclass_number"
+        ],
+        "type": "object"
+      },
+      "VisaSubclass": {
+        "enum": [
+          "189",
+          "190",
+          "491"
+        ],
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "apiKeyAuth": {
+        "description": "Parse API key. Create one at https://parse.bot/settings.",
+        "in": "header",
+        "name": "X-API-Key",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "Search and analyze Australian skilled migration occupation data to find ANZSCO codes, visa invitation trends, EOI backlogs, and state nomination opportunities for your migration pathway. Access detailed occupation insights including points distribution patterns to make informed decisions about your skilled migration prospects.",
+    "title": "migroto.com API",
+    "version": "1.0.0",
+    "x-parse-follows-live": true
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/get_occupation_details": {
+      "get": {
+        "operationId": "get_occupation_details",
+        "parameters": [
+          {
+            "description": "6-digit ANZSCO occupation code (e.g. '261313' for Software Engineer). Obtainable from search_occupations results.",
+            "in": "query",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "description": "6-digit ANZSCO occupation code (e.g. '261313' for Software Engineer). Obtainable from search_occupations results.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "EOI backlog snapshot date in YYYY-MM-DD format (e.g. '2026-06-01'). Available dates retrievable from get_occupation_filters.",
+            "in": "query",
+            "name": "eoi_date",
+            "schema": {
+              "description": "EOI backlog snapshot date in YYYY-MM-DD format (e.g. '2026-06-01'). Available dates retrievable from get_occupation_filters.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Time range filter for invitations. Examples: 'last-6-months', 'last-fy'.",
+            "in": "query",
+            "name": "inv_year",
+            "schema": {
+              "description": "Time range filter for invitations. Examples: 'last-6-months', 'last-fy'.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Visa subclass filter for EOI backlog section. Accepted values: 189, 190, 491.",
+            "in": "query",
+            "name": "eoi_subclass",
+            "schema": {
+              "description": "Visa subclass filter for EOI backlog section. Accepted values: 189, 190, 491.",
+              "enum": [
+                "189",
+                "190",
+                "491"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Visa subclass filter for invitations section. Accepted values: 189, 190, 491.",
+            "in": "query",
+            "name": "inv_subclass",
+            "schema": {
+              "description": "Visa subclass filter for invitations section. Accepted values: 189, 190, 491.",
+              "enum": [
+                "189",
+                "190",
+                "491"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "UUID of the occupation, obtainable from search_occupations results. Provides faster lookup when supplied.",
+            "in": "query",
+            "name": "occupation_id",
+            "schema": {
+              "description": "UUID of the occupation, obtainable from search_occupations results. Provides faster lookup when supplied.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Visa subclass filter for EOI trends section. Accepted values: 189, 190, 491.",
+            "in": "query",
+            "name": "trend_subclass",
+            "schema": {
+              "description": "Visa subclass filter for EOI trends section. Accepted values: 189, 190, 491.",
+              "enum": [
+                "189",
+                "190",
+                "491"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Financial year range for EOI trends (e.g. '2025-2026'). Available values retrievable from get_occupation_filters.",
+            "in": "query",
+            "name": "trend_year_range",
+            "schema": {
+              "description": "Financial year range for EOI trends (e.g. '2025-2026'). Available values retrievable from get_occupation_filters.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccupationInsight"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Missing or invalid X-API-Key, or the API's authenticated session was lost. Create a key at https://parse.bot/settings."
+          },
+          "402": {
+            "description": "Credit quota exceeded for the billing period."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Declared for this API — input_not_found: The ANZSCO code does not match any known occupation (upstream returns 404)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Stale or invalid input (`status: stale_input`; kinds: input_format_invalid, input_not_found, business_rule_rejected). Correct the input — retrying unchanged will not help."
+          },
+          "429": {
+            "description": "Rate limited. Honor Retry-After before retrying."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Scraper-side failure (`status: error`; kinds: scraper_bug, extraction_failed). The API needs a revision — retrying will not help."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Upstream site rejected the request (`status: upstream_error`; carries upstream_status_code + snippet)."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Blocked by site protection (`status: blocked`; kinds: antibot_solvable — retry, the executor rotates; antibot_unsolvable / ip_burned — terminal, do not retry)."
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "summary": "Retrieve comprehensive migration data for a single occupation identified by its ANZSCO code. Includes visa subclass eligibility, invitation history, EOI backlog queue position, state nomination programs, points distribution, and EOI trend data. Optional filter parameters narrow the invitation, backlog, and trend sections to a specific visa subclass or date range.",
+        "x-parse-price": 1
+      }
+    },
+    "/get_occupation_filters": {
+      "get": {
+        "operationId": "get_occupation_filters",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Filter"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Missing or invalid X-API-Key, or the API's authenticated session was lost. Create a key at https://parse.bot/settings."
+          },
+          "402": {
+            "description": "Credit quota exceeded for the billing period."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Declared for this API — input_not_found: The ANZSCO code does not match any known occupation (upstream returns 404)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Stale or invalid input (`status: stale_input`; kinds: input_format_invalid, input_not_found, business_rule_rejected). Correct the input — retrying unchanged will not help."
+          },
+          "429": {
+            "description": "Rate limited. Honor Retry-After before retrying."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Scraper-side failure (`status: error`; kinds: scraper_bug, extraction_failed). The API needs a revision — retrying will not help."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Upstream site rejected the request (`status: upstream_error`; carries upstream_status_code + snippet)."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Blocked by site protection (`status: blocked`; kinds: antibot_solvable — retry, the executor rotates; antibot_unsolvable / ip_burned — terminal, do not retry)."
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "summary": "Retrieve available filter options for occupation insight queries. Returns Australian states, visa subclasses, financial year ranges, and EOI backlog snapshot dates that can be used as parameters when calling get_occupation_details.",
+        "x-parse-price": 1
+      }
+    },
+    "/search_occupations": {
+      "get": {
+        "operationId": "search_occupations",
+        "parameters": [
+          {
+            "description": "Search term — an occupation name (e.g. 'software engineer') or an ANZSCO code (e.g. '261313').",
+            "in": "query",
+            "name": "query",
+            "required": true,
+            "schema": {
+              "description": "Search term — an occupation name (e.g. 'software engineer') or an ANZSCO code (e.g. '261313').",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Occupation"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Missing or invalid X-API-Key, or the API's authenticated session was lost. Create a key at https://parse.bot/settings."
+          },
+          "402": {
+            "description": "Credit quota exceeded for the billing period."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Declared for this API — input_not_found: The ANZSCO code does not match any known occupation (upstream returns 404)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Stale or invalid input (`status: stale_input`; kinds: input_format_invalid, input_not_found, business_rule_rejected). Correct the input — retrying unchanged will not help."
+          },
+          "429": {
+            "description": "Rate limited. Honor Retry-After before retrying."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Scraper-side failure (`status: error`; kinds: scraper_bug, extraction_failed). The API needs a revision — retrying will not help."
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Upstream site rejected the request (`status: upstream_error`; carries upstream_status_code + snippet)."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseErrorEnvelope"
+                }
+              }
+            },
+            "description": "Blocked by site protection (`status: blocked`; kinds: antibot_solvable — retry, the executor rotates; antibot_unsolvable / ip_burned — terminal, do not retry)."
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "summary": "Full-text search over Australian skilled migration occupations by name or ANZSCO code. Returns matching occupations with their codes and titles. Results are auto-iterated.",
+        "x-parse-price": 1
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKeyAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://api.parse.bot/scraper/426cd41f-9657-408c-9258-44fb7184c999"
+    }
+  ]
+}

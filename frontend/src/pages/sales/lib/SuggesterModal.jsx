@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Bot, ChevronRight, Loader2, Check, AlertTriangle, FileText, Award, Scale, HelpCircle } from 'lucide-react';
+import { Bot, ChevronRight, Loader2, Check, AlertTriangle, FileText, Award, Scale, HelpCircle, ListChecks, Building2 } from 'lucide-react';
 import { formatApiError } from '@/lib/apiErrors';
 import { API, COUNTRIES } from './constants';
 
@@ -237,6 +237,61 @@ export default function SuggesterModal({
                     <p className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 mb-2">
                       <strong className="text-slate-700">Role Alignment:</strong> {s.reasoning}
                     </p>
+
+                    {/* Core Duty & Task Alignment against ABS ANZSCO */}
+                    {s.duty_alignment && (
+                      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 mb-2 space-y-1.5" data-testid={`duty-alignment-${i}`}>
+                        <div className="flex items-center justify-between text-[11px]">
+                          <div className="flex items-center gap-1.5 font-bold text-slate-800">
+                            <ListChecks className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>Core Duty &amp; Task Alignment</span>
+                          </div>
+                          <Badge className="bg-emerald-100 text-emerald-800 text-[9px] font-semibold border border-emerald-200">
+                            {s.duty_alignment.match_percentage}% Match ({s.duty_alignment.matched_tasks_count}/{s.duty_alignment.total_tasks_count} tasks)
+                          </Badge>
+                        </div>
+                        <p className="text-[10.5px] text-slate-600 leading-tight">
+                          {s.duty_alignment.summary}
+                        </p>
+                        {s.duty_alignment.matched_tasks && s.duty_alignment.matched_tasks.length > 0 && (
+                          <div className="space-y-1 pt-1 border-t border-slate-200/60">
+                            <span className="text-[9px] font-semibold uppercase text-slate-400 block">Matched Official ABS ANZSCO Tasks:</span>
+                            <div className="space-y-0.5">
+                              {s.duty_alignment.matched_tasks.map((t, tidx) => (
+                                <div key={tidx} className="flex items-start gap-1.5 text-[10.5px] text-slate-700 bg-white/90 p-1.5 rounded border border-slate-100 leading-tight">
+                                  <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                                  <span>{t}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Company Sector & Age GSM Points Evaluation */}
+                    {(s.company_alignment || s.age_evaluation) && (
+                      <div className="grid grid-cols-2 gap-2 mb-2 text-[10.5px]">
+                        {s.company_alignment && (
+                          <div className="bg-slate-50 border border-slate-200 rounded p-2 flex items-start gap-1.5">
+                            <Building2 className="h-3.5 w-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-slate-700 block">Employer &amp; Sector Fit</span>
+                              <span className="text-slate-600 leading-tight block">{s.company_alignment.summary}</span>
+                            </div>
+                          </div>
+                        )}
+                        {s.age_evaluation && (
+                          <div className="bg-slate-50 border border-slate-200 rounded p-2 flex items-start gap-1.5">
+                            <Award className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
+                            <div>
+                              <span className="font-bold text-slate-700 block">Age GSM Migration Points</span>
+                              <span className="text-slate-600 leading-tight block">{s.age_evaluation.summary}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Assessing Body Deductions & Rules Analysis Box */}
                     <div className="bg-gradient-to-r from-amber-50/80 to-indigo-50/80 border border-indigo-100 rounded-lg p-2.5 space-y-1.5">

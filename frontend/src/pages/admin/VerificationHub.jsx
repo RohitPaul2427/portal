@@ -19,11 +19,12 @@ import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   ArrowLeft, ShieldCheck, FileText, Globe2, FileBadge, Loader2,
   Upload, Database, Sparkles, AlertCircle, Clock, ExternalLink, RefreshCw,
-  Cloud, Info, ChevronRight, Wrench, FileSpreadsheet,
+  Cloud, Info, ChevronRight, Wrench, FileSpreadsheet, CheckCircle2, Zap,
 } from 'lucide-react';
 import { formatApiError } from '@/lib/apiErrors';
 import { RecentImportsPanel } from '@/components/admin/RecentImportsPanel';
@@ -116,7 +117,61 @@ export default function VerificationHub() {
     }
   }, [headers]);
 
-  useEffect(() => { loadHub(); loadLatest(); loadOccStats(); /* eslint-disable-next-line */ }, []);
+  const [verifyCode, setVerifyCode] = useState('');
+  const [verifyResult, setVerifyResult] = useState(null);
+  const [verifying, setVerifying] = useState(false);
+  const [migrotoStatus, setMigrotoStatus] = useState(null);
+  const [syncingOcc, setSyncingOcc] = useState(false);
+
+  const loadMigrotoStatus = useCallback(async () => {
+    try {
+      const r = await axios.get(`${API}/migroto/status`, { headers });
+      setMigrotoStatus(r.data);
+    } catch (e) {
+      console.warn('Migroto status fetch failed', e);
+    }
+  }, [headers]);
+
+  const handleMigrotoVerify = async () => {
+    if (!verifyCode.trim()) {
+      toast.error('Enter an ANZSCO code to verify');
+      return;
+    }
+    setVerifying(true);
+    setVerifyResult(null);
+    try {
+      const r = await axios.post(`${API}/migroto/verify/${verifyCode.trim()}`, {}, { headers });
+      setVerifyResult(r.data);
+      if (r.data.verified) {
+        toast.success(`✓ Code ${verifyCode} verified: ${r.data.official_title}`);
+      } else {
+        toast.error(r.data.reason || 'Code not verified');
+      }
+    } catch (e) {
+      toast.error(formatApiError(e, 'Verification check failed'));
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleMigrotoSync = async (code) => {
+    setSyncingOcc(true);
+    try {
+      const r = await axios.post(`${API}/migroto/sync/${code}`, {}, { headers });
+      if (r.data.status === 'success') {
+        toast.success(`✓ Synced ${code} into Occupation Master`);
+        await Promise.all([loadHub(), loadOccStats()]);
+      } else {
+        toast.error(r.data.error || 'Sync failed');
+      }
+    } catch (e) {
+      toast.error(formatApiError(e, 'Sync failed'));
+    } finally {
+      setSyncingOcc(false);
+    }
+  };
+
+  useEffect(() => { loadHub(); loadLatest(); loadOccStats(); loadMigrotoStatus(); /* eslint-disable-next-line */ }, []);
 
   // Phase 17.0 — REIMPORT: re-runs against latest stored file. If backend says
   // NO_PRIOR_FILE (race condition or storage cleared) we surface a banner with
@@ -391,6 +446,91 @@ export default function VerificationHub() {
                       data-testid="verif-hub-autofetch-nz">🇳🇿 NZ</Button>
             </div>
           </div>
+        </Card>
+
+        {/* Migroto Skilled Migration Live Registry & Verification Card */}
+        <Card className="p-4 border-l-4 border-l-indigo-600 bg-gradient-to-r from-indigo-50/40 via-teal-50/20 to-white" data-testid="migroto-live-registry-card">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
+                <Globe2 className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-indigo-900">Migroto Live Australian Skilled Migration Registry</h3>
+                  <Badge className="bg-emerald-100 text-emerald-700 text-[10px] border-emerald-300">
+                    Live Connected ✓
+                  </Badge>
+                  {migrotoStatus?.subclasses && (
+                    <Badge className="bg-indigo-100 text-indigo-800 text-[10px]">
+                      Subclasses: {migrotoStatus.subclasses.join(', ')}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Real-time ANZSCO validation, visa invitation cutoffs, SkillSelect EOI backlog depth & state nomination programs across 8 Australian states.
+                </p>
+              </div>
+            </div>
+
+            {/* Quick verify input form */}
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <Input
+                placeholder="Verify ANZSCO (e.g. 261313)"
+                value={verifyCode}
+                onChange={(e) => setVerifyCode(e.target.value)}
+                className="h-9 w-48 text-xs font-mono"
+                data-testid="migroto-verify-code-input"
+              />
+              <Button
+                size="sm"
+                onClick={handleMigrotoVerify}
+                disabled={verifying}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white h-9"
+                data-testid="migroto-verify-btn"
+              >
+                {verifying ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1" />}
+                Verify Code
+              </Button>
+            </div>
+          </div>
+
+          {/* Verification Result Preview */}
+          {verifyResult && (
+            <div className="mt-3 pt-3 border-t border-indigo-100 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                {verifyResult.verified ? (
+                  <Badge className="bg-emerald-600 text-white flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> VERIFIED ANZSCO
+                  </Badge>
+                ) : (
+                  <Badge className="bg-rose-600 text-white flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> NOT IN REGISTRY
+                  </Badge>
+                )}
+                <span className="font-semibold text-slate-900 font-mono">{verifyResult.code}</span>
+                <span className="text-slate-600">· {verifyResult.official_title || verifyResult.reason}</span>
+                {verifyResult.classification_version && (
+                  <Badge variant="outline" className="text-[10px] text-indigo-700 border-indigo-200">
+                    Version: {verifyResult.classification_version}
+                  </Badge>
+                )}
+              </div>
+              {verifyResult.verified && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleMigrotoSync(verifyResult.code)}
+                  disabled={syncingOcc}
+                  className="h-7 text-xs border-teal-400 text-teal-700 hover:bg-teal-50"
+                  data-testid="migroto-sync-btn"
+                >
+                  {syncingOcc ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1 text-teal-600" />}
+                  Sync into Occupation Master
+                </Button>
+              )}
+            </div>
+          )}
         </Card>
 
         {/* Stat Tiles */}

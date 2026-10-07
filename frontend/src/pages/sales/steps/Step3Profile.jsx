@@ -334,19 +334,26 @@ export default function Step3Profile({ data, update, setData, headers }) {
             setShowResumeUpload(false);
 
             // 2) Build rich candidate profile summary for AI occupation & assessment engine
+            const dutiesList = extracted.duty_bullets || (p.work_history?.[0]?.duty_bullets) || [];
+            const empName = pf.employer_name || extracted.employer_name || (p.work_history?.[0]?.employer_name) || '';
+            const empNature = pf.employer_nature || extracted.company_nature || (p.work_history?.[0]?.company_nature) || (p.work_history?.[0]?.nature_of_company) || '';
+
             const parts = [];
             if (profVal) parts.push(profVal);
-            if (pf.designation && pf.designation !== profVal) parts.push(`(Designation: ${pf.designation})`);
+            if (empName) parts.push(`at ${empName}`);
+            if (empNature) parts.push(`(Sector: ${empNature})`);
             if (expVal) parts.push(`with ${expVal} years of experience`);
-            if (pf.industry) parts.push(`in the ${pf.industry} industry`);
             if (qualVal || fieldVal) parts.push(`. Education: ${qualVal} in ${fieldVal || 'General'}`);
+            if (dutiesList.length > 0) {
+              parts.push(`. Core duties & responsibilities: ${dutiesList.join('; ')}`);
+            }
             
             const wh = (p.work_history || extracted.work_history || []).slice(0, 3)
-              .map(w => [w.designation, w.employer && `at ${w.employer}`, w.duties].filter(Boolean).join(' '))
+              .map(w => [w.designation || w.job_title, (w.employer || w.employer_name) && `at ${w.employer || w.employer_name}`, (w.company_nature || w.nature_of_company) && `(${w.company_nature || w.nature_of_company})`, w.duties || (w.duty_bullets && w.duty_bullets.join(', '))].filter(Boolean).join(' '))
               .filter(Boolean).join('. ');
             
             let desc = parts.join(' ').trim();
-            if (wh) desc += `. Work history: ${wh}`;
+            if (wh && !desc.includes(wh)) desc += `. Work history: ${wh}`;
             desc = desc.replace(/\s+/g, ' ').trim();
 
             // Fallback to guarantee a rich description
@@ -371,6 +378,14 @@ export default function Step3Profile({ data, update, setData, headers }) {
                 qualification: qualVal,
                 field_of_study: fieldVal,
                 years_experience_total: Number(expVal) || 0,
+                profession: profVal,
+                employer_name: empName,
+                nature_of_company: empNature,
+                company_nature: empNature,
+                roles_and_responsibilities: extracted.roles_and_responsibilities || (dutiesList.join('\n')),
+                duty_bullets: dutiesList,
+                work_history: p.work_history || extracted.work_history || [],
+                age: Number(ageVal) || 30,
                 primary_applicant: p,
               },
             });

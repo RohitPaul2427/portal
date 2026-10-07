@@ -170,10 +170,31 @@ def _verification_tone(days: Optional[int]) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 async def _load_occupation_for_ssg(cc: str, code: str) -> Optional[Dict[str, Any]]:
     cc = (cc or "").upper()
-    return await db["occupation_master"].find_one(
+    doc = await db["occupation_master"].find_one(
         {"country_code": cc, "code": str(code), "status": "verified"},
         {"_id": 0},
     )
+    if not doc and cc == "AU" and len(str(code)) == 4:
+        unit = await db["anzsco_4digit_master"].find_one({"code": str(code)}, {"_id": 0})
+        if unit:
+            children = await db["occupation_master"].find(
+                {"country_code": "AU", "code": {"$regex": f"^{code}"}},
+                {"_id": 0, "code": 1, "title": 1, "assessing_authority": 1, "pathway_list": 1, "recommended_visa_subclass": 1}
+            ).to_list(20)
+            aa = {}
+            for ch in children:
+                if ch.get("assessing_authority"):
+                    aa = ch["assessing_authority"]
+                    break
+            unit["country_code"] = "AU"
+            unit["status"] = "verified"
+            unit["assessing_authority"] = aa
+            unit["similar_codes"] = [{"code": ch["code"], "title": ch["title"]} for ch in children]
+            unit["child_occupations"] = children
+            unit["pathway_list"] = "MLTSSL / STSOL"
+            unit["recommended_visa_subclass"] = {"AU": "190"}
+            return unit
+    return doc
 
 
 def _build_occupation_jsonld(occ: Dict[str, Any], country: Dict[str, str], base_url: str, page_url: str) -> Dict[str, Any]:
@@ -422,33 +443,140 @@ async def render_occupation_html(country_code: str, code: str) -> Optional[str]:
                 {"_id": 0, "state_code": 1, "state_name": 1, "slug": 1, "capital_city": 1},
             ):
                 state_docs[st["state_code"]] = st
-            for code in codes:  # preserve sort order
-                st = state_docs.get(code)
+            for s_code in codes:  # preserve sort order
+                st = state_docs.get(s_code)
                 if st:
-                    top_states.append({**st, "state_share_pct": pct_by_code[code]})
-    # print("=" * 80)
-    # print("ABS DATA")
+                    top_states.append({**st, "state_share_pct": pct_by_code[s_code]})
 
-    # print(occ.get("abs_data"))
+    occ_code = str(occ.get("code") or code).strip()
+    migroto_live = None
+    if cc == "AU":
+        try:
+            from services.migroto_service import migroto_service
+            details = await migroto_service.get_occupation_details(occ_code)
+            if details.get("status") == "success":
+                migroto_live = details.get("data")
+        except Exception:
+            pass
 
-    # print("=" * 80)
-    # print("JSA DATA")
-    # print(occ.get("jsa_data"))
+    min_pts = occ.get("min_invitation_points") or {}
+    pathway_list = occ.get("pathway_list") or ""
+    gsm_pathways = (occ.get("visa_pathways") or {}).get("gsm_pathways") or []
+    is_189_eligible = ("189" in gsm_pathways or pathway_list == "MLTSSL") and (min_pts.get("subclass_189") is not None or pathway_list == "MLTSSL")
 
-    # print("=" * 80)
-    # print("INDUSTRIES")
-    # print(occ.get("industries_ranked"))
+    cutoff_189 = min_pts.get("subclass_189") if is_189_eligible else None
+    if is_189_eligible and cutoff_189 is None:
+        cutoff_189 = 80
+    cutoff_190 = min_pts.get("subclass_190") or 75
+    cutoff_491 = min_pts.get("subclass_491") or 65
 
-    # print("=" * 80)
-    # print("EDUCATION")
-    # print(occ.get("education_distribution"))
+    total_189 = "N/A" if not is_189_eligible else "0"
+    total_190 = "0"
+    total_491 = "0"
+    as_month = "July 2026"
+    eoi_rows = []
 
-    # print("=" * 80)
-    # print("STATE DISTRIBUTION")
-    # print(occ.get("state_distribution"))
-    # print("=" * 80)
-    
-    
+    if migroto_live:
+        eoi = migroto_live.get("eoi_backlog") or {}
+        subclasses = eoi.get("subclasses") or []
+        sub189 = next((s for s in subclasses if str(s.get("subclass")) == "189"), None)
+        sub190 = next((s for s in subclasses if str(s.get("subclass")) == "190"), None)
+        sub491 = next((s for s in subclasses if str(s.get("subclass")) == "491"), None)
+        if sub189 and sub189.get("total") is not None:
+            total_189 = f"{sub189['total']:,}"
+        elif not is_189_eligible:
+            total_189 = "N/A"
+        if sub190 and sub190.get("total") is not None:
+            total_190 = f"{sub190['total']:,}"
+        if sub491 and sub491.get("total") is not None:
+            total_491 = f"{sub491['total']:,}"
+
+        inv_data = migroto_live.get("invitations", {}).get("data", [])
+        for inv in inv_data:
+            sc = str(inv.get("subclass"))
+            if sc == "189" and is_189_eligible:
+                cutoff_189 = inv.get("score") or cutoff_189
+            elif sc == "190":
+                cutoff_190 = inv.get("score") or cutoff_190
+            elif sc == "491":
+                cutoff_491 = inv.get("score") or cutoff_491
+
+        as_month = eoi.get("as_at_month") or "July 2026"
+        eoi_rows = eoi.get("data") or []
+
+    ste = occ.get("state_territory_eligibility") or {}
+    state_ratings = occ.get("state_ratings") or {}
+    state_demand = occ.get("state_demand") or {}
+    live_progs = (migroto_live or {}).get("state_programs") or []
+
+    state_order = [
+        {"code": "NSW", "name": "New South Wales"},
+        {"code": "VIC", "name": "Victoria"},
+        {"code": "WA", "name": "Western Australia"},
+        {"code": "QLD", "name": "Queensland"},
+        {"code": "SA", "name": "South Australia"},
+        {"code": "TAS", "name": "Tasmania"},
+        {"code": "ACT", "name": "Canberra (ACT)"},
+        {"code": "NT", "name": "Northern Territory"},
+    ]
+
+    state_radar = []
+    for st in state_order:
+        live = next((p for p in live_progs if p.get("state") == st["code"]), None)
+        if live:
+            state_radar.append({
+                "code": st["code"],
+                "name": live.get("state_name") or st["name"],
+                "status": live.get("status") or "open",
+                "badge": live.get("badge") or ("Open" if live.get("status") == "open" else "Conditional"),
+                "subclass": live.get("subclass") or "190 & 491",
+            })
+        else:
+            s = ste.get(st["code"]) or {}
+            el190 = s.get("eligible_190", True)
+            el491 = s.get("eligible_491", True)
+            rating = s.get("rating") or state_ratings.get(st["code"]) or "NS"
+            demand = s.get("demand") or state_demand.get(st["code"]) or "low"
+            stream = s.get("stream") or ""
+
+            if rating == "S" or demand == "high":
+                status = "open"
+                badge = "Priority Open" if el190 else "491 Priority"
+            elif rating == "R" or demand == "medium":
+                status = "open" if el190 else "conditional"
+                badge = "491 Regional Only" if (el491 and not el190) else "Open (Medium)"
+            elif el190 and el491:
+                status = "open"
+                badge = "Open"
+            elif el491:
+                status = "conditional"
+                badge = "491 Regional Only"
+            elif "DAMA" in stream:
+                status = "conditional"
+                badge = "DAMA Pathway"
+            else:
+                status = "closed"
+                badge = "Closed / Restricted"
+
+            if el190 and el491:
+                subclass = "190 & 491"
+            elif el190:
+                subclass = "190 Nominated"
+            elif el491:
+                subclass = "491 Regional"
+            elif "DAMA" in stream:
+                subclass = "DAMA Concession"
+            else:
+                subclass = "Restricted"
+
+            state_radar.append({
+                "code": st["code"],
+                "name": st["name"],
+                "status": status,
+                "badge": badge,
+                "subclass": subclass,
+            })
+
     tmpl = _env.get_template("atlas_occupation_ssr.html")
     return tmpl.render(
         occ=occ,
@@ -475,6 +603,17 @@ async def render_occupation_html(country_code: str, code: str) -> Optional[str]:
         strong_regions=strong_regions,
         industry_slug_map=industry_slug_map,
         top_states=top_states,
+        migroto_live=migroto_live,
+        total_189=total_189,
+        total_190=total_190,
+        total_491=total_491,
+        cutoff_189=cutoff_189,
+        cutoff_190=cutoff_190,
+        cutoff_491=cutoff_491,
+        is_189_eligible=is_189_eligible,
+        state_radar=state_radar,
+        as_month=as_month,
+        eoi_rows=eoi_rows,
     )
 
 

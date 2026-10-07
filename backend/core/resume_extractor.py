@@ -552,9 +552,9 @@ def parse_resume_heuristically(text: str) -> dict:
     highest_qual = "bachelor"
     if _has_kw(["phd", "doctorate", "doctor of"]):
         highest_qual = "doctorate"
-    elif _has_kw(["master", "m.tech", "m.sc", "mba", "m.s.", "ms in", "ll.m", "llm", "master of laws"]):
+    elif _has_kw(["master", "m.tech", "m.sc", "mba", "m.s.", "ms in", "ll.m", "master of laws", "master of law"]):
         highest_qual = "master"
-    elif _has_kw(["bachelor", "b.tech", "b.sc", "b.e.", "b.com", "bba", "ll.b", "llb", "bachelor of laws"]):
+    elif _has_kw(["bachelor", "b.tech", "b.sc", "b.e.", "b.com", "bba", "ll.b", "llb", "bachelor of laws", "bachelor of law"]):
         highest_qual = "bachelor"
     elif _has_kw(["diploma", "associate"]):
         highest_qual = "diploma"
@@ -563,7 +563,7 @@ def parse_resume_heuristically(text: str) -> dict:
 
     field = "Information Technology"
     if _has_kw([
-        "bachelor of laws", "master of laws", "ll.b", "llb", "ll.m", "llm", "juris doctor",
+        "bachelor of laws", "bachelor of law", "master of laws", "master of law", "ll.b", "llb", "ll.m", "juris doctor",
         "law practitioner", "legal practice", "legal studies", "bar council", "high court",
         "supreme court", "advocate", "solicitor", "barrister", "criminal law", "civil law",
         "corporate law", "constitutional law", "litigation", "conveyancing"

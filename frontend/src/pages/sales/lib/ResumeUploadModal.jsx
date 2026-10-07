@@ -113,7 +113,7 @@ export default function ResumeUploadModal({ onClose, onExtracted, headers }) {
               </div>
 
               {/* Language & Marital */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 border-b pb-2.5">
                 <div>
                   <span className="text-slate-400 block text-[10px] uppercase font-bold">Language Test</span>
                   <span className="font-semibold text-slate-800">
@@ -123,9 +123,42 @@ export default function ResumeUploadModal({ onClose, onExtracted, headers }) {
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[10px] uppercase font-bold">Marital Status</span>
-                  <span className="font-semibold text-slate-800 capitalize">{extracted.primary_applicant?.marital_status || 'Never Married / Single'}</span>
+                  <span className="font-semibold text-slate-800 capitalize">{extracted.primary_applicant?.marital_status || extracted.marital_status || 'Never Married / Single'}</span>
                 </div>
               </div>
+
+              {/* Employer & Company Nature */}
+              <div className="grid grid-cols-2 gap-2 border-b pb-2.5 bg-indigo-50/60 p-2.5 rounded-lg border border-indigo-100">
+                <div>
+                  <span className="text-indigo-600 block text-[10px] uppercase font-bold">Recent Employer</span>
+                  <span className="font-semibold text-slate-800">
+                    {extracted.primary_applicant?.professional?.employer_name || extracted.employer_name || (extracted.work_history?.[0]?.employer_name) || '—'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-indigo-600 block text-[10px] uppercase font-bold">Nature of Company / Sector</span>
+                  <span className="font-semibold text-indigo-900">
+                    {extracted.primary_applicant?.professional?.employer_nature || extracted.company_nature || (extracted.work_history?.[0]?.company_nature) || (extracted.work_history?.[0]?.nature_of_company) || 'General Enterprise'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Roles & Key Responsibilities / Duties */}
+              {((extracted.duty_bullets && extracted.duty_bullets.length > 0) || (extracted.primary_applicant?.work_history?.[0]?.duty_bullets?.length > 0)) && (
+                <div className="space-y-1 pt-0.5">
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">
+                    Extracted Roles &amp; Responsibilities ({(extracted.duty_bullets || extracted.primary_applicant?.work_history?.[0]?.duty_bullets || []).length} core duties)
+                  </span>
+                  <div className="bg-white border border-slate-200 rounded-lg p-2 max-h-28 overflow-y-auto space-y-1 text-[11px] text-slate-700">
+                    {(extracted.duty_bullets || extracted.primary_applicant?.work_history?.[0]?.duty_bullets || []).map((b, idx) => (
+                      <div key={idx} className="flex items-start gap-1.5 leading-tight">
+                        <span className="text-emerald-500 font-bold">•</span>
+                        <span>{b}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2 justify-end pt-2">

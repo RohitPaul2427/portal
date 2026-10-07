@@ -849,13 +849,28 @@ async def get_single_occupation(country: str, code: str):
     if country not in {"AU", "CA", "NZ"}:
         raise HTTPException(404, "Unknown country")
     # Sanity on code format
-    if not re.match(r"^\d{5,6}$", code):
+    if not re.match(r"^\d{4,6}$", code):
         raise HTTPException(400, "Invalid code format")
 
     d = await db["occupation_master"].find_one(
         {"country_code": country, "code": code, "status": "verified"},
         {"_id": 0},
     )
+    if not d and country == "AU" and len(code) == 4:
+        d = await db["anzsco_4digit_master"].find_one({"code": code}, {"_id": 0})
+        if d:
+            d["country_code"] = "AU"
+            d["status"] = "verified"
+            children = await db["occupation_master"].find(
+                {"country_code": "AU", "code": {"$regex": f"^{code}"}},
+                {"_id": 0, "code": 1, "title": 1, "assessing_authority": 1, "pathway_list": 1, "recommended_visa_subclass": 1}
+            ).to_list(20)
+            if children:
+                d["assessing_authority"] = children[0].get("assessing_authority") or {}
+                d["similar_codes"] = [{"code": ch["code"], "title": ch["title"]} for ch in children]
+                d["child_occupations"] = children
+                d["pathway_list"] = "MLTSSL / STSOL"
+                d["recommended_visa_subclass"] = {"AU": "190"}
     if not d:
         raise HTTPException(404, "Occupation not found or not yet verified")
         # ---------------------------------------------------------
@@ -917,6 +932,16 @@ async def get_single_occupation(country: str, code: str):
                 **_country_meta(other),
             })
 
+    migroto_live = None
+    if country == "AU":
+        try:
+            from services.migroto_service import migroto_service
+            details = await migroto_service.get_occupation_details(code)
+            if details.get("status") == "success":
+                migroto_live = details.get("data")
+        except Exception:
+            pass
+
     return {
         "country": country,
         "country_meta": cm,
@@ -925,6 +950,7 @@ async def get_single_occupation(country: str, code: str):
         "cross_country": cross_country,
         "faqs": faqs,
         "seo": _build_seo(country, d, faqs),
+        "migroto_live": migroto_live,
     }
 
 

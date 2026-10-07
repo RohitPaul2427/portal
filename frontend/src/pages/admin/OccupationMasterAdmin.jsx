@@ -335,6 +335,41 @@ function ThreePanelEditor({ item, headers, onSaved, onCancel }) {
     } finally { setSaving(false); }
   };
 
+  const [migrotoLoading, setMigrotoLoading] = useState(false);
+  const syncMigroto = async () => {
+    if (item.country_code !== 'AU') {
+      toast.error('Migroto live sync is available for Australia (ANZSCO) occupations');
+      return;
+    }
+    setMigrotoLoading(true);
+    try {
+      const r = await axios.post(`${API}/migroto/sync/${item.code}`, {}, { headers });
+      if (r.data.status === 'success') {
+        const details = await axios.get(`${API}/migroto/occupation/${item.code}`, { headers });
+        const insight = details.data?.data;
+        if (insight) {
+          setEdit((s) => ({
+            ...s,
+            classification_version: insight.occupation?.version || r.data.migroto_info?.classification_version || s.classification_version,
+            skillselect_tier: insight.occupation?.tier || s.skillselect_tier,
+            typical_tasks: insight.occupation?.essential_tasks ? insight.occupation.essential_tasks.split('\n').filter(Boolean) : s.typical_tasks,
+            migroto_synced: true,
+            migroto_last_update: insight.eoi_backlog_last_update,
+          }));
+        }
+        toast.success('✓ Synced with Migroto Skilled Migration Registry', {
+          description: `Verified ANZSCO code ${item.code} (${r.data.migroto_info?.classification_version || 'v1.3, v2022'}). Tier & backlog updated.`
+        });
+      } else {
+        toast.error(r.data.error || 'Migroto sync failed');
+      }
+    } catch (e) {
+      toast.error(formatApiError(e, 'Failed to sync with Migroto'));
+    } finally {
+      setMigrotoLoading(false);
+    }
+  };
+
   const selectedAuthCode = edit.assessing_authority?.code || edit.assessing_authority?.short_name || edit.skill_assessment_details?.authority || '';
   const currentAuthDoc = authorities.find((a) => a.code === selectedAuthCode);
 
@@ -351,17 +386,36 @@ function ThreePanelEditor({ item, headers, onSaved, onCancel }) {
               {edit.status || item.status}
             </Badge>
             <Badge className="text-[10px] bg-indigo-100 text-indigo-800 border-indigo-300">
-              {edit.classification_type || item.classification_type} (2013 / 2022)
+              {edit.classification_version || edit.classification_type || item.classification_type} (2013 / 2022)
             </Badge>
             {edit.skillselect_tier && (
               <Badge className="text-[10px] bg-teal-100 text-teal-800 border-teal-300">
                 {String(edit.skillselect_tier).replace('_', ' ').toUpperCase()}
               </Badge>
             )}
+            {(edit.migroto_synced || item.migroto_synced) && (
+              <Badge className="text-[10px] bg-teal-600 text-white border-teal-700" title="Synchronized with Migroto Australian Skilled Migration Registry">
+                Migroto Live ✓
+              </Badge>
+            )}
           </div>
           <h2 className="text-xl font-bold mt-1 text-slate-900">{edit.title || item.title}</h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center flex-wrap">
+          {item.country_code === 'AU' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={syncMigroto}
+              disabled={migrotoLoading}
+              className="border-teal-400 text-teal-700 hover:bg-teal-50"
+              data-testid="editor-migroto-sync"
+              title="Pull latest ANZSCO version, SkillSelect tier, and invitation data from Migroto"
+            >
+              {migrotoLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1 text-teal-600" />}
+              Migroto Live Sync
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={onCancel} data-testid="editor-cancel">
             Back
           </Button>
