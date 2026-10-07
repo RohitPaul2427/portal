@@ -73,7 +73,7 @@ class SalaryDeductions(BaseModel):
     pf_employer_pct: float = 12.0
     esi_employee_pct: float = 0.75
     esi_employer_pct: float = 3.25
-    professional_tax_inr: int = 200
+    professional_tax_inr: Optional[int] = None  # None = auto from state PT slabs
     tds_inr: int = 0
     custom_deductions: List[dict] = Field(default_factory=list)
 
@@ -98,12 +98,27 @@ class PayslipGenerate(BaseModel):
 # CALC HELPERS (India FY25-26 simplified)
 # ════════════════════════════════════════════════════
 
-PF_WAGE_CAP_INR = 15_000  # Monthly PF wage ceiling
-ESI_GROSS_CUTOFF_INR = 21_000  # ESI applies only if gross < this
+PF_WAGE_CAP_INR = 15_000  # Legacy fallback only - real value comes from statutory_settings
+ESI_GROSS_CUTOFF_INR = 21_000  # Legacy fallback only
+
+# Backlog E16-03/04: rates are effective-dated data (core/governance/statutory.py)
+from core.governance import payroll_rules as _pr  # noqa: E402
+from core.governance import statutory as _statutory  # noqa: E402
+
+# A stored professional_tax_inr of None (new default) or the old hard-coded 200
+# means "compute from the state slab table". Any other number is a manual override.
+_PT_AUTO_VALUES = (None, 200)
 
 
-def _compute_payslip(structure: dict, attendance: dict, bonus_inr: int, reimbursements_inr: int) -> dict:
-    """Compute a single payslip given salary structure + attendance summary."""
+def _compute_payslip(structure: dict, attendance: dict, bonus_inr: int, reimbursements_inr: int,
+                     rules: Optional[dict] = None, gender: Optional[str] = None,
+                     month: Optional[int] = None) -> dict:
+    """Compute a single payslip given salary structure + attendance summary.
+
+    `rules` = statutory settings effective for the wage month (see
+    core.governance.statutory.payroll_rules_for). Falls back to defaults.
+    """
+    rules = rules or _pr.DEFAULT_RULES
     comp = structure.get("components", {})
     ded = structure.get("deductions", {})
 
@@ -122,19 +137,17 @@ def _compute_payslip(structure: dict, attendance: dict, bonus_inr: int, reimburs
     lwp_per_day = basic / 30 if basic > 0 else 0
     lwp_deduction = int(round(lwp_per_day * (lwp_days + 0.5 * half_days)))
 
-    # PF: 12% of capped basic
-    pf_basic = min(basic, PF_WAGE_CAP_INR)
-    pf_emp = int(round(pf_basic * ded.get("pf_employee_pct", 12) / 100))
-    pf_employer = int(round(pf_basic * ded.get("pf_employer_pct", 12) / 100))
+    # Labour-code 50% wage rule -> PF wages
+    wage_check = _pr.deemed_wages(comp, rules.get("labour_code.min_wage_pct", 50.0))
+    pf_wages = wage_check["deemed_wages"] if rules.get("labour_code.apply_wage_rule", True) else basic
+    pf = _pr.pf_contribution(pf_wages, rules, ded.get("pf_employee_pct"), ded.get("pf_employer_pct"))
+    pf_emp, pf_employer = pf["employee"], pf["employer"]
 
-    # ESI: only if gross < cutoff
-    esi_emp = 0
-    esi_employer = 0
-    if gross < ESI_GROSS_CUTOFF_INR:
-        esi_emp = int(round(gross * ded.get("esi_employee_pct", 0.75) / 100))
-        esi_employer = int(round(gross * ded.get("esi_employer_pct", 3.25) / 100))
+    esi = _pr.esi_contribution(gross, rules, ded.get("esi_employee_pct"), ded.get("esi_employer_pct"))
+    esi_emp, esi_employer = esi["employee"], esi["employer"]
 
-    pt = int(ded.get("professional_tax_inr", 200))
+    stored_pt = ded.get("professional_tax_inr")
+    pt = _pr.professional_tax(gross, rules, gender=gender, month=month) if stored_pt in _PT_AUTO_VALUES else int(stored_pt)
     tds = int(ded.get("tds_inr", 0))
     custom_ded_total = sum(int(c.get("amount", 0)) for c in ded.get("custom_deductions", []))
 
@@ -170,6 +183,11 @@ def _compute_payslip(structure: dict, attendance: dict, bonus_inr: int, reimburs
         "net_pay_inr": net_pay,
         "pf_employer_inr": pf_employer,
         "esi_employer_inr": esi_employer,
+        "statutory": {
+            "pf_wages_inr": pf["pf_wages"], "pf_ceiling_inr": pf["ceiling"],
+            "esi_applicable": esi["applicable"], "esi_threshold_inr": esi["threshold"],
+            "wage_rule": wage_check,
+        },
     }
 
 
@@ -311,8 +329,11 @@ async def create_salary_structure(
         + int(comp.get("lta", 0))
         + sum(int(c.get("amount", 0)) for c in comp.get("custom", []))
     )
-    pf_basic = min(int(comp.get("basic", 0)), PF_WAGE_CAP_INR)
-    pf_employer_monthly = int(round(pf_basic * ded.get("pf_employer_pct", 12) / 100))
+    _rules = await _statutory.rules_as_of(payload.effective_from[:10])
+    _wc = _pr.deemed_wages(comp, _rules.get("labour_code.min_wage_pct", 50.0))
+    pf_employer_monthly = _pr.pf_contribution(
+        _wc["deemed_wages"] if _rules.get("labour_code.apply_wage_rule", True) else int(comp.get("basic", 0)),
+        _rules, ded.get("pf_employee_pct"), ded.get("pf_employer_pct"))["employer"]
     ctc_monthly = gross_monthly + pf_employer_monthly
     ctc_annual = ctc_monthly * 12
 
@@ -366,10 +387,17 @@ async def preview_ctc(payload: CtcPreview, current_user: dict = Depends(get_curr
         + int(comp.get("lta", 0))
         + sum(int(c.get("amount", 0)) for c in comp.get("custom", []))
     )
-    pf_basic = min(int(comp.get("basic", 0)), PF_WAGE_CAP_INR)
-    pf_employer_monthly = int(round(pf_basic * ded.get("pf_employer_pct", 12) / 100))
+    _rules = await _statutory.rules_as_of(datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    _wc = _pr.deemed_wages(comp, _rules.get("labour_code.min_wage_pct", 50.0))
+    _pf = _pr.pf_contribution(
+        _wc["deemed_wages"] if _rules.get("labour_code.apply_wage_rule", True) else int(comp.get("basic", 0)),
+        _rules, ded.get("pf_employee_pct"), ded.get("pf_employer_pct"))
+    pf_employer_monthly = _pf["employer"]
     ctc_monthly = gross_monthly + pf_employer_monthly
     return {
+        "wage_rule": _wc,
+        "pf_wages_inr": _pf["pf_wages"],
+        "pf_ceiling_inr": _pf["ceiling"],
         "gross_monthly_inr": gross_monthly,
         "pf_employer_monthly_inr": pf_employer_monthly,
         "ctc_monthly_inr": ctc_monthly,
@@ -390,6 +418,8 @@ async def generate_payslips(payload: PayslipGenerate, current_user: dict = Depen
 
     created = []
     skipped = []
+    period_rules = await _statutory.payroll_rules_for(payload.period)
+    period_month = int(payload.period[5:7])
     for emp_id in payload.employee_ids:
         # Check existing payslip for this period
         existing = await payslips_col.find_one(
@@ -432,7 +462,9 @@ async def generate_payslips(payload: PayslipGenerate, current_user: dict = Depen
         }
         bonus = 0
         reimbursements = 0
-        calc = _compute_payslip(structure, attendance_summary, bonus, reimbursements)
+        emp_profile = await users_col.find_one({"id": emp_id}, {"_id": 0, "gender": 1}) or {}
+        calc = _compute_payslip(structure, attendance_summary, bonus, reimbursements,
+                                rules=period_rules, gender=emp_profile.get("gender"), month=period_month)
 
         payslip_doc = {
             "id": str(uuid.uuid4()),
@@ -537,6 +569,15 @@ async def download_payslip_pdf(payslip_id: str, current_user: dict = Depends(get
 async def approve_payslip(payslip_id: str, current_user: dict = Depends(get_current_user)):
     if not _is_manager_or_admin(current_user):
         raise HTTPException(status_code=403, detail="HR/admin only")
+    # Backlog E15 maker-checker: whoever generated a payslip cannot approve it.
+    # Set PAYROLL_MAKER_CHECKER=0 only if a single person runs payroll.
+    import os as _os
+    draft = await payslips_col.find_one({"id": payslip_id, "status": "draft"}, {"_id": 0, "generated_by": 1, "employee_id": 1})
+    if draft and _os.environ.get("PAYROLL_MAKER_CHECKER", "1") == "1":
+        if draft.get("generated_by") == current_user["id"]:
+            raise HTTPException(status_code=403, detail="Maker-checker: the person who generated this payslip cannot approve it")
+        if draft.get("employee_id") == current_user["id"]:
+            raise HTTPException(status_code=403, detail="You cannot approve your own payslip")
     res = await payslips_col.update_one(
         {"id": payslip_id, "status": "draft"},
         {"$set": {
@@ -547,6 +588,8 @@ async def approve_payslip(payslip_id: str, current_user: dict = Depends(get_curr
     )
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Draft payslip not found")
+    from core.governance import audit_chain as _ac
+    await _ac.log_event("payroll.payslip_approved", actor=current_user, target_type="payslip", target_id=payslip_id)
     return {"message": "Approved"}
 
 
@@ -572,4 +615,7 @@ async def mark_payslip_paid(payslip_id: str, payload: MarkPaid, current_user: di
     )
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Approved payslip not found")
+    from core.governance import audit_chain as _ac
+    await _ac.log_event("payroll.payslip_paid", actor=current_user, target_type="payslip", target_id=payslip_id,
+                        meta={"payment_reference": payload.payment_reference.strip()})
     return {"message": "Marked paid", "paid_at": now_iso, "paid_by": current_user.get("id")}

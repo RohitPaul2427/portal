@@ -834,6 +834,8 @@ async def deactivate_employee(
         "details": {"reason": reason},
         "created_at": datetime.now(timezone.utc),
     })
+    from core.governance.access import offboard_user
+    await offboard_user(employee_id, current_user, reason=reason or "employee_deactivated")
     return {"message": "Employee deactivated"}
 
 

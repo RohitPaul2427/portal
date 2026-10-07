@@ -195,6 +195,7 @@ from routers.fee_master import router as fee_master_router
 from routers.email_settings import router as email_settings_router
 from routers.email_templates import router as email_templates_router
 from routers.public_resume import router as public_resume_router
+from routers.governance import router as governance_router
 
 from contextlib import asynccontextmanager  # noqa: E402
 
@@ -251,6 +252,13 @@ async def run_startup_tasks(run_migrations: bool = True):
     await init_db()
     if not run_migrations:
         return
+
+    # Backlog Phase 0-1: governance indexes + idempotent seeds (never overwrite edits)
+    try:
+        from core.governance.setup import ensure_governance_ready
+        print(f"[Governance] {await ensure_governance_ready()}")
+    except Exception as e:  # noqa: BLE001
+        print(f"[Governance ERROR] {e}")
 
     await seed_atlas_countries(db)
     try:
@@ -493,6 +501,9 @@ def start_scheduler():
         global _digest_scheduler
         _digest_scheduler = AsyncIOScheduler(timezone="UTC")
         _digest_scheduler.add_job(run_digest_once, "interval", minutes=30, id="client_error_digest", replace_existing=True)
+        # Backlog E06-03 - expire time-bound access grants
+        from core.governance.access import expire_grants
+        _digest_scheduler.add_job(expire_grants, "interval", minutes=15, id="governance_expire_grants", replace_existing=True)
         # Phase 19 — Nightly SEO SSG full sweep @ 03:00 UTC
         from apscheduler.triggers.cron import CronTrigger
         _digest_scheduler.add_job(
@@ -738,7 +749,8 @@ for r in [targets_router, cost_structures_router, auth_router, users_router, pro
           reimbursements_router, hr_analytics_router, content_studio_router,
           site_audit_router, dev_tracker_router,
           internal_chat_router, support_tickets_router, rbac_v2_router, country_workflows_router,atlas_countries_router,atlas_country_admin_router,
-          eoi_backlog_router, bulk_assessments_router, fee_master_router, email_settings_router, email_templates_router, public_resume_router]:
+          eoi_backlog_router, bulk_assessments_router, fee_master_router, email_settings_router, email_templates_router, public_resume_router,
+          governance_router]:
     app.include_router(r, prefix="/api")
 
 

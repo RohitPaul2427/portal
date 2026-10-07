@@ -65,7 +65,9 @@ async def login(request: LoginRequest, http_request: Request):
         if user.get("status") != "active":
             raise HTTPException(status_code=401, detail="Account is inactive")
         
-        token = create_access_token(build_token_payload(user))
+        from core.governance.sessions import create_session
+        sid = await create_session(user, http_request, kind="password")
+        token = create_access_token({**build_token_payload(user), "sid": sid})
         
         try:
             await _log(user.get("id"), "login", "user", user.get("id"), {"role": user.get("role"), "email": user.get("email")})
@@ -139,7 +141,11 @@ async def register(request: RegisterRequest, current_user: dict = Depends(get_op
     await users_col.insert_one(user)
 
     # An admin creating a staff account must not receive that account's token.
-    token = None if is_admin else create_access_token(build_token_payload(user))
+    token = None
+    if not is_admin:
+        from core.governance.sessions import create_session
+        sid = await create_session(user, None, kind="register")
+        token = create_access_token({**build_token_payload(user), "sid": sid})
     return {
         "token": token,
         "user": {"id": user["id"], "email": user["email"], "name": user["name"], "role": user["role"], "status": "active"}
@@ -214,8 +220,14 @@ async def impersonate_user(user_id: str, current_user: dict = Depends(get_curren
     if target.get("status") != "active":
         raise HTTPException(status_code=400, detail="Cannot impersonate an inactive user")
 
-    # Issue JWT for target user (same flow as /login)
-    token = create_access_token(build_token_payload(target))
+    # Issue JWT for target user (same flow as /login) with its own session,
+    # tagged as impersonation so it shows up in the target's session list.
+    from core.governance.sessions import create_session
+    from core.governance import audit_chain
+    sid = await create_session(target, None, kind="impersonation", impersonated_by=current_user["id"], hours=2)
+    token = create_access_token({**build_token_payload(target), "sid": sid}, expires_hours=2)
+    await audit_chain.log_event("auth.impersonate", actor=current_user, target_type="user",
+                                target_id=target["id"], severity="warn")
 
     # Audit log — captures admin id + target id for compliance
     await _log(

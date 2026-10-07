@@ -54,7 +54,7 @@ jobs:
         env:
           API_BASE_URL: http://127.0.0.1:8001
           TEST_ADMIN_PASSWORD: Ci!AdminPassw0rd
-        run: pytest -q tests/test_security_hardening.py
+        run: pytest -q tests/test_security_hardening.py tests/test_governance_api.py
       - name: Dependency vulnerability audit
         continue-on-error: true   # report new advisories without blocking merges
         run: pip-audit -r requirements.txt --no-deps --disable-pip --progress-spinner off

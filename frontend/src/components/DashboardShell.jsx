@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import NotificationBell from '@/components/NotificationBell';
 import { LanguageToggle, useLanguage } from '@/components/LanguageProvider';
 import { ThemeToggle } from '@/components/ThemeProvider';
-import { LogOut, Menu, ArrowLeft, ChevronDown, ChevronRight, MessageCircle, TicketCheck } from 'lucide-react';
+import { LogOut, ShieldCheck, Menu, ArrowLeft, ChevronDown, ChevronRight, MessageCircle, TicketCheck } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' && window.location.hostname.includes('leamss.com') ? 'https://api.leamss.com' : 'http://localhost:8001');
 const COMM_API = `${BACKEND_URL}/api`;
@@ -292,7 +292,24 @@ const DashboardShell = ({
               </div>
             </div>
             <Button
-              onClick={onLogout}
+              onClick={() => navigate('/access-center')}
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 h-8 text-xs mb-1"
+              data-testid="access-center-link"
+            >
+              <ShieldCheck className="mr-2 h-3.5 w-3.5" /> Access &amp; security
+            </Button>
+            <Button
+              onClick={async () => {
+                // Backlog E02-05: end the server-side session so the token stops working.
+                try {
+                  await axios.post(`${COMM_API}/governance/logout`, {}, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }, timeout: 4000,
+                  });
+                } catch (e) { /* offline / old token - still log out locally */ }
+                onLogout?.();
+              }}
               variant="ghost"
               size="sm"
               className="w-full justify-start text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 h-8 text-xs"
