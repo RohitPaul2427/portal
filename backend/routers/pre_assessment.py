@@ -763,6 +763,20 @@ async def download_pa_document(pa_id: str, doc_id: str, inline: bool = False, cu
     doc = await pre_assessment_docs_col.find_one({"id": doc_id, "pre_assessment_id": pa_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+    pa = await pre_assessments_col.find_one({"id": pa_id}, {"_id": 0})
+    if not pa:
+        raise HTTPException(status_code=404, detail="Pre-assessment not found")
+    
+    role = current_user.get("role")
+    if role not in ("admin", "admin_owner", "super_admin"):
+        if role in ("partner", "sales_executive", "sr_sales_executive") and pa.get("partner_id") != current_user["id"] and pa.get("created_by") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not your pre-assessment")
+        if role == "client":
+            email_match = pa.get("client_email", "").lower() == current_user.get("email", "").lower()
+            id_match = pa.get("client_user_id") == current_user["id"]
+            if not (email_match or id_match):
+                raise HTTPException(status_code=403, detail="Not your document")
+
     path = doc.get("file_path")
     if not path or not os.path.exists(path):
         raise HTTPException(status_code=404, detail="File missing on server")

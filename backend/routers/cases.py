@@ -10,6 +10,7 @@ from core.database import (
 )
 pre_assessments_col = db["pre_assessments"]
 from core.auth import get_current_user
+from core.case_access_service import CaseAccessService
 from core.services import create_notification, notify_users, log_activity
 from core.email_service import send_case_step_update_email
 import uuid
@@ -493,9 +494,7 @@ async def get_overdue_steps(current_user: dict = Depends(get_current_user)):
 
 @router.get("/{case_id}")
 async def get_case(case_id: str, current_user: dict = Depends(get_current_user)):
-    case = await cases_col.find_one({"id": case_id}, {"_id": 0})
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
+    case = await CaseAccessService.verify_case_access(case_id, current_user, "case.view")
     
     client = await users_col.find_one({"id": case.get("client_id")}, {"_id": 0, "password": 0})
     product = await products_col.find_one({"id": case.get("product_id")}, {"_id": 0})
@@ -527,12 +526,7 @@ async def get_case(case_id: str, current_user: dict = Depends(get_current_user))
 
 @router.post("/update-step")
 async def update_step(request: StepUpdate, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] not in ["admin", "case_manager"]:
-        raise HTTPException(status_code=403, detail="Only admin or case manager can update steps")
-
-    case = await cases_col.find_one({"id": request.case_id}, {"_id": 0})
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
+    case = await CaseAccessService.verify_case_access(request.case_id, current_user, "case.update")
 
     # Get all steps for this case
     steps = await case_steps_col.find({"case_id": request.case_id}, {"_id": 0}).sort("step_order", 1).to_list(100)

@@ -231,4 +231,5 @@ data/
 backend/venv/
 frontend/node_modules/
 .emergent/
+scratch/
 

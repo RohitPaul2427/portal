@@ -669,6 +669,24 @@ def _build_seo(country: str, doc: Dict[str, Any], faqs: Optional[List[Dict[str, 
 
 def _shape_for_card(d: Dict[str, Any]) -> Dict[str, Any]:
     """Compact shape for list / featured cards (smaller payload)."""
+    aa = d.get("assessing_authority") or {}
+    aa_name = aa.get("name") or aa.get("short_name") or aa.get("code") or ""
+    rvs = d.get("recommended_visa_subclass") or {}
+    cc = d.get("country_code") or "AU"
+    rec_visa = rvs.get(cc) if isinstance(rvs, dict) else (rvs if isinstance(rvs, str) else "")
+    
+    salary_chip = None
+    annual = (d.get("abs_data") or {}).get("median_ft_annual_aud") or ((d.get("anzsco_profile") or {}).get("median_annual_earnings_aud"))
+    if annual:
+        try:
+            salary_chip = f"${round(float(annual) / 1000)}k/yr"
+        except (ValueError, TypeError):
+            pass
+
+    growth_chip = (d.get("jsa_data") or {}).get("future_growth") or (d.get("employment_projections_2035") or {}).get("projected_growth_category")
+    if growth_chip in (None, "Unknown", ""):
+        growth_chip = None
+
     return {
         "country_code": d.get("country_code"),
         "code": d.get("code"),
@@ -677,8 +695,78 @@ def _shape_for_card(d: Dict[str, Any]) -> Dict[str, Any]:
         "teer_category": d.get("teer_category"),
         "nz_green_list_tier": d.get("nz_green_list_tier"),
         "hierarchy": (d.get("hierarchy") or {}).get("unit_group_name"),
+        "assessing_authority_name": aa_name[:36] if aa_name else None,
+        "recommended_visa": rec_visa or None,
+        "salary_chip": salary_chip,
+        "growth_chip": growth_chip,
         "verified": (d.get("status") or "") == "verified",
     }
+
+
+# ─── Typeahead ─────────────────────────────────────────────────────────────
+@router.get("/{country}/typeahead")
+async def typeahead_country(
+    country: str,
+    q: str = Query(..., min_length=1, max_length=100),
+    limit: int = Query(6, ge=1, le=20),
+):
+    """Fast typeahead for the search bar (suggests occupations while typing)."""
+    country = _code_path_country(country)
+    if country not in {"AU", "CA", "NZ"}:
+        raise HTTPException(404, "Unknown country")
+
+    q_clean = q.strip()
+    if not q_clean:
+        return {"country": country, "items": []}
+
+    tokens = [re.escape(t) for t in q_clean.split() if t]
+    token_filters = []
+    for t in tokens:
+        token_filters.append({
+            "$or": [
+                {"code": {"$regex": f"^{t}", "$options": "i"} if t.isdigit() else {"code": {"$regex": t, "$options": "i"}}},
+                {"title": {"$regex": t, "$options": "i"}},
+                {"alternative_titles": {"$regex": t, "$options": "i"}},
+                {"specialisations": {"$regex": t, "$options": "i"}},
+            ]
+        })
+
+    match: Dict[str, Any] = {
+        "country_code": country,
+        "status": "verified",
+        "$and": token_filters,
+    }
+
+    proj = {
+        "_id": 0, "code": 1, "title": 1, "country_code": 1,
+        "assessing_authority": 1, "pathway_list": 1, "status": 1
+    }
+    cursor = db["occupation_master"].find(match, proj).sort("code", 1).limit(limit)
+
+    items = []
+    async for d in cursor:
+        code_str = str(d.get("code", "")).strip()
+        title_str = d.get("title", "—")
+        aa = (d.get("assessing_authority") or {}).get("name") or (d.get("assessing_authority") or {}).get("short_name") or ""
+        pw = d.get("pathway_list") or ""
+
+        # Score relevance: higher if exact code prefix or exact title match
+        score = 90
+        if code_str.lower().startswith(q_clean.lower()):
+            score = 98
+        elif q_clean.lower() in title_str.lower():
+            score = 95
+
+        items.append({
+            "country_code": d.get("country_code", country),
+            "code": code_str,
+            "title": title_str,
+            "assessing_body": aa[:32],
+            "pathway": pw,
+            "score": score,
+        })
+
+    return {"country": country, "query": q, "items": items}
 
 
 # ─── Featured ───────────────────────────────────────────────────────────────
@@ -791,16 +879,31 @@ async def list_country(
     if verified_only:
         match["status"] = "verified"
     if search:
-        # Escape regex special chars
-        s = re.escape(search.strip())
-        match["$or"] = [
-            {"code": {"$regex": s, "$options": "i"}},
-            {"title": {"$regex": s, "$options": "i"}},
-        ]
+        s_clean = search.strip()
+        tokens = [re.escape(t) for t in s_clean.split() if t]
+        if tokens:
+            token_conditions = []
+            for t in tokens:
+                token_conditions.append({
+                    "$or": [
+                        {"code": {"$regex": f"^{t}", "$options": "i"} if t.isdigit() else {"code": {"$regex": t, "$options": "i"}}},
+                        {"title": {"$regex": t, "$options": "i"}},
+                        {"alternative_titles": {"$regex": t, "$options": "i"}},
+                        {"specialisations": {"$regex": t, "$options": "i"}},
+                        {"hierarchy.unit_group_name": {"$regex": t, "$options": "i"}},
+                        {"assessing_authority.name": {"$regex": t, "$options": "i"}},
+                        {"assessing_authority.short_name": {"$regex": t, "$options": "i"}},
+                    ]
+                })
+            match["$and"] = token_conditions
 
     total = await db["occupation_master"].count_documents(match)
-    proj = {"_id": 0, "code": 1, "title": 1, "country_code": 1, "skill_level": 1,
-            "teer_category": 1, "nz_green_list_tier": 1, "hierarchy": 1, "status": 1}
+    proj = {
+        "_id": 0, "code": 1, "title": 1, "country_code": 1, "skill_level": 1,
+        "teer_category": 1, "nz_green_list_tier": 1, "hierarchy": 1, "status": 1,
+        "assessing_authority": 1, "recommended_visa_subclass": 1, "abs_data": 1,
+        "anzsco_profile": 1, "jsa_data": 1, "employment_projections_2035": 1
+    }
     cursor = db["occupation_master"].find(match, proj).sort("code", 1).skip(offset).limit(limit)
     items = [_shape_for_card(d) async for d in cursor]
 

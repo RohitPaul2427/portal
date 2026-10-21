@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 
 from core.auth import get_current_user
+from core.case_access_service import CaseAccessService
 from core.database import (
     db, cases_col, case_deadlines_col, documents_col, notifications_col,
     case_steps_col, users_col
@@ -84,13 +85,7 @@ def _guess_validity(doc_type: str) -> int:
 @router.get("/case/{case_id}")
 async def get_case_deadlines(case_id: str, current_user: dict = Depends(get_current_user)):
     """Get all deadlines for a case - merges custom deadlines + auto-detected from documents"""
-    case = await cases_col.find_one({"id": case_id}, {"_id": 0})
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
-
-    # Access check
-    if current_user["role"] == "client" and current_user["id"] != case.get("client_id"):
-        raise HTTPException(status_code=403, detail="Access denied")
+    case = await CaseAccessService.verify_case_access(case_id, current_user, "case.view")
 
     # 1. Get custom/manual deadlines
     custom_deadlines = await case_deadlines_col.find(
@@ -187,12 +182,7 @@ async def get_case_deadlines(case_id: str, current_user: dict = Depends(get_curr
 @router.post("/create")
 async def create_deadline(data: DeadlineCreate, current_user: dict = Depends(get_current_user)):
     """Create a manual deadline for a case"""
-    if current_user["role"] not in ["admin", "case_manager"]:
-        raise HTTPException(status_code=403, detail="Admin or CM only")
-
-    case = await cases_col.find_one({"id": data.case_id}, {"_id": 0, "id": 1, "client_id": 1})
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
+    case = await CaseAccessService.verify_case_access(data.case_id, current_user, "case.update")
 
     deadline = {
         "id": str(uuid.uuid4()),
@@ -236,8 +226,10 @@ async def create_deadline(data: DeadlineCreate, current_user: dict = Depends(get
 @router.put("/{deadline_id}")
 async def update_deadline(deadline_id: str, data: DeadlineUpdate, current_user: dict = Depends(get_current_user)):
     """Update a manual deadline"""
-    if current_user["role"] not in ["admin", "case_manager"]:
-        raise HTTPException(status_code=403, detail="Admin or CM only")
+    existing = await case_deadlines_col.find_one({"id": deadline_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Deadline not found")
+    await CaseAccessService.verify_case_access(existing["case_id"], current_user, "case.update")
 
     update_data = {k: v for k, v in data.dict().items() if v is not None}
     if not update_data:
@@ -256,8 +248,10 @@ async def update_deadline(deadline_id: str, data: DeadlineUpdate, current_user: 
 @router.delete("/{deadline_id}")
 async def delete_deadline(deadline_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a manual deadline"""
-    if current_user["role"] not in ["admin", "case_manager"]:
-        raise HTTPException(status_code=403, detail="Admin or CM only")
+    existing = await case_deadlines_col.find_one({"id": deadline_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Deadline not found")
+    await CaseAccessService.verify_case_access(existing["case_id"], current_user, "case.update")
 
     result = await case_deadlines_col.delete_one({"id": deadline_id})
     if result.deleted_count == 0:

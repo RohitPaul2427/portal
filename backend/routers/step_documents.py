@@ -14,6 +14,7 @@ from core.database import (
     audit_logs_col, workflow_steps_col, case_steps_col, additional_doc_requests_col
 )
 from core.auth import get_current_user
+from core.case_access_service import CaseAccessService
 
 router = APIRouter(prefix="/step-documents", tags=["Step Documents"])
 
@@ -34,12 +35,7 @@ class StepDocRequest(BaseModel):
 @router.post("/request-step-doc")
 async def request_step_document(data: StepDocRequest, current_user: dict = Depends(get_current_user)):
     """CM requests a document within a specific step (client-specific)"""
-    if current_user["role"] not in ["case_manager", "admin"]:
-        raise HTTPException(status_code=403, detail="CM or Admin only")
-
-    case = await cases_col.find_one({"id": data.case_id}, {"_id": 0})
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
+    case = await CaseAccessService.verify_case_access(data.case_id, current_user, "case.update")
 
     # Add to case_steps required_documents as CM-added
     step = await case_steps_col.find_one(
@@ -104,12 +100,7 @@ class AdditionalDocRequest(BaseModel):
 @router.post("/request-additional")
 async def request_additional_document(data: AdditionalDocRequest, current_user: dict = Depends(get_current_user)):
     """CM requests an additional document (not tied to any step)"""
-    if current_user["role"] not in ["case_manager", "admin"]:
-        raise HTTPException(status_code=403, detail="CM or Admin only")
-
-    case = await cases_col.find_one({"id": data.case_id}, {"_id": 0})
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
+    case = await CaseAccessService.verify_case_access(data.case_id, current_user, "case.update")
 
     request_doc = {
         "id": str(uuid.uuid4()),
@@ -344,8 +335,7 @@ async def get_stepwise_documents(case_id: str, current_user: dict = Depends(get_
                 case["client_occupation_review_status"] = pa_obj.get("client_occupation_review_status") or "pending_client_review"
 
     # Access check
-    if current_user["role"] == "client" and current_user["id"] != case.get("client_id") and current_user["id"] != case.get("spouse_id"):
-        raise HTTPException(status_code=403, detail="Access denied")
+    await CaseAccessService.verify_case_access(case_id, current_user, "case.view")
 
     # Get case steps
     case_steps = await case_steps_col.find(
@@ -690,8 +680,7 @@ class RemoveDocRequest(BaseModel):
 @router.post("/remove-step-doc")
 async def remove_step_document(data: RemoveDocRequest, current_user: dict = Depends(get_current_user)):
     """Remove a document requirement from a step"""
-    if current_user["role"] not in ["case_manager", "admin"]:
-        raise HTTPException(status_code=403, detail="CM or Admin only")
+    await CaseAccessService.verify_case_access(data.case_id, current_user, "case.update")
 
     step = await case_steps_col.find_one(
         {"case_id": data.case_id, "step_name": data.step_name}, {"_id": 0}

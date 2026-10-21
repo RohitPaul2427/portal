@@ -24,6 +24,7 @@
  */
 const path = require('path');
 const fs = require('fs');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const PUBLIC_DIR = path.resolve(__dirname, '..', 'public');
 const ATLAS_DIR = path.join(PUBLIC_DIR, 'atlas');
@@ -45,6 +46,14 @@ function sendStaticFile(req, res, filePath, contentType) {
 }
 
 module.exports = function setupProxy(app) {
+  // Proxy /api to backend
+  app.use(
+    '/api',
+    createProxyMiddleware({
+      target: 'http://localhost:8001',
+      changeOrigin: true,
+    })
+  );
   // /sitemap.xml — static SSG-generated sitemap
   app.get('/sitemap.xml', (req, res, next) => {
     const f = path.join(PUBLIC_DIR, 'sitemap.xml');

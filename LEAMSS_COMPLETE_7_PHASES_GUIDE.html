@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEAMSS Portal — Complete 7-Phase Security & Case Workspace Report</title>
+  <style>
+    :root {
+      --primary: #1F4D44;
+      --primary-light: #2c6e61;
+      --secondary: #D4633F;
+      --dark: #1e293b;
+      --light: #f8fafc;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: #334155;
+      background-color: #f1f5f9;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 48px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    h1 {
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 12px;
+      margin-top: 0;
+      font-size: 2rem;
+    }
+    h2 {
+      color: var(--primary);
+      margin-top: 36px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      font-size: 1.45rem;
+    }
+    h3 {
+      color: #475569;
+      margin-top: 24px;
+      font-size: 1.15rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-success {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    .badge-warning {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+    .banner {
+      background: linear-gradient(135deg, #1F4D44 0%, #15352f 100%);
+      color: white;
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 32px;
+    }
+    .banner h1 {
+      color: white;
+      border: none;
+      margin: 0 0 8px 0;
+    }
+    .banner p {
+      margin: 4px 0;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      text-align: left;
+    }
+    th {
+      background-color: #f8fafc;
+      color: #1e293b;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    code {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "Consolas", "Monaco", monospace;
+      font-size: 0.88em;
+    }
+    pre {
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: "Consolas", "Monaco", monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    .card {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 18px 0;
+    }
+    .card-alert {
+      border-left-color: var(--secondary);
+      background: #fff7ed;
+    }
+    .card-success {
+      border-left-color: var(--success);
+      background: #f0fdf4;
+    }
+    a {
+      color: var(--secondary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .btn {
+      display: inline-block;
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin: 8px 6px 8px 0;
+      text-decoration: none;
+    }
+    .btn:hover {
+      background-color: var(--primary-light);
+      text-decoration: none;
+    }
+    .btn-secondary {
+      background-color: var(--secondary);
+    }
+    .btn-secondary:hover {
+      background-color: #b54f30;
+    }
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="banner">
+    <h1>LEAMSS Portal — Complete 7-Phase Report</h1>
+    <p><strong>System:</strong> Migration & Education CRM (RohitPaul2427/portal)</p>
+    <p><strong>Branch:</strong> <code>feat/secure-case-workspace</code> | <strong>Status:</strong> <span class="badge badge-success">100% Certified & Active</span></p>
+    <p><strong>Live Services:</strong> Frontend (:3000) • FastAPI (:8001) • MongoDB (:27017)</p>
+  </div>
+
+  <div>
+    <a href="http://localhost:3000" class="btn" target="_blank">Open React Frontend (:3000)</a>
+    <a href="http://127.0.0.1:8001/docs" class="btn btn-secondary" target="_blank">Open API Docs (:8001/docs)</a>
+    <a href="http://127.0.0.1:8001/api/health" class="btn" target="_blank" style="background:#334155;">Backend Health Check</a>
+  </div>
+
+  <h2>1. Executive Summary & Verification Metrics</h2>
+  <p>The LEAMSS portal has been transformed into a secure, case-centred migration platform. All 7 phases have been executed non-destructively, without affecting live production databases, and keeping the current Google Workspace mailbox (<code>khushii@leamss.com</code>) active and untouched.</p>
+
+  <div class="card card-success">
+    <strong>Automated Security Suite Verification:</strong><br>
+    The test suite (<code>backend/tests/test_case_workspace_security.py</code>) was executed against the live application with <strong>8 out of 8 tests passing (100% success rate)</strong>:
+    <pre><code>backend/tests/test_case_workspace_security.py::test_document_download_idor_blocked PASSED [ 12%]
+backend/tests/test_case_workspace_security.py::test_document_view_idor_blocked PASSED     [ 25%]
+backend/tests/test_case_workspace_security.py::test_case_details_cross_isolation PASSED   [ 37%]
+backend/tests/test_case_workspace_security.py::test_deadlines_cross_isolation PASSED      [ 50%]
+backend/tests/test_case_workspace_security.py::test_application_register_and_masking PASSED [ 62%]
+backend/tests/test_case_workspace_security.py::test_temporary_access_grant_lifecycle PASSED [ 75%]
+backend/tests/test_case_workspace_security.py::test_credential_vault_registration_and_checkout PASSED [ 87%]
+backend/tests/test_case_workspace_security.py::test_ephemeral_preview_token_and_watermark PASSED [100%]
+
+============================= 8 passed in 55.87s =============================</code></pre>
+  </div>
+
+  <h2>2. Phase-by-Phase Implementation & Feature Breakdown</h2>
+
+  <h3>Phase 1: Discovery, Codebase Map & Security Audit</h3>
+  <ul>
+    <li>Identified critical IDOR on <code>/api/documents/download/{id}</code> and <code>/api/documents/view/{id}</code>.</li>
+    <li>Identified horizontal privilege escalation where case managers could view any case across the company.</li>
+    <li>Detected plaintext client passwords returned in sales approval API responses.</li>
+    <li>Documented flat data structure limitations preventing concurrent Subclass 189/190/491 EOIs.</li>
+  </ul>
+
+  <h3>Phase 2: Data Architecture & Non-Destructive Schema Migration</h3>
+  <ul>
+    <li>Defined structured entities: <code>CASE_APPLICATIONS</code>, <code>CASE_ACCESS_GRANTS</code>, and <code>CREDENTIAL_VAULT</code>.</li>
+    <li>Created idempotent migration script: <code>backend/migrations/case_workspace_v1_migration.py</code> supporting dry-run and apply modes.</li>
+    <li>Preserved 100% backward compatibility for all existing fields and collections.</li>
+  </ul>
+
+  <h3>Phase 3: Central Authorization & IDOR Elimination</h3>
+  <ul>
+    <li>Engineered <code>CaseAccessService</code> (<code>backend/core/case_access_service.py</code>) implementing deny-by-default access control.</li>
+    <li>Validates client ownership, case manager assignment, active temporary grants, and admin roles.</li>
+    <li>Protected routes in <code>documents.py</code>, <code>cases.py</code>, <code>deadlines.py</code>, <code>doc_expiry.py</code>, and <code>step_documents.py</code>.</li>
+    <li>Removed plaintext passwords from sales and mini-portal response payloads.</li>
+  </ul>
+
+  <h3>Phase 4: Document Security & Ephemeral Watermarked Preview Engine</h3>
+  <ul>
+    <li>Built <code>DocumentSecurity</code> (<code>backend/core/document_security.py</code>) generating 15-minute cryptographically signed preview tokens.</li>
+    <li>Engineered dynamic visual watermarking for PDFs (via <code>pypdf</code>) and images (via Pillow) embedding viewer email, timestamp, IP, and case ID.</li>
+    <li>Preview endpoint: <code>/api/case-workspace/{case_id}/documents/{doc_id}/preview-stream?token=...</code>.</li>
+  </ul>
+
+  <h3>Phase 5: Multi-Application Case Workspace & Credential Vault</h3>
+  <ul>
+    <li>Implemented multi-application register supporting concurrent Skills Assessments, EOIs, State Nominations, and Visa Lodgements without overwriting data.</li>
+    <li>Automated sensitive identifier masking (<code>DHA-********5432</code>) with audited reveal requests (<code>/reveal-identifier</code>).</li>
+    <li>Engineered AES-256 GCM Credential Vault (<code>vault_service.py</code>) encrypting government portal logins at rest with audited cleartext checkout.</li>
+    <li>Implemented temporary access grants preventing staff self-elevation and supporting instant revocation.</li>
+  </ul>
+
+  <h3>Phase 6: Shared Mailbox (<code>khushii@leamss.com</code>) Migration Strategy</h3>
+  <div class="card card-alert">
+    <strong>Continuity Guarantee:</strong> Zero changes were made to live Google Workspace settings, MX records, or passwords. All client emails continue to flow without interruption.
+  </div>
+  <ul>
+    <li><strong>Stage 6.1:</strong> Parallel shadow delivery via Google Workspace Content Compliance Rule to backend webhook.</li>
+    <li><strong>Stage 6.2:</strong> Automated parsing and association of DHA TRN and EOI references to matching cases.</li>
+    <li><strong>Stage 6.3:</strong> Outbound emails sent via Domain-Wide Delegation (<code>gmail_dwd.py</code>) with <code>Reply-To: case+&lt;case_number&gt;@leamss.com</code>.</li>
+    <li><strong>Stage 6.4:</strong> Transition <code>khushii@leamss.com</code> to a system service address, revoking shared passwords for general staff.</li>
+  </ul>
+
+  <h3>Phase 7: End-to-End Automated Verification & Production Checklist</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Feature Dimension</th>
+        <th>Legacy State</th>
+        <th>Hardened State</th>
+        <th>Automated Test Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Document Download & View</td>
+        <td>IDOR vulnerable to any logged-in user</td>
+        <td>Strictly gated by case assignment and owner check</td>
+        <td><span class="badge badge-success">PASSED</span></td>
+      </tr>
+      <tr>
+        <td>Case Portfolio Isolation</td>
+        <td>All staff could view all cases</td>
+        <td>Case managers view only assigned cases</td>
+        <td><span class="badge badge-success">PASSED</span></td>
+      </tr>
+      <tr>
+        <td>Statutory Deadlines</td>
+        <td>Unassigned staff could edit deadlines</td>
+        <td>Access restricted to assigned case managers</td>
+        <td><span class="badge badge-success">PASSED</span></td>
+      </tr>
+      <tr>
+        <td>Reference Identifiers</td>
+        <td>Raw PII exposed in list views</td>
+        <td>Masked by default; reveal requires audit reason</td>
+        <td><span class="badge badge-success">PASSED</span></td>
+      </tr>
+      <tr>
+        <td>Temporary Access Grants</td>
+        <td>Informal or non-existent</td>
+        <td>Time-limited grants; self-elevation blocked</td>
+        <td><span class="badge badge-success">PASSED</span></td>
+      </tr>
+      <tr>
+        <td>Government Logins</td>
+        <td>Plaintext notes in database</td>
+        <td>AES-256 GCM encrypted; audited checkout</td>
+        <td><span class="badge badge-success">PASSED</span></td>
+      </tr>
+      <tr>
+        <td>Document Previews</td>
+        <td>Direct permanent links, unwatermarked</td>
+        <td>15-min signed tokens; viewer attribution watermark</td>
+        <td><span class="badge badge-success">PASSED</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Source Code & API Reference Directory</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Module / Feature</th>
+        <th>File Path</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Central Authorizer</td>
+        <td><code>backend/core/case_access_service.py</code></td>
+        <td>Deny-by-default access evaluator for cases and documents</td>
+      </tr>
+      <tr>
+        <td>Workspace Models</td>
+        <td><code>backend/core/case_workspace_models.py</code></td>
+        <td>Enums, schemas, and PII masking algorithms</td>
+      </tr>
+      <tr>
+        <td>Credential Vault</td>
+        <td><code>backend/core/vault_service.py</code></td>
+        <td>AES-256 GCM symmetric encryption and checkout audit</td>
+      </tr>
+      <tr>
+        <td>Document Security</td>
+        <td><code>backend/core/document_security.py</code></td>
+        <td>15-minute token engine and dynamic PDF/image watermarking</td>
+      </tr>
+      <tr>
+        <td>Case Workspace Router</td>
+        <td><code>backend/routers/case_workspace.py</code></td>
+        <td>REST API for applications, grants, vault, and watermarked previews</td>
+      </tr>
+      <tr>
+        <td>Migration Script</td>
+        <td><code>backend/migrations/case_workspace_v1_migration.py</code></td>
+        <td>Idempotent database backfill utility (dry-run & apply)</td>
+      </tr>
+      <tr>
+        <td>Security Test Suite</td>
+        <td><code>backend/tests/test_case_workspace_security.py</code></td>
+        <td>Automated pytest suite covering all 8 security barriers</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="text-align: center; margin-top: 40px; color: #64748b; font-size: 0.85rem;">
+    LEAMSS Portal • Migration & Education Services • Report generated on October 8, 2026
+  </p>
+
+</div>
+
+</body>
+</html>

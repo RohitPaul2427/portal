@@ -142,8 +142,10 @@ async def upcoming(
         ctx = await _hydrate_case(d.get("case_id"))
         if role == "client" and ctx.get("client_user_id") != current_user.get("id"):
             continue
-        # partner has no direct case ownership; admin/cm see all
+        # partner has no direct case ownership; case managers only see assigned cases
         if role in ("partner", "sales_executive", "sr_sales_executive"):
+            continue
+        if role == "case_manager" and ctx.get("case_manager_id") != current_user.get("id"):
             continue
         item = _build_item(d, "case", ctx)
         if item["days_left"] is None or item["days_left"] > horizon_days:

@@ -539,10 +539,11 @@ async def approve_sale(request: SaleApproval, current_user: dict = Depends(get_c
             response["assignment_pending"] = True
             response["message"] = "Sale approved! Case created — please assign a case manager from the Pending Assignment tab."
         if client_is_new:
-            response["client_credentials"] = {
-                "email": sale["client_email"], "password": client_password,
+            response["client_account"] = {
+                "email": sale["client_email"],
                 "name": sale["client_name"],
-                "message": "New client account created. Share these login credentials with the client."
+                "activation_status": "account_created",
+                "message": "New client account created. Login activation instructions dispatched to client."
             }
         return response
     

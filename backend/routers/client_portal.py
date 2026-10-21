@@ -28,6 +28,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile,
                       Body)
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from core.database import db
@@ -269,6 +270,30 @@ async def upload_document(
                      summary={"document_id": doc_id, "type": document_type,
                               "size_bytes": len(contents)})
     return {"ok": True, "document_id": doc_id, "batch_id": batch["batch_id"]}
+
+
+@router.get("/documents/{doc_id}/download")
+async def download_client_document(
+    doc_id: str, client: Dict[str, Any] = Depends(get_current_client),
+):
+    doc = await db[DOCS_COLL].find_one({"id": doc_id, "client_id": client["client_id"]})
+    if not doc:
+        raise HTTPException(404, "Document not found")
+    path = doc.get("file_path")
+    if not path or not os.path.exists(path):
+        raise HTTPException(404, "File missing on server")
+    
+    await log_action(
+        db,
+        action="client.document_download",
+        user_id=client["client_id"],
+        summary={"document_id": doc_id, "name": doc.get("document_name")},
+    )
+    return FileResponse(
+        path,
+        media_type=doc.get("mime_type") or "application/octet-stream",
+        filename=doc.get("document_name") or "document",
+    )
 
 
 @router.delete("/documents/{doc_id}")

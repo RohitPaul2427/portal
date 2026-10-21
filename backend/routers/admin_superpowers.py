@@ -266,7 +266,7 @@ async def quick_approval_action(data: QuickApproveRequest, current_user: dict = 
             if not case_manager_id:
                 result["assignment_pending"] = True
             if client_is_new:
-                result["client_credentials"] = {"email": sale["client_email"], "password": client_password, "name": sale["client_name"]}
+                result["client_account"] = {"email": sale["client_email"], "name": sale["client_name"], "activation_status": "account_created"}
             return result
 
         else:

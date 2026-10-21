@@ -14,10 +14,14 @@ import pathlib
 
 import pytest
 
-# ── Env auto-load (idempotent) ────────────────────────────────────────────────
 # Backend .env (MONGO_URL, DB_NAME, JWT_SECRET, etc.)
-for _envp in (pathlib.Path("/app/backend/.env"),
-              pathlib.Path("/app/frontend/.env")):
+_this_dir = pathlib.Path(__file__).resolve().parent
+for _envp in (
+    pathlib.Path("/app/backend/.env"),
+    pathlib.Path("/app/frontend/.env"),
+    _this_dir.parent / ".env",
+    _this_dir.parent.parent / "backend" / ".env",
+):
     if _envp.exists():
         for _line in _envp.read_text().splitlines():
             if "=" in _line and not _line.startswith("#"):

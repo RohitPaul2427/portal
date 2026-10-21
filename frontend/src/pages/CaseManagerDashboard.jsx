@@ -37,6 +37,7 @@ import IntakeFormFiller from '@/components/IntakeFormFiller';
 import FeeCalculator from '@/components/FeeCalculator';
 import DocumentExtractor from '@/components/DocumentExtractor';
 import CmEarningsWidget from '@/components/CmEarningsWidget';
+import CaseWorkspacePanel from '@/components/CaseWorkspacePanel';
 // import {
 //   Eye,
 //   Download,
@@ -582,21 +583,36 @@ const loadCaseDetails = async (caseId) => {
     }));
   };
 
-  // View document in new tab
+  // View document in new tab with ephemeral watermarking
   const viewDocument = async (fileId, filename) => {
     try {
+      if (selectedCase?.id) {
+        try {
+          const tokRes = await axios.post(
+            `${API}/case-workspace/${selectedCase.id}/documents/${fileId}/preview-token`,
+            {},
+            getAuthHeader()
+          );
+          if (tokRes.data?.preview_url) {
+            toast.info('Opening secure watermarked document preview...');
+            const previewUrl = `${BACKEND_URL}${tokRes.data.preview_url}`;
+            window.open(previewUrl, '_blank');
+            return;
+          }
+        } catch (e) {
+          // Fallback to standard authenticated view
+        }
+      }
       toast.info('Opening document...');
       const response = await axios.get(`${API}/documents/view/${fileId}`, {
         ...getAuthHeader(),
         responseType: 'blob'
       });
 
-      // Get the content type from response or guess from filename
       const contentType = response.headers['content-type'] || 'application/pdf';
       const blob = new Blob([response.data], { type: contentType });
       const blobUrl = window.URL.createObjectURL(blob);
 
-      // Open in new tab
       window.open(blobUrl, '_blank');
     } catch (error) {
       console.error('View error:', error);
@@ -826,6 +842,12 @@ const loadCaseDetails = async (caseId) => {
               </div>
             </div>
           </Card>
+
+          {/* Phase 5 — Secure Case-Centred Workspace Panel */}
+          <CaseWorkspacePanel
+            caseData={selectedCase}
+            onUpdate={() => loadCaseDetails(selectedCase.id)}
+          />
 
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">

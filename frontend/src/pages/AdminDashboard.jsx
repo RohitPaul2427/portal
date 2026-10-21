@@ -53,6 +53,8 @@ import IntakeFormBuilder from '@/components/IntakeFormBuilder';
 import ReportBuilder from '@/components/ReportBuilder';
 import EmailDigest from '@/components/EmailDigest';
 import PaymentReminders from '@/components/PaymentReminders';
+import CaseWorkspacePanel from '@/components/CaseWorkspacePanel';
+import AdminCaseGovernanceWidget from '@/components/AdminCaseGovernanceWidget';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' && window.location.hostname.includes('leamss.com') ? 'https://api.leamss.com' : 'http://localhost:8001');
 const API = `${BACKEND_URL}/api`;
@@ -2220,6 +2222,21 @@ const AdminDashboard = () => {
           {/* Cases Tab */}
           {activeTab === 'cases' && !selectedCase && (
             <div className="space-y-4" data-testid="cases-content">
+              {/* System-wide Security & Access Governance Overview */}
+              <AdminCaseGovernanceWidget
+                onSelectCase={(targetCaseId) => {
+                  const found = cases.find(c => c.id === targetCaseId || c.case_id === targetCaseId);
+                  if (found) {
+                    viewCaseDetails(found);
+                  } else {
+                    viewCaseDetails({ id: targetCaseId });
+                  }
+                }}
+                onFilterUnassigned={() => {
+                  setCaseFilter({ ...caseFilter, status: 'all', search: '', case_manager_id: 'all' });
+                }}
+              />
+
               <div className="flex flex-wrap gap-3 mb-6">
                 <div className="relative flex-1 min-w-[250px]">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -2277,9 +2294,32 @@ const AdminDashboard = () => {
                       <div className="text-right">
                         {getStatusBadge(caseItem.status || 'active')}
                         <p className="text-sm text-slate-600 mt-2">Step: {caseItem.current_step}</p>
-                        <Button onClick={(e) => { e.stopPropagation(); setReassignDialog({ open: true, case_id: caseItem.id }); }} size="sm" variant="outline" className="mt-2" data-testid={`reassign-${caseItem.id}`}>
-                          <Edit className="h-4 w-4 mr-1" />Change Manager
-                        </Button>
+                        <div className="flex gap-2 mt-2 justify-end">
+                          <Button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              viewCaseDetails(caseItem); 
+                            }} 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs text-[#1F4D44] border-emerald-700/30 hover:bg-emerald-50" 
+                            data-testid={`workspace-btn-${caseItem.id}`}
+                          >
+                            <Shield className="h-3.5 w-3.5 mr-1" />Security & Workspace
+                          </Button>
+                          <Button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setReassignDialog({ open: true, case_id: caseItem.id }); 
+                            }} 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs" 
+                            data-testid={`reassign-${caseItem.id}`}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />Change Manager
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -2369,6 +2409,18 @@ const AdminDashboard = () => {
                   <div><p className="text-sm text-slate-500">Case Manager</p><p className="font-medium text-slate-800">{selectedCase.case_manager_name}</p></div>
                 </div>
               </Card>
+
+              {/* Secure Case-Centred Workspace Panel (Multi-App Register, Credential Vault, Access Grants, Ephemeral Security) */}
+              <CaseWorkspacePanel
+                caseData={selectedCase}
+                onUpdate={() => {
+                  loadData();
+                  if (selectedCase?.id) {
+                    viewCaseDetails(selectedCase);
+                  }
+                }}
+              />
+
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4 text-slate-800">Workflow Progress</h3>
                 <div className="space-y-3">

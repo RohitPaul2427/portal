@@ -639,9 +639,6 @@ async def render_country_index_html(country_code: str) -> str:
             o["recommended_visa"] = ""
         # Phase 19.3 — surface assessing-authority fee + proc time on cards
         aa = o.get("assessing_authority") or {}
-        print("fee_native =", aa.get("fee_native"))
-        print("fee_currency =", aa.get("fee_currency"))
-        print("processing_time_weeks =", aa.get("processing_time_weeks"))
         o["aa_fee"] = aa.get("fee_native")
         o["aa_currency"] = aa.get("fee_currency")
         o["aa_proc_weeks"] = aa.get("processing_time_weeks")

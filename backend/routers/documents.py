@@ -1,10 +1,17 @@
 """Documents Router"""
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Response
 from fastapi.responses import FileResponse
-from core.database import documents_col, cases_col, notifications_col, audit_logs_col, users_col
+from core.database import db, documents_col, cases_col, notifications_col, audit_logs_col, users_col
 from core.auth import get_current_user
 from core.services import create_notification, notify_role, log_activity
 from core.email_service import send_document_review_email
+from core.case_access_service import CaseAccessService
+from core.document_security import (
+    classify_sensitivity,
+    watermark_pdf_bytes,
+    watermark_image_bytes,
+)
+from services.audit_service import log_action
 from pydantic import BaseModel
 from typing import Optional, List
 import uuid, os
@@ -52,6 +59,7 @@ async def _log(user_id, action, entity_type, entity_id=None, details=None):
 
 @router.get("/case/{case_id}")
 async def get_case_documents(case_id: str, current_user: dict = Depends(get_current_user)):
+    await CaseAccessService.verify_case_access(case_id, current_user, "document.metadata.view")
     docs = await documents_col.find({"case_id": case_id}, {"_id": 0}).to_list(500)
     if docs:
         user_ids = set()
@@ -80,9 +88,7 @@ async def upload_document(
     expiry_date: str = Form(""),
     current_user: dict = Depends(get_current_user)
 ):
-    case = await cases_col.find_one({"id": case_id})
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
+    case = await CaseAccessService.verify_case_access(case_id, current_user, "document.upload")
     
     file_id = str(uuid.uuid4())
     file_ext = os.path.splitext(file.filename)[1]
@@ -92,11 +98,14 @@ async def upload_document(
     with open(file_path, "wb") as f:
         f.write(content)
     
+    sensitivity = classify_sensitivity(document_type).value
     doc = {
-        "id": file_id, "case_id": case_id, "step_name": step_name,
+        "id": file_id, "case_id": case_id, "client_id": case.get("client_id"),
+        "step_name": step_name,
         "document_type": document_type, "filename": file.filename,
         "file_path": file_path, "file_size": len(content),
         "content_type": file.content_type,
+        "sensitivity_tier": sensitivity,
         "status": "pending", "uploaded_by": current_user["id"],
         "uploaded_at": datetime.now(timezone.utc)
     }
@@ -139,14 +148,26 @@ async def download_document(file_id: str, current_user: dict = Depends(get_curre
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     
+    await CaseAccessService.verify_document_access(doc, current_user, "document.download")
+    
     if not os.path.exists(doc["file_path"]):
         raise HTTPException(status_code=404, detail="File not found on server")
     
+    await log_action(
+        db,
+        action="document.downloaded",
+        user_id=current_user.get("id"),
+        user_name=current_user.get("email"),
+        summary={"doc_id": file_id, "case_id": doc.get("case_id"), "filename": doc.get("filename")},
+        severity="info",
+    )
+
     return FileResponse(
         doc["file_path"],
         filename=doc["filename"],
         media_type=doc.get("content_type", "application/octet-stream")
     )
+
 
 @router.get("/view/{file_id}")
 async def view_document(
@@ -164,18 +185,48 @@ async def view_document(
             detail="Document not found"
         )
 
+    await CaseAccessService.verify_document_access(doc, current_user, "document.preview")
+
     if not os.path.exists(doc["file_path"]):
         raise HTTPException(
             status_code=404,
             detail="File not found on server"
         )
 
+    await log_action(
+        db,
+        action="document.viewed",
+        user_id=current_user.get("id"),
+        user_name=current_user.get("email"),
+        summary={"doc_id": file_id, "case_id": doc.get("case_id"), "filename": doc.get("filename")},
+        severity="info",
+    )
+
+    mime = doc.get("content_type", "application/octet-stream")
+    sensitivity = doc.get("sensitivity_tier") or classify_sensitivity(doc.get("document_type")).value
+    if sensitivity in ("sensitive_identity", "highly_restricted"):
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        viewer_label = f"LEAMSS CONFIDENTIAL - {current_user.get('email', 'Staff')} - {now_str}"
+        with open(doc["file_path"], "rb") as f:
+            raw_bytes = f.read()
+        if "pdf" in mime.lower():
+            wm_bytes = watermark_pdf_bytes(raw_bytes, viewer_label)
+            return Response(
+                content=wm_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'inline; filename="{doc["filename"]}"'},
+            )
+        elif any(img_t in mime.lower() for img_t in ("image", "png", "jpeg", "jpg")):
+            wm_bytes = watermark_image_bytes(raw_bytes, viewer_label, mime)
+            return Response(
+                content=wm_bytes,
+                media_type=mime,
+                headers={"Content-Disposition": f'inline; filename="{doc["filename"]}"'},
+            )
+
     return FileResponse(
         doc["file_path"],
-        media_type=doc.get(
-            "content_type",
-            "application/octet-stream"
-        ),
+        media_type=mime,
         headers={
             "Content-Disposition": (
                 f'inline; filename="{doc["filename"]}"'
@@ -184,12 +235,11 @@ async def view_document(
     )
 @router.post("/review")
 async def review_document(request: DocumentReview, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] not in ["admin", "case_manager"]:
-        raise HTTPException(status_code=403, detail="Admin or Case Manager only")
-    
     doc = await documents_col.find_one({"id": request.document_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+    
+    await CaseAccessService.verify_document_access(doc, current_user, "document.verify")
     
     # Require comment for rejection and revision_required
     if request.status in ["rejected", "revision_required"] and (not request.comment or len(request.comment.strip()) < 5):
@@ -461,6 +511,7 @@ async def get_all_expiring_documents(current_user: dict = Depends(get_current_us
 @router.get("/expiring/case/{case_id}")
 async def get_case_expiring_documents(case_id: str, current_user: dict = Depends(get_current_user)):
     """Get expiring documents for a specific case"""
+    await CaseAccessService.verify_case_access(case_id, current_user, "document.metadata.view")
     now = datetime.now(timezone.utc)
     docs = await documents_col.find({"case_id": case_id}, {"_id": 0, "file_path": 0}).to_list(500)
 
